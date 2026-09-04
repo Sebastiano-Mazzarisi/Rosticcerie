@@ -1,0 +1,93 @@
+name: Rosticcerie iOS
+
+permissions:
+  contents: write
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rosticceria-ios.yml'
+      - 'Rosticceria.py'
+      - 'requirements.txt'
+  schedule:
+    - cron: '*/5 9-12 * * *'
+      timezone: "Europe/Rome"
+  workflow_dispatch:
+
+concurrency:
+  group: rosticcerie-ios
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Controlla fascia oraria italiana
+        id: timecheck
+        shell: python
+        run: |
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          now = datetime.now(ZoneInfo("Europe/Rome"))
+          in_window = (9 <= now.hour < 12) or (now.hour == 12 and now.minute == 0)
+          manual = os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"run={str(in_window or manual).lower()}\n")
+              output.write(f"rome_time={now:%Y-%m-%d %H:%M:%S %Z}\n")
+
+      - name: Checkout
+        if: steps.timecheck.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Configura Python
+        if: steps.timecheck.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installa dipendenze
+        if: steps.timecheck.outputs.run == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Crea cookies.txt se presente
+        if: steps.timecheck.outputs.run == 'true'
+        env:
+          FACEBOOK_COOKIES: ${{ secrets.FACEBOOK_COOKIES }}
+        run: |
+          if [ -z "$FACEBOOK_COOKIES" ]; then
+            echo "Secret FACEBOOK_COOKIES non presente: provo senza cookie."
+          else
+            printf '%s' "$FACEBOOK_COOKIES" > cookies.txt
+          fi
+
+      - name: Estrai foto
+        if: steps.timecheck.outputs.run == 'true'
+        run: python Rosticceria.py --once --no-git
+
+      - name: Commit immagini aggiornate
+        if: steps.timecheck.outputs.run == 'true'
+        run: |
+          git config user.name "Rosticcerie Bot"
+          git config user.email "actions@github.com"
+          git add output/rosticceria_ios
+          if git diff --staged --quiet; then
+            echo "Nessuna modifica da salvare"
+          else
+            git commit -m "Aggiorna foto rosticcerie"
+            for i in 1 2 3 4 5; do
+              if git push; then
+                break
+              fi
+              echo "Push rifiutato (probabile collisione con un altro commit su main), riprovo dopo un rebase..."
+              git fetch origin main
+              git rebase origin/main
+              sleep 3
+            done
+          fi
