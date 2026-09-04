@@ -1,0 +1,61 @@
+{
+  "updated_at": "2026-09-04T08:23:24",
+  "pages": [
+    {
+      "name": "Fantasia",
+      "image": "Fantasia.jpg",
+      "text": "MENÙ DEL GIORNO 04/09/26",
+      "published_at": "04/09/2026",
+      "published_at_raw": "MENÙ DEL GIORNO 04/09/26",
+      "error": null
+    },
+    {
+      "name": "Cibarìa",
+      "image": "Cibaria.jpg",
+      "text": "4 Settembre.\nMenù del giorno.",
+      "published_at": "07/08/2026 circa",
+      "published_at_raw": "4 Settembre. Menù del giorno.",
+      "error": null
+    },
+    {
+      "name": "Impastamò",
+      "image": "Impastamo.jpg",
+      "text": "Ricarichiamo un po’ le energie!\nCi vediamo presto con le bontà della nuova stagione in arrivo",
+      "published_at": "30/08/2026 circa",
+      "published_at_raw": "5d",
+      "error": null
+    },
+    {
+      "name": "Le delizie di Michela",
+      "image": "Le_delizie_di_Michela.jpg",
+      "text": "Like\nComment",
+      "published_at": "04/09/2026 08:22 circa",
+      "published_at_raw": "/stories/186699229513704/UzpfSVNDOjEwMTQwNjU2NTQ5OTkwODY=/?view_single=false&__cft__[0]=AZg2VLNFJIP2TDI0tYoguzLsZhjVNAnk28OuPuWDlnSRVthjgHQnyzlttEmS2UXxuH3O_fR2oREB1H7hvXVjO69NBINXOk1CVIAERt_ksx2T_GdvUVJIgrILc0WS7EppzzdJ__9yaQEJU4IhnwMqPMqvWt2ZA5--OWrQ0jOBpPzheAqiqSV2i11lfB4&__tn__=%3C%3C%2CP-R",
+      "error": null
+    },
+    {
+      "name": "Santoro (Castellana)",
+      "image": "Santoro__Castellana.jpg",
+      "text": "menù del giorno 4 Settembre",
+      "published_at": "07/08/2026 circa",
+      "published_at_raw": "menù del giorno 4 Settembre … See more",
+      "error": null
+    },
+    {
+      "name": "Pane&Co",
+      "image": "Pane_Co.jpg",
+      "text": "Menu 4 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette tricolore all'amatriciana - €6.50\n- Tagliolino con fagiolini, pomodoro fresco e cacio affumicato - €8.50\n- Orecchiette con ciliegino, rucola e salsiccia - €8.50\n- Risotto con gamberetti, patate e zafferano - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Trancio di pesce spada alla pizzaiola - €8.50\n  Con pomodorini, origano e olive\n- Spezzatino di capocollo con funghi misti - €7.50",
+      "published_at": "04/09/2026",
+      "published_at_raw": "4 Settembre",
+      "error": null
+    },
+    {
+      "name": "Bollenti piatti",
+      "image": null,
+      "text": "",
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Non ho trovato nessun post testuale del menu nella pagina Facebook: https://www.facebook.com/BollentiPiatti"
+    }
+  ]
+}
