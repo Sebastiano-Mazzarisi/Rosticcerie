@@ -1687,7 +1687,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
     }}
     #detail-content img {{
-      max-width: 100%;
+      width: 100%;
       height: auto;
       display: block;
       margin: 0 auto;
