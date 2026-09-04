@@ -16,7 +16,7 @@ import argparse
 import datetime
 import html
 from zoneinfo import ZoneInfo
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -1147,12 +1147,48 @@ def crop_fantasia_chalkboard(image_bytes: bytes) -> bytes:
     return output.getvalue()
 
 
-def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
+def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
+    """Aggiunge sotto la foto una fascia bianca con la data del menu,
+    allungando l'immagine invece di sovrapporsi al contenuto: utile quando
+    la lavagna fotografata non riporta la data."""
+    match = re.search(r"\d{2}/\d{2}/\d{4}", published_at or "")
+    if not match:
+        return image_bytes
+    date_text = f"Menu del giorno: {match.group(0)}"
+
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = image.size
-    if width < 100 or height < 100:
-        return image_bytes
+    bar_height = max(48, height // 14)
+    canvas = Image.new("RGB", (width, height + bar_height), (255, 255, 255))
+    canvas.paste(image, (0, 0))
+    draw = ImageDraw.Draw(canvas)
+    font = _load_bold_font(int(bar_height * 0.45))
+    bbox = draw.textbbox((0, 0), date_text, font=font)
+    text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    x = (width - text_w) / 2 - bbox[0]
+    y = height + (bar_height - text_h) / 2 - bbox[1]
+    draw.text((x, y), date_text, fill=(60, 60, 60), font=font)
+    output = io.BytesIO()
+    canvas.save(output, format="JPEG", quality=92)
+    return output.getvalue()
 
+
+def add_white_border(image_bytes: bytes, border: int = 10) -> bytes:
+    """Aggiunge un bordo bianco attorno alla foto del menu."""
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+    canvas = Image.new("RGB", (width + border * 2, height + border * 2), (255, 255, 255))
+    canvas.paste(image, (border, border))
+    output = io.BytesIO()
+    canvas.save(output, format="JPEG", quality=92)
+    return output.getvalue()
+
+
+def _widest_dark_column_run(image: Image.Image) -> Optional[Tuple[int, int]]:
+    """Individua il blocco contiguo di colonne scure piu' ampio nell'immagine
+    (tipicamente la lavagna). Restituisce (inizio, fine) oppure None se non
+    trova nulla di sufficientemente scuro."""
+    width, height = image.size
     y_start = int(height * 0.1)
     y_end = int(height * 0.9)
     step = max(1, (y_end - y_start) // 300)
@@ -1204,18 +1240,48 @@ def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
         best_start, best_end = run_start, width
         best_len = width - run_start
 
-    if best_start is None or best_len < max(width * 0.35, 380):
+    if best_start is None:
+        return None
+    return best_start, best_end
+
+
+def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+    if width < 100 or height < 100:
+        return image_bytes
+
+    bounds = _widest_dark_column_run(image)
+    if bounds is None or (bounds[1] - bounds[0]) < max(width * 0.35, 380):
         # Se il blocco scuro rilevato e' troppo stretto per essere una vera
         # lavagna leggibile, meglio tenere la foto intera piuttosto che un
         # ritaglio troppo stretto e illeggibile.
         return image_bytes
+    best_start, best_end = bounds
 
     margin = 25
     left = max(0, best_start - margin)
     right = min(width, best_end + margin)
+    cropped = image.crop((left, 0, right, height))
+
+    # Rifinitura: sul ritaglio appena ottenuto puo' restare ancora del muro o
+    # un infisso scuro vicino alla lavagna (es. una porta), che il primo
+    # passaggio include per via del margine. Rilancia la stessa rilevazione
+    # su questo ritaglio piu' piccolo: se individua un blocco scuro
+    # chiaramente piu' stretto e ben centrato, restringe ulteriormente,
+    # eliminando i bordi inutili rimasti ai lati.
+    cropped_width = cropped.size[0]
+    refine_bounds = _widest_dark_column_run(cropped)
+    if refine_bounds is not None:
+        r_start, r_end = refine_bounds
+        r_len = r_end - r_start
+        if max(cropped_width * 0.15, 150) <= r_len < cropped_width * 0.85:
+            r_left = max(0, r_start - margin)
+            r_right = min(cropped_width, r_end + margin)
+            cropped = cropped.crop((r_left, 0, r_right, height))
 
     output = io.BytesIO()
-    image.crop((left, 0, right, height)).save(output, format="JPEG", quality=92)
+    cropped.save(output, format="JPEG", quality=92)
     trimmed_bytes = output.getvalue()
 
     # Applica poi lo stesso ritaglio verticale usato per Fantasia.
@@ -1997,9 +2063,12 @@ def extract_pages() -> List[Dict]:
             
             if name == "Fantasia":
                 image_bytes = crop_fantasia_chalkboard(image_bytes)
+                image_bytes = add_date_footer(image_bytes, post.get("published_at", ""))
             elif name == "Le delizie di Michela":
                 image_bytes = crop_michela_chalkboard(image_bytes)
-                
+            elif name == "Santoro (Castellana)":
+                image_bytes = add_white_border(image_bytes, border=10)
+
             image_path = save_image(image_bytes, facebook_page["output_image"])
             print(f"{name}: immagine salvata in {image_path}")
             if not post.get("published_at_raw"):
