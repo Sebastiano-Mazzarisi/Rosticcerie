@@ -1493,7 +1493,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         bg_color = "#e3f8ea" if p["updated"] else "#fff7de"
         cards.append(f"""
         <button type="button" class="card" style="border-color:{border_color};background-color:{bg_color}" onclick="openDetail({i})">
-            <span>{title}</span>
+            <span class="card-name">{title}</span>
+            <span class="card-counter" id="card-counter-{i}"></span>
         </button>
         """)
 
@@ -1563,6 +1564,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       box-sizing: border-box;
     }}
     .card {{
+      position: relative;
       appearance: none;
       -webkit-appearance: none;
       font: inherit;
@@ -1578,10 +1580,19 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       border: 4px solid #ffd641; /* Verde intenso se aggiornata oggi, giallo intenso altrimenti */
       border-radius: 12px;
     }}
-    .card span {{
+    .card .card-name {{
       font-size: clamp(16px, 5vw, 26px);
       color: #111; /* Nomi neri */
       font-weight: bold;
+    }}
+    .card-counter {{
+      display: none;
+      position: absolute;
+      bottom: 4px;
+      right: 8px;
+      font-size: 11px;
+      font-weight: normal;
+      color: #555;
     }}
     .error {{
       color: #ffd0d0;
@@ -1645,15 +1656,21 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get('v') === '57';
-    // Uso un'API globale gratuita per il contatore
+    // Uso un'API globale gratuita per il contatore, un contatore separato per ogni rosticceria
     const ABACUS_BASE = 'https://abacus.jasoncameron.dev';
     const COUNTER_NAMESPACE = 'rosticcerie-fantasia';
-    const COUNTER_KEY = 'menu-views';
-    const counterGetUrl = ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + COUNTER_KEY;
-    const counterHitUrl = ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + COUNTER_KEY;
-    const OFFSET_KEY = 'menu-views-offset';
-    const offsetGetUrl = ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + OFFSET_KEY;
-    const offsetHitUrl = ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + OFFSET_KEY;
+
+    function slugify(s) {{
+        return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }}
+    function counterKeyFor(name) {{ return 'menu-views-' + slugify(name); }}
+    function offsetKeyFor(name) {{ return 'menu-views-offset-' + slugify(name); }}
+    function counterGetUrlFor(name) {{ return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }}
+    function counterHitUrlFor(name) {{ return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }}
+    function offsetGetUrlFor(name) {{ return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + offsetKeyFor(name); }}
+    function offsetHitUrlFor(name) {{ return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + offsetKeyFor(name); }}
+
     function fetchWithRetry(url, attempts) {{
         return fetch(url).catch(err => {{
             if (attempts > 1) {{
@@ -1663,19 +1680,22 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }});
     }}
 
-    let totalClicks = 0;
-    let offsetClicks = 0;
+    let totalClicksByPanel = [];
+    let offsetClicksByPanel = [];
 
     function loadCounter() {{
         if (isAdmin) {{
             // L'offset di azzeramento e' condiviso (salvato su Abacus), non solo sul dispositivo
-            Promise.all([
-                fetchWithRetry(counterGetUrl, 3).then(r => r.json()),
-                fetchWithRetry(offsetGetUrl, 3).then(r => r.json())
+            const tasks = PANELS.map((p, i) => Promise.all([
+                fetchWithRetry(counterGetUrlFor(p.name), 3).then(r => r.json()),
+                fetchWithRetry(offsetGetUrlFor(p.name), 3).then(r => r.json())
             ]).then(([totalData, offsetData]) => {{
-                totalClicks = totalData.value || 0;
-                offsetClicks = offsetData.value || 0;
+                totalClicksByPanel[i] = totalData.value || 0;
+                offsetClicksByPanel[i] = offsetData.value || 0;
+            }}));
+            Promise.all(tasks).then(() => {{
                 updateAdminTitle();
+                updateCardCounters();
             }}).catch(e => console.error(e));
         }}
     }}
@@ -1684,25 +1704,43 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const mainTitle = document.getElementById('main-title');
         mainTitle.innerText = 'Azzeramento in corso...';
         try {{
-            const totalData = await fetchWithRetry(counterGetUrl, 3).then(r => r.json());
-            const target = totalData.value || 0;
-            let offsetData = await fetchWithRetry(offsetGetUrl, 3).then(r => r.json());
-            let current = offsetData.value || 0;
-            while (current < target) {{
-                await fetchWithRetry(offsetHitUrl, 3);
-                current++;
+            for (let i = 0; i < PANELS.length; i++) {{
+                const p = PANELS[i];
+                const totalData = await fetchWithRetry(counterGetUrlFor(p.name), 3).then(r => r.json());
+                const target = totalData.value || 0;
+                let offsetData = await fetchWithRetry(offsetGetUrlFor(p.name), 3).then(r => r.json());
+                let current = offsetData.value || 0;
+                while (current < target) {{
+                    await fetchWithRetry(offsetHitUrlFor(p.name), 3);
+                    current++;
+                }}
+                totalClicksByPanel[i] = target;
+                offsetClicksByPanel[i] = current;
             }}
-            totalClicks = target;
-            offsetClicks = current;
         }} catch (e) {{
             console.error(e);
         }}
         updateAdminTitle();
+        updateCardCounters();
     }}
 
     function updateAdminTitle() {{
-        let val = Math.max(0, totalClicks - offsetClicks);
+        let val = 0;
+        for (let i = 0; i < PANELS.length; i++) {{
+            val += Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
+        }}
         document.getElementById('main-title').innerText = `Rosticcerie (${{val.toLocaleString('it-IT')}})`;
+    }}
+
+    function updateCardCounters() {{
+        if (!isAdmin) return;
+        for (let i = 0; i < PANELS.length; i++) {{
+            const el = document.getElementById('card-counter-' + i);
+            if (!el) continue;
+            const val = Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
+            el.innerText = val.toLocaleString('it-IT');
+            el.style.display = 'block';
+        }}
     }}
 
     function renderDetail(i) {{
@@ -1711,6 +1749,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const p = PANELS[currentIndex];
 
         document.getElementById('main-title').innerText = p.name;
+        document.getElementById('main-updated').style.display = 'none';
 
         const phoneLine = document.getElementById('phone-line');
         if (p.phone_tel) {{
@@ -1738,7 +1777,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         window.scrollTo(0, 0);
 
         if (!isAdmin) {{
-            fetchWithRetry(counterHitUrl, 3).catch(e => {{}});
+            const p = PANELS[currentIndex];
+            fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {{}});
         }}
     }}
 
@@ -1750,6 +1790,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
+        document.getElementById('main-updated').style.display = '';
 
         const mainTitle = document.getElementById('main-title');
         if (isAdmin) {{
@@ -1775,10 +1816,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 <body>
   <header id="main-header">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
+    <div id="phone-line"></div>
     <p id="main-updated" class="updated">Aggiornato: {html.escape(updated_at)}</p>
   </header>
-
-  <div id="phone-line"></div>
 
   <main id="grid-view">
     {"".join(cards)}
