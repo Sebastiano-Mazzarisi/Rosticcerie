@@ -71,6 +71,20 @@ jobs:
         if: steps.timecheck.outputs.run == 'true'
         run: python Rosticceria.py --once --no-git
 
+      - name: Stampa diagnostica HTML Facebook (se presente)
+        if: steps.timecheck.outputs.run == 'true'
+        shell: bash
+        run: |
+          echo "===== FILE DEBUG ====="
+          ls -lh error_* 2>/dev/null || echo "Nessun file di debug presente."
+
+          echo "===== TESTO HTML (prime 200 righe per file) ====="
+          for f in error_*.html; do
+            [ -f "$f" ] || continue
+            echo "--- $f ---"
+            sed -n '1,200p' "$f"
+          done
+
       - name: Carica diagnostica errori Facebook (se presente)
         if: steps.timecheck.outputs.run == 'true'
         uses: actions/upload-artifact@v4
