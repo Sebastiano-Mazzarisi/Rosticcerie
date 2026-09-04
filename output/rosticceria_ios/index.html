@@ -8,6 +8,10 @@
   <meta name="apple-mobile-web-app-title" content="Rosticcerie">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:title" content="Rosticcerie">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html">
+  <meta property="og:image" content="https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/apple-touch-icon.png">
   <title>Rosticcerie</title>
   <style>
     body {
@@ -29,7 +33,7 @@
     h1#main-title {
       margin: 0;
       font-size: 32px;
-      color: #007bff; /* Blu */
+      color: #007bff; /* Azzurro */
       cursor: pointer;
     }
     .updated {
@@ -37,15 +41,31 @@
       color: #ccc;
       font-size: 14px;
     }
-    /* Ripristinato il layout a più colonne */
+    /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
+    #phone-line {
+      display: none;
+      text-align: center;
+      padding: 10px 16px 0;
+    }
+    #phone-line a {
+      color: #00c853;
+      font-size: 20px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    /* Griglia dei bottoni iniziali: distanziati di 10px tra loro e dai margini */
     main {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 1px;
-      background: #333;
+      gap: 10px;
+      padding: 10px;
+      box-sizing: border-box;
     }
     .card {
-      background: #111;
+      appearance: none;
+      -webkit-appearance: none;
+      font: inherit;
+      background: #d9d9d9; /* Grigio chiaro */
       box-sizing: border-box;
       cursor: pointer;
       min-height: 110px;
@@ -54,20 +74,21 @@
       justify-content: center;
       text-align: center;
       padding: 12px;
+      border: 4px solid #ffd641; /* Verde se aggiornata oggi, giallo altrimenti */
+      border-radius: 12px;
     }
-    .card-detail-content {
-      display: none; /* Nella griglia si vede solo il nome */
-    }
-    .card h2 {
-      margin: 0;
+    .card span {
       font-size: clamp(16px, 5vw, 26px);
-      color: #ffcc00; /* Colore giallo per i titoli come nell'originale */
+      color: #fff; /* Nomi bianchi */
+      font-weight: bold;
     }
     .error {
       color: #ffd0d0;
       font-size: 16px;
+      text-align: center;
+      padding: 20px;
     }
-    
+
     /* Layout per monitor normali/piccoli */
     @media (max-width: 1200px) {
       main {
@@ -78,45 +99,49 @@
     /* Dettaglio a tutto schermo */
     #detail-view {
       display: none;
+      padding-bottom: 85px; /* Spazio per la fascia con le frecce */
+    }
+    #detail-content {
       padding: 12px;
-      padding-bottom: 85px; /* Spazio per la fascia Home */
+      cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
     }
-    #detail-view h2 {
-      display: none; /* Il nome e' gia' mostrato nella fascia superiore */
-    }
-    #detail-view .card-detail-content {
-      display: block; /* Nel dettaglio si vede solo l'immagine (tutto e' dentro l'immagine) */
-    }
-    #detail-view img {
+    #detail-content img {
       max-width: 100%;
       height: auto;
       display: block;
+      margin: 0 auto;
     }
-    #detail-view a {
-      display: block;
-    }
-    
-    /* Fascia nera inferiore */
-    footer {
+
+    /* Fascia nera inferiore con le frecce di navigazione */
+    #nav-bar {
       display: none;
       background: #000;
-      padding: 18px 16px;
-      text-align: center;
+      padding: 14px 24px;
+      align-items: center;
+      justify-content: space-between;
       position: fixed;
       bottom: 0;
       width: 100%;
       z-index: 100;
-      cursor: pointer;
       border-top: 1px solid #333;
       box-sizing: border-box;
     }
-    footer h1 {
-      margin: 0;
-      font-size: 30px;
+    #nav-bar button {
+      appearance: none;
+      -webkit-appearance: none;
+      background: none;
+      border: none;
       color: #fff;
+      font-size: 30px;
+      line-height: 1;
+      padding: 6px 24px;
+      cursor: pointer;
     }
   </style>
   <script>
+    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788515439", "error": "", "updated": false}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Pane&Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane_Co.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "", "error": "Non ho trovato nessun post testuale del menu nella pagina Facebook: https://www.facebook.com/BollentiPiatti", "updated": false}];
+    let currentIndex = -1;
+
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get('v') === '57';
     // Uso un'API globale gratuita per il contatore
@@ -136,11 +161,10 @@
             throw err;
         });
     }
-    const PHONE_NUMBERS = {"Fantasia": "080-405.41.39", "Cibarìa": "080-645.07.99", "Impastamò": "392-536.15.36", "Le delizie di Michela": "080-521.22.33", "Santoro (Castellana)": "080-859.83.13", "Pane&Co": "080-405.49.00", "Bollenti piatti": "334-318.58.44"};
-    
+
     let totalClicks = 0;
     let offsetClicks = 0;
-    
+
     function loadCounter() {
         if (isAdmin) {
             // L'offset di azzeramento e' condiviso (salvato su Abacus), non solo sul dispositivo
@@ -174,46 +198,68 @@
         }
         updateAdminTitle();
     }
-    
+
     function updateAdminTitle() {
         let val = Math.max(0, totalClicks - offsetClicks);
         document.getElementById('main-title').innerText = `Rosticcerie (${val.toLocaleString('it-IT')})`;
     }
 
-    function openDetail(element) {
+    function renderDetail(i) {
+        const n = PANELS.length;
+        currentIndex = ((i % n) + n) % n;
+        const p = PANELS[currentIndex];
+
+        document.getElementById('main-title').innerText = p.name;
+
+        const phoneLine = document.getElementById('phone-line');
+        if (p.phone_tel) {
+            phoneLine.innerHTML = '<a href="tel:' + p.phone_tel + '" onclick="event.stopPropagation()">' + p.phone_display + '</a>';
+            phoneLine.style.display = 'block';
+        } else {
+            phoneLine.innerHTML = '';
+            phoneLine.style.display = 'none';
+        }
+
+        const content = document.getElementById('detail-content');
+        if (p.image) {
+            content.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '">';
+        } else {
+            content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
+        }
+    }
+
+    function openDetail(i) {
         document.getElementById('grid-view').style.display = 'none';
-        
-        const detailView = document.getElementById('detail-view');
-        detailView.innerHTML = element.innerHTML;
-        detailView.style.display = 'block';
-        
-        const title = element.getAttribute('data-title');
-        document.getElementById('main-title').innerText = title;
-        
-        document.getElementById('main-footer').style.display = 'block';
+
+        renderDetail(i);
+        document.getElementById('detail-view').style.display = 'block';
+        document.getElementById('nav-bar').style.display = 'flex';
         window.scrollTo(0, 0);
-        
+
         if (!isAdmin) {
             fetchWithRetry(counterHitUrl, 3).catch(e => {});
         }
     }
 
+    function showPrev() { renderDetail(currentIndex - 1); }
+    function showNext() { renderDetail(currentIndex + 1); }
+
     function closeDetail() {
         document.getElementById('detail-view').style.display = 'none';
-        document.getElementById('detail-view').innerHTML = '';
+        document.getElementById('phone-line').style.display = 'none';
+        document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
-        
+
         const mainTitle = document.getElementById('main-title');
         if (isAdmin) {
             updateAdminTitle();
         } else {
             mainTitle.innerText = 'Rosticcerie';
         }
-        
-        document.getElementById('main-footer').style.display = 'none';
+
         window.scrollTo(0, 0);
     }
-    
+
     function handleTitleClick() {
         if (isAdmin && document.getElementById('grid-view').style.display !== 'none') {
             if (confirm("Vuoi davvero azzerare il contatore? (Verra' azzerato per tutti i dispositivi)")) {
@@ -221,83 +267,57 @@
             }
         }
     }
-    
+
     window.onload = loadCounter;
   </script>
 </head>
 <body>
   <header id="main-header">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
-    <p id="main-updated" class="updated">Aggiornato: 04/09/2026 08:46</p>
+    <p id="main-updated" class="updated">Aggiornato: 04/09/2026 09:50</p>
   </header>
-  
+
+  <div id="phone-line"></div>
+
   <main id="grid-view">
     
-        <section class="card" data-title="Fantasia" onclick="openDetail(this)">
-            <h2>Fantasia</h2>
-            
-            <div class="card-detail-content">
-                <a href="tel:0804054139"><img src="Fantasia_call.jpg?v=1788511561" alt="Fantasia"></a>
-            </div>
-            
-        </section>
+        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(0)">
+            <span>Fantasia</span>
+        </button>
         
-        <section class="card" data-title="Cibarìa" onclick="openDetail(this)">
-            <h2>Cibarìa</h2>
-            
-            <div class="card-detail-content">
-                <a href="tel:0806450799"><img src="Cibaria_call.jpg?v=1788511561" alt="Cibarìa"></a>
-            </div>
-            
-        </section>
+        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(1)">
+            <span>Cibària</span>
+        </button>
         
-        <section class="card" data-title="Impastamò" onclick="openDetail(this)">
-            <h2>Impastamò</h2>
-            
-            <div class="card-detail-content">
-                <a href="tel:3925361536"><img src="Impastamo_call.jpg?v=1788511561" alt="Impastamò"></a>
-            </div>
-            
-        </section>
+        <button type="button" class="card" style="border-color:#ffd641" onclick="openDetail(2)">
+            <span>Impastamò</span>
+        </button>
         
-        <section class="card" data-title="Le delizie di Michela" onclick="openDetail(this)">
-            <h2>Le delizie di Michela</h2>
-            
-            <div class="card-detail-content">
-                <a href="tel:0805212233"><img src="Le_delizie_di_Michela_call.jpg?v=1788511561" alt="Le delizie di Michela"></a>
-            </div>
-            
-        </section>
+        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(3)">
+            <span>Le delizie di Michela</span>
+        </button>
         
-        <section class="card" data-title="Santoro (Castellana)" onclick="openDetail(this)">
-            <h2>Santoro (Castellana)</h2>
-            
-            <div class="card-detail-content">
-                <a href="tel:0808598313"><img src="Santoro__Castellana_call.jpg?v=1788511561" alt="Santoro (Castellana)"></a>
-            </div>
-            
-        </section>
+        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(4)">
+            <span>Santoro (Castellana)</span>
+        </button>
         
-        <section class="card" data-title="Pane&amp;Co" onclick="openDetail(this)">
-            <h2>Pane&amp;Co</h2>
-            
-            <div class="card-detail-content">
-                <a href="tel:0804054900"><img src="Pane_Co_call.jpg?v=1788511561" alt="Pane&amp;Co"></a>
-            </div>
-            
-        </section>
+        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(5)">
+            <span>Pane&amp;Co</span>
+        </button>
         
-        <section class="card" data-title="Bollenti piatti" onclick="openDetail(this)">
-            <h2>Bollenti piatti</h2>
-            <div class="card-detail-content"><p class="error">Non ho trovato nessun post testuale del menu nella pagina Facebook: https://www.facebook.com/BollentiPiatti</p></div>
-        </section>
+        <button type="button" class="card" style="border-color:#ffd641" onclick="openDetail(6)">
+            <span>Bollenti piatti</span>
+        </button>
         
   </main>
-  
-  <div id="detail-view"></div>
-  
-  <footer id="main-footer" onclick="closeDetail()">
-    <h1>Home</h1>
-  </footer>
+
+  <div id="detail-view">
+    <div id="detail-content" onclick="closeDetail()"></div>
+  </div>
+
+  <div id="nav-bar">
+    <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
+    <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
+  </div>
 </body>
 </html>
