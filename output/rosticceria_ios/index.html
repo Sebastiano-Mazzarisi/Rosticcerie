@@ -65,7 +65,7 @@
       appearance: none;
       -webkit-appearance: none;
       font: inherit;
-      background: #d9d9d9; /* Grigio chiaro */
+      background: #fff7de; /* Sostituito inline per riga: verde/giallo tenue */
       box-sizing: border-box;
       cursor: pointer;
       min-height: 110px;
@@ -74,12 +74,12 @@
       justify-content: center;
       text-align: center;
       padding: 12px;
-      border: 4px solid #ffd641; /* Verde se aggiornata oggi, giallo altrimenti */
+      border: 4px solid #ffd641; /* Verde intenso se aggiornata oggi, giallo intenso altrimenti */
       border-radius: 12px;
     }
     .card span {
       font-size: clamp(16px, 5vw, 26px);
-      color: #fff; /* Nomi bianchi */
+      color: #111; /* Nomi neri */
       font-weight: bold;
     }
     .error {
@@ -139,7 +139,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788515439", "error": "", "updated": false}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Pane&Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane_Co.jpg?v=1788515439", "error": "", "updated": true}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "", "error": "Non ho trovato nessun post testuale del menu nella pagina Facebook: https://www.facebook.com/BollentiPiatti", "updated": false}];
+    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788534582", "error": "", "updated": true}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788534582", "error": "", "updated": true}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788534582", "error": "", "updated": false}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788534582", "error": "", "updated": true}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788534582", "error": "", "updated": true}, {"name": "Pane&Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane_Co.jpg?v=1788534582", "error": "", "updated": true}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "", "error": "Non ho trovato nessun post testuale del menu nella pagina Facebook: https://www.facebook.com/BollentiPiatti", "updated": false}];
     let currentIndex = -1;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -274,38 +274,38 @@
 <body>
   <header id="main-header">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
-    <p id="main-updated" class="updated">Aggiornato: 04/09/2026 09:50</p>
+    <p id="main-updated" class="updated">Aggiornato: 04/09/2026 15:09</p>
   </header>
 
   <div id="phone-line"></div>
 
   <main id="grid-view">
     
-        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(0)">
+        <button type="button" class="card" style="border-color:#00c853;background-color:#e3f8ea" onclick="openDetail(0)">
             <span>Fantasia</span>
         </button>
         
-        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(1)">
+        <button type="button" class="card" style="border-color:#00c853;background-color:#e3f8ea" onclick="openDetail(1)">
             <span>Cibària</span>
         </button>
         
-        <button type="button" class="card" style="border-color:#ffd641" onclick="openDetail(2)">
+        <button type="button" class="card" style="border-color:#ffd641;background-color:#fff7de" onclick="openDetail(2)">
             <span>Impastamò</span>
         </button>
         
-        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(3)">
+        <button type="button" class="card" style="border-color:#00c853;background-color:#e3f8ea" onclick="openDetail(3)">
             <span>Le delizie di Michela</span>
         </button>
         
-        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(4)">
+        <button type="button" class="card" style="border-color:#00c853;background-color:#e3f8ea" onclick="openDetail(4)">
             <span>Santoro (Castellana)</span>
         </button>
         
-        <button type="button" class="card" style="border-color:#00c853" onclick="openDetail(5)">
+        <button type="button" class="card" style="border-color:#00c853;background-color:#e3f8ea" onclick="openDetail(5)">
             <span>Pane&amp;Co</span>
         </button>
         
-        <button type="button" class="card" style="border-color:#ffd641" onclick="openDetail(6)">
+        <button type="button" class="card" style="border-color:#ffd641;background-color:#fff7de" onclick="openDetail(6)">
             <span>Bollenti piatti</span>
         </button>
         
