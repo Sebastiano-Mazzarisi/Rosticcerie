@@ -71,6 +71,17 @@ jobs:
         if: steps.timecheck.outputs.run == 'true'
         run: python Rosticceria.py --once --no-git
 
+      - name: Carica diagnostica errori Facebook (se presente)
+        if: steps.timecheck.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: facebook-debug
+          path: |
+            error_*.png
+            error_*.html
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Assicura icona Home
         if: steps.timecheck.outputs.run == 'true'
         run: |
