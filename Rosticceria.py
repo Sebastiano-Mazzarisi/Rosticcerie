@@ -1252,12 +1252,15 @@ def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
         return image_bytes
 
     bounds = _widest_dark_column_run(image)
-    if bounds is None or (bounds[1] - bounds[0]) < max(width * 0.35, 380):
-        # Se il blocco scuro rilevato e' troppo stretto per essere una vera
-        # lavagna leggibile, meglio tenere la foto intera piuttosto che un
-        # ritaglio troppo stretto e illeggibile.
+    if bounds is None:
         return image_bytes
     best_start, best_end = bounds
+    best_len = best_end - best_start
+    if best_len < max(width * 0.15, 150) or best_len >= width * 0.85:
+        # Se il blocco scuro rilevato e' troppo stretto per essere una vera
+        # lavagna leggibile (o copre gia' quasi tutta la foto), meglio
+        # tenere la foto intera piuttosto che un ritaglio inutile o illeggibile.
+        return image_bytes
 
     margin = 25
     left = max(0, best_start - margin)
