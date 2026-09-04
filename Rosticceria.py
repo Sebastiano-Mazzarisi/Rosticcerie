@@ -1,6 +1,6 @@
 # Nome.py: Rosticceria.py
 # Data e ora ultima modifica: 03/09/2026 23:19
-# Descrizione: Estrae e pubblica i menu delle rosticcerie Fantasia, Cibarìa, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela e Santoro da Facebook e web.
+# Descrizione: Estrae e pubblica i menu delle rosticcerie Fantasia, Cibària, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela e Santoro da Facebook e web.
 # File di input: cookies.txt
 # File di output: status.json, Rosticcerie.html, immagini jpg
 # Parametri: --once, --show, --no-git
@@ -37,7 +37,7 @@ FACEBOOK_PAGES = [
         "output_image": "Rosticceria_Fantasia.jpg",
     },
     {
-        "name": "Cibarìa",
+        "name": "Cibària",
         "url": "https://www.facebook.com/cibaria.asporto",
         "output_image": "Rosticceria_Cibaria.jpg",
     },
@@ -1445,54 +1445,55 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     updated_at = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
     phone_numbers = {
         "Fantasia": "080-405.41.39",
-        "Cibarìa": "080-645.07.99",
+        "Cibària": "080-645.07.99",
         "Impastamò": "392-536.15.36",
         "Le delizie di Michela": "080-521.22.33",
         "Santoro (Castellana)": "080-859.83.13",
         "Pane&Co": "080-405.49.00",
         "Bollenti piatti": "334-318.58.44",
     }
-    phone_numbers_json = json.dumps(phone_numbers, ensure_ascii=False)
-    cards = []
+    today = rome_now().date()
+    panels_data = []
 
     for panel in panels:
-        title = html.escape(panel["name"])
-        phone_number = phone_numbers.get(panel["name"], "")
+        name = panel["name"]
+        phone_number = phone_numbers.get(name, "")
         phone_tel = re.sub(r"[^0-9+]", "", phone_number) if phone_number else ""
+        error = panel.get("error")
 
-        if "error" in panel:
-            body = f'<div class="card-detail-content"><p class="error">{html.escape(panel["error"])}</p></div>'
+        image_url = ""
+        is_updated = False
+        if error:
+            error = str(error)
         else:
             image_name = panel.get("publish_image", "")
-            display_image = image_name
-            if image_name and phone_number:
-                source_path = os.path.join(output_dir, image_name)
-                if os.path.exists(source_path):
-                    try:
-                        with open(source_path, "rb") as source_file:
-                            overlaid_bytes = add_phone_overlay(source_file.read(), phone_number)
-                        display_name = f"{safe_file_name(panel['name'])}_call.jpg"
-                        with open(os.path.join(output_dir, display_name), "wb") as display_file:
-                            display_file.write(overlaid_bytes)
-                        display_image = display_name
-                    except Exception:
-                        display_image = image_name
-            display_image_escaped = html.escape(display_image)
-            img_html = f'<img src="{display_image_escaped}?v={int(time.time())}" alt="{title}">'
-            if phone_tel:
-                img_html = f'<a href="tel:{phone_tel}">{img_html}</a>'
-            body = f"""
-            <div class="card-detail-content">
-                {img_html}
-            </div>
-            """
+            if image_name:
+                image_url = f"{html.escape(image_name)}?v={int(time.time())}"
+            published_at = panel_published_at(panel)
+            is_updated = parse_status_date(published_at) == today
 
+        panels_data.append({
+            "name": name,
+            "phone_display": phone_number,
+            "phone_tel": phone_tel,
+            "image": image_url,
+            "error": error or "",
+            "updated": is_updated,
+        })
+
+    panels_json = json.dumps(panels_data, ensure_ascii=False)
+
+    cards = []
+    for i, p in enumerate(panels_data):
+        title = html.escape(p["name"])
+        border_color = "#00c853" if p["updated"] else "#ffd641"
         cards.append(f"""
-        <section class="card" data-title="{title}" onclick="openDetail(this)">
-            <h2>{title}</h2>
-            {body}
-        </section>
+        <button type="button" class="card" style="border-color:{border_color}" onclick="openDetail({i})">
+            <span>{title}</span>
+        </button>
         """)
+
+    site_url = "https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/"
 
     index_html = f"""<!doctype html>
 <html lang="it">
@@ -1504,6 +1505,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   <meta name="apple-mobile-web-app-title" content="Rosticcerie">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:title" content="Rosticcerie">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{site_url}Rosticcerie.html">
+  <meta property="og:image" content="{site_url}apple-touch-icon.png">
   <title>Rosticcerie</title>
   <style>
     body {{
@@ -1525,7 +1530,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     h1#main-title {{
       margin: 0;
       font-size: 32px;
-      color: #007bff; /* Blu */
+      color: #007bff; /* Azzurro */
       cursor: pointer;
     }}
     .updated {{
@@ -1533,15 +1538,31 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       color: #ccc;
       font-size: 14px;
     }}
-    /* Ripristinato il layout a più colonne */
+    /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
+    #phone-line {{
+      display: none;
+      text-align: center;
+      padding: 10px 16px 0;
+    }}
+    #phone-line a {{
+      color: #00c853;
+      font-size: 20px;
+      font-weight: bold;
+      text-decoration: none;
+    }}
+    /* Griglia dei bottoni iniziali: distanziati di 10px tra loro e dai margini */
     main {{
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 1px;
-      background: #333;
+      gap: 10px;
+      padding: 10px;
+      box-sizing: border-box;
     }}
     .card {{
-      background: #111;
+      appearance: none;
+      -webkit-appearance: none;
+      font: inherit;
+      background: #d9d9d9; /* Grigio chiaro */
       box-sizing: border-box;
       cursor: pointer;
       min-height: 110px;
@@ -1550,20 +1571,21 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       justify-content: center;
       text-align: center;
       padding: 12px;
+      border: 4px solid #ffd641; /* Verde se aggiornata oggi, giallo altrimenti */
+      border-radius: 12px;
     }}
-    .card-detail-content {{
-      display: none; /* Nella griglia si vede solo il nome */
-    }}
-    .card h2 {{
-      margin: 0;
+    .card span {{
       font-size: clamp(16px, 5vw, 26px);
-      color: #ffcc00; /* Colore giallo per i titoli come nell'originale */
+      color: #fff; /* Nomi bianchi */
+      font-weight: bold;
     }}
     .error {{
       color: #ffd0d0;
       font-size: 16px;
+      text-align: center;
+      padding: 20px;
     }}
-    
+
     /* Layout per monitor normali/piccoli */
     @media (max-width: 1200px) {{
       main {{
@@ -1574,45 +1596,49 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     /* Dettaglio a tutto schermo */
     #detail-view {{
       display: none;
+      padding-bottom: 85px; /* Spazio per la fascia con le frecce */
+    }}
+    #detail-content {{
       padding: 12px;
-      padding-bottom: 85px; /* Spazio per la fascia Home */
+      cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
     }}
-    #detail-view h2 {{
-      display: none; /* Il nome e' gia' mostrato nella fascia superiore */
-    }}
-    #detail-view .card-detail-content {{
-      display: block; /* Nel dettaglio si vede solo l'immagine (tutto e' dentro l'immagine) */
-    }}
-    #detail-view img {{
+    #detail-content img {{
       max-width: 100%;
       height: auto;
       display: block;
+      margin: 0 auto;
     }}
-    #detail-view a {{
-      display: block;
-    }}
-    
-    /* Fascia nera inferiore */
-    footer {{
+
+    /* Fascia nera inferiore con le frecce di navigazione */
+    #nav-bar {{
       display: none;
       background: #000;
-      padding: 18px 16px;
-      text-align: center;
+      padding: 14px 24px;
+      align-items: center;
+      justify-content: space-between;
       position: fixed;
       bottom: 0;
       width: 100%;
       z-index: 100;
-      cursor: pointer;
       border-top: 1px solid #333;
       box-sizing: border-box;
     }}
-    footer h1 {{
-      margin: 0;
-      font-size: 30px;
+    #nav-bar button {{
+      appearance: none;
+      -webkit-appearance: none;
+      background: none;
+      border: none;
       color: #fff;
+      font-size: 30px;
+      line-height: 1;
+      padding: 6px 24px;
+      cursor: pointer;
     }}
   </style>
   <script>
+    const PANELS = {panels_json};
+    let currentIndex = -1;
+
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get('v') === '57';
     // Uso un'API globale gratuita per il contatore
@@ -1632,11 +1658,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             throw err;
         }});
     }}
-    const PHONE_NUMBERS = {phone_numbers_json};
-    
+
     let totalClicks = 0;
     let offsetClicks = 0;
-    
+
     function loadCounter() {{
         if (isAdmin) {{
             // L'offset di azzeramento e' condiviso (salvato su Abacus), non solo sul dispositivo
@@ -1670,46 +1695,68 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
         updateAdminTitle();
     }}
-    
+
     function updateAdminTitle() {{
         let val = Math.max(0, totalClicks - offsetClicks);
         document.getElementById('main-title').innerText = `Rosticcerie (${{val.toLocaleString('it-IT')}})`;
     }}
 
-    function openDetail(element) {{
+    function renderDetail(i) {{
+        const n = PANELS.length;
+        currentIndex = ((i % n) + n) % n;
+        const p = PANELS[currentIndex];
+
+        document.getElementById('main-title').innerText = p.name;
+
+        const phoneLine = document.getElementById('phone-line');
+        if (p.phone_tel) {{
+            phoneLine.innerHTML = '<a href="tel:' + p.phone_tel + '" onclick="event.stopPropagation()">' + p.phone_display + '</a>';
+            phoneLine.style.display = 'block';
+        }} else {{
+            phoneLine.innerHTML = '';
+            phoneLine.style.display = 'none';
+        }}
+
+        const content = document.getElementById('detail-content');
+        if (p.image) {{
+            content.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '">';
+        }} else {{
+            content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
+        }}
+    }}
+
+    function openDetail(i) {{
         document.getElementById('grid-view').style.display = 'none';
-        
-        const detailView = document.getElementById('detail-view');
-        detailView.innerHTML = element.innerHTML;
-        detailView.style.display = 'block';
-        
-        const title = element.getAttribute('data-title');
-        document.getElementById('main-title').innerText = title;
-        
-        document.getElementById('main-footer').style.display = 'block';
+
+        renderDetail(i);
+        document.getElementById('detail-view').style.display = 'block';
+        document.getElementById('nav-bar').style.display = 'flex';
         window.scrollTo(0, 0);
-        
+
         if (!isAdmin) {{
             fetchWithRetry(counterHitUrl, 3).catch(e => {{}});
         }}
     }}
 
+    function showPrev() {{ renderDetail(currentIndex - 1); }}
+    function showNext() {{ renderDetail(currentIndex + 1); }}
+
     function closeDetail() {{
         document.getElementById('detail-view').style.display = 'none';
-        document.getElementById('detail-view').innerHTML = '';
+        document.getElementById('phone-line').style.display = 'none';
+        document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
-        
+
         const mainTitle = document.getElementById('main-title');
         if (isAdmin) {{
             updateAdminTitle();
         }} else {{
             mainTitle.innerText = 'Rosticcerie';
         }}
-        
-        document.getElementById('main-footer').style.display = 'none';
+
         window.scrollTo(0, 0);
     }}
-    
+
     function handleTitleClick() {{
         if (isAdmin && document.getElementById('grid-view').style.display !== 'none') {{
             if (confirm("Vuoi davvero azzerare il contatore? (Verra' azzerato per tutti i dispositivi)")) {{
@@ -1717,7 +1764,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             }}
         }}
     }}
-    
+
     window.onload = loadCounter;
   </script>
 </head>
@@ -1726,16 +1773,21 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
     <p id="main-updated" class="updated">Aggiornato: {html.escape(updated_at)}</p>
   </header>
-  
+
+  <div id="phone-line"></div>
+
   <main id="grid-view">
     {"".join(cards)}
   </main>
-  
-  <div id="detail-view"></div>
-  
-  <footer id="main-footer" onclick="closeDetail()">
-    <h1>Home</h1>
-  </footer>
+
+  <div id="detail-view">
+    <div id="detail-content" onclick="closeDetail()"></div>
+  </div>
+
+  <div id="nav-bar">
+    <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
+    <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
+  </div>
 </body>
 </html>
 """
@@ -2025,7 +2077,7 @@ def monitor_loop(show: bool = False, publish_to_git: bool = True) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Estrae e pubblica Fantasia, Cibarìa, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela e Santoro.")
+    parser = argparse.ArgumentParser(description="Estrae e pubblica Fantasia, Cibària, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela e Santoro.")
     parser.add_argument("--once", action="store_true", help="Esegue una sola estrazione e poi termina.")
     parser.add_argument("--show", action="store_true", help="Mostra anche le due foto a pieno schermo.")
     parser.add_argument("--no-git", action="store_true", help="Non prova a pubblicare con GitHub/git.")
