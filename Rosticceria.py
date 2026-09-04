@@ -1487,8 +1487,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     for i, p in enumerate(panels_data):
         title = html.escape(p["name"])
         border_color = "#00c853" if p["updated"] else "#ffd641"
+        bg_color = "#e3f8ea" if p["updated"] else "#fff7de"
         cards.append(f"""
-        <button type="button" class="card" style="border-color:{border_color}" onclick="openDetail({i})">
+        <button type="button" class="card" style="border-color:{border_color};background-color:{bg_color}" onclick="openDetail({i})">
             <span>{title}</span>
         </button>
         """)
@@ -1562,7 +1563,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       appearance: none;
       -webkit-appearance: none;
       font: inherit;
-      background: #d9d9d9; /* Grigio chiaro */
+      background: #fff7de; /* Sostituito inline per riga: verde/giallo tenue */
       box-sizing: border-box;
       cursor: pointer;
       min-height: 110px;
@@ -1571,12 +1572,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       justify-content: center;
       text-align: center;
       padding: 12px;
-      border: 4px solid #ffd641; /* Verde se aggiornata oggi, giallo altrimenti */
+      border: 4px solid #ffd641; /* Verde intenso se aggiornata oggi, giallo intenso altrimenti */
       border-radius: 12px;
     }}
     .card span {{
       font-size: clamp(16px, 5vw, 26px);
-      color: #fff; /* Nomi bianchi */
+      color: #111; /* Nomi neri */
       font-weight: bold;
     }}
     .error {{
