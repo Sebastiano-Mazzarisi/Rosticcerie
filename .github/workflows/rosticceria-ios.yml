@@ -71,6 +71,14 @@ jobs:
         if: steps.timecheck.outputs.run == 'true'
         run: python Rosticceria.py --once --no-git
 
+      - name: Assicura icona Home
+        if: steps.timecheck.outputs.run == 'true'
+        run: |
+          if [ ! -f output/rosticceria_ios/apple-touch-icon.png ]; then
+            curl -sL "https://raw.githubusercontent.com/Sebastiano-Mazzarisi/Prog/main/Fantasia/output/rosticceria_ios/apple-touch-icon.png" -o output/rosticceria_ios/apple-touch-icon.png
+            echo "Icona Home scaricata."
+          fi
+
       - name: Commit immagini aggiornate
         if: steps.timecheck.outputs.run == 'true'
         run: |
