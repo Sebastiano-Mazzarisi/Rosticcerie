@@ -771,7 +771,11 @@ def extract_first_facebook_text_menu(page_config: Dict[str, str]) -> Dict[str, s
             page.goto(page_config["url"], wait_until="domcontentloaded", timeout=60000)
 
             try:
-                page.get_by_role("button", name="Consenti tutti i cookie").click(timeout=3000)
+                consent_pattern = re.compile(
+                    r"(Consenti tutti i cookie|Allow all cookies|Accept all|Allow all)",
+                    re.IGNORECASE,
+                )
+                page.get_by_role("button", name=consent_pattern).click(timeout=3000)
             except PlaywrightTimeoutError:
                 pass
             except Exception:
@@ -796,6 +800,19 @@ def extract_first_facebook_text_menu(page_config: Dict[str, str]) -> Dict[str, s
                     }
                 page.mouse.wheel(0, 900)
                 page.wait_for_timeout(2000)
+
+            # Diagnostica: salva screenshot e HTML della pagina cosi' com'e'
+            # apparsa a Playwright, per capire se la sessione anonima riceve
+            # un login wall, un banner cookie bloccante o semplicemente una
+            # pagina senza post.
+            try:
+                debug_name = safe_file_name(page_config["name"])
+                page.screenshot(path=os.path.join(script_dir(), f"error_{debug_name}.png"), full_page=True)
+                with open(os.path.join(script_dir(), f"error_{debug_name}.html"), "w", encoding="utf-8") as debug_file:
+                    debug_file.write(page.content())
+                print(f"Diagnostica salvata: error_{debug_name}.png e error_{debug_name}.html")
+            except Exception as debug_exc:
+                print(f"Errore durante il salvataggio della diagnostica: {debug_exc}")
 
             raise RuntimeError(f"Non ho trovato nessun post testuale del menu nella pagina Facebook: {page_config['url']}")
         finally:
