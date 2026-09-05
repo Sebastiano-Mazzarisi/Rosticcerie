@@ -575,7 +575,14 @@ def normalize_facebook_time(value: str) -> str:
     if inferred:
         return inferred
 
-    return value
+    # Nessun formato riconosciuto: meglio restituire una stringa vuota (che i
+    # chiamanti trattano come "non trovata") piuttosto che l'intero testo in
+    # ingresso invariato. In precedenza, quando "value" era l'intero testo di
+    # un post (perche' non si era trovata nessuna etichetta di tempo), questo
+    # ramo lo restituiva cosi' com'era: il chiamante lo scambiava per una data
+    # valida gia' "normalizzata" e lo salvava in status.json al posto della
+    # data, gonfiandolo inutilmente senza mai mostrare una vera data.
+    return ""
 
 
 def looks_like_facebook_time(value: str) -> bool:
@@ -712,6 +719,48 @@ def find_first_post_image(page) -> Optional[Dict[str, str]]:
     return None
 
 
+ITALIAN_WEEKDAYS = {
+    "lunedi": 0,
+    "martedi": 1,
+    "mercoledi": 2,
+    "giovedi": 3,
+    "venerdi": 4,
+    "sabato": 5,
+    "domenica": 6,
+}
+
+
+def infer_weekday_date_from_text(text: str) -> str:
+    """Cerca un riferimento tipo 'MENU DI SABATO'/'MENU DI VENERDI' nel testo
+    e restituisce la data (DD/MM/YYYY) dell'ultima occorrenza di quel giorno
+    della settimana (oggi compreso). Utile per i "menu del giorno" (es.
+    Bollenti piatti) che non riportano mai una data esplicita ne' un orario
+    di pubblicazione leggibile, solo il nome del giorno."""
+    normalized = (
+        text.lower()
+        .replace("\u00ec", "i")
+        .replace("\u00e8", "e")
+    )
+    match = re.search(
+        r"\bmenu\s+di\s+(lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)\b",
+        normalized,
+    )
+    if not match:
+        return ""
+
+    target_weekday = ITALIAN_WEEKDAYS.get(match.group(1))
+    if target_weekday is None:
+        return ""
+
+    today = rome_now().date()
+    for days_back in range(7):
+        candidate_date = today - datetime.timedelta(days=days_back)
+        if candidate_date.weekday() == target_weekday:
+            return candidate_date.strftime("%d/%m/%Y")
+
+    return ""
+
+
 def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) -> Optional[Dict[str, str]]:
     post_selectors = [
         'div[role="article"]',
@@ -738,11 +787,16 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
 
             published_at = infer_date_from_text(post_text) or infer_date_from_text(raw_text)
             published_at_raw = published_at or best_published_time_from_post(post) or raw_text
-            normalized_published_at = published_at or normalize_facebook_time(published_at_raw) or normalize_facebook_time(raw_text)
-            print(
-                "DEBUG data menu: published_at=" + repr(published_at)
-                + " published_at_raw=" + repr(published_at_raw[:80])
-                + " normalized_published_at=" + repr(normalized_published_at)
+            normalized_published_at = (
+                published_at
+                or normalize_facebook_time(published_at_raw)
+                or normalize_facebook_time(raw_text)
+                # I "menu del giorno" (es. Bollenti piatti) non riportano mai
+                # un orario di pubblicazione leggibile ne' una data esplicita,
+                # solo il nome del giorno (es. "MENU DI SABATO"): in
+                # quel caso risaliamo alla data dell'ultima occorrenza di
+                # quel giorno della settimana (oggi compreso).
+                or infer_weekday_date_from_text(post_text)
             )
             candidate = {
                 "text": post_text,
@@ -1649,11 +1703,8 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                 # nuovo caricamento completo) e non scatta il redirect al
                 # login.
                 try:
-                    url_before_click = photos_page.url
                     anchor.click(timeout=5000)
                     photos_page.wait_for_timeout(2500)
-                    print("DEBUG Michela: url prima del click=" + repr(url_before_click))
-                    print("DEBUG Michela: url dopo il click=" + repr(photos_page.url))
 
                     try:
                         og_image_url = (
@@ -1663,22 +1714,15 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                         )
                     except Exception:
                         og_image_url = ""
-                    print("DEBUG Michela: og_image_url=" + repr(og_image_url))
                     if og_image_url:
                         image_url = og_image_url
                     else:
-                        for debug_attempt in range(6):
+                        for _ in range(6):
                             larger_image_url = find_largest_visible_image_url(photos_page)
-                            print(
-                                "DEBUG Michela: tentativo " + str(debug_attempt)
-                                + " larger_image_url=" + repr(larger_image_url)
-                            )
                             if larger_image_url:
                                 image_url = larger_image_url
                                 break
                             photos_page.wait_for_timeout(1000)
-
-                    print("DEBUG Michela: image_url finale scelto=" + repr(image_url))
 
                     # Data di pubblicazione reale dell'avviso (non la data
                     # odierna): cerchiamo un'etichetta di tempo nel
@@ -1693,7 +1737,6 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                         if raw_time:
                             break
                         photos_page.wait_for_timeout(800)
-                    print("DEBUG Michela: raw_time=" + repr(raw_time))
                     if raw_time:
                         published_at_raw = raw_time
                         published_at = normalize_facebook_time(raw_time)
@@ -1705,8 +1748,8 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                         photos_page.wait_for_timeout(500)
                     except Exception:
                         pass
-                except Exception as click_exc:
-                    print("DEBUG Michela: eccezione nel blocco click: " + repr(click_exc))
+                except Exception:
+                    pass
 
             if not image_url:
                 continue
