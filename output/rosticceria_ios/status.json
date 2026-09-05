@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-09-04T22:03:53",
+  "updated_at": "2026-09-05T06:24:31",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 04/09/26",
-      "published_at": "04/09/2026 11:02 circa",
-      "published_at_raw": "13h",
+      "published_at": "04/09/2026 10:22 circa",
+      "published_at_raw": "22h",
       "error": null
     },
     {
@@ -37,16 +37,16 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 4 Settembre",
-      "published_at": "04/09/2026 11:03 circa",
-      "published_at_raw": "13h",
+      "published_at": "04/09/2026 10:23 circa",
+      "published_at_raw": "22h",
       "error": null
     },
     {
       "name": "Pane&Co",
       "image": "Pane_Co.jpg",
-      "text": "Menu 4 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette tricolore all'amatriciana - €6.50\n- Tagliolino con fagiolini, pomodoro fresco e cacio affumicato - €8.50\n- Orecchiette con ciliegino, rucola e salsiccia - €8.50\n- Risotto con gamberetti, patate e zafferano - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Trancio di pesce spada alla pizzaiola - €8.50\n  Con pomodorini, origano e olive\n- Spezzatino di capocollo con funghi misti - €7.50",
-      "published_at": "04/09/2026",
-      "published_at_raw": "4 Settembre",
+      "text": "Menu 5 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette tricolore all'amatriciana - €6.50\n- Tagliolino con fagiolini, pomodoro fresco e cacio affumicato - €8.50\n- Orecchiette con ciliegino, rucola e salsiccia - €8.50\n- Risotto con gamberetti, patate e zafferano - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Trancio di pesce spada alla pizzaiola - €8.50\n  Con pomodorini, origano e olive\n- Spezzatino di capocollo con funghi misti - €7.50",
+      "published_at": "05/09/2026",
+      "published_at_raw": "5 Settembre",
       "error": null
     },
     {
