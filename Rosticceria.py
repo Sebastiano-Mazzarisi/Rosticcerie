@@ -162,6 +162,13 @@ def clean_post_text(text: str) -> str:
         "Tutti",
         "Piu pertinenti",
         "Più pertinenti",
+        "Like",
+        "Comment",
+        "Share",
+        "Send",
+        "All",
+        "Most relevant",
+        "Reply",
     }
 
     for raw_line in text.splitlines():
@@ -625,6 +632,10 @@ def find_first_post_image(page) -> Optional[Dict[str, str]]:
             if best_image and best_score:
                 image_url = best_image.get_attribute("src")
                 if image_url:
+                    try:
+                        image_alt = (best_image.get_attribute("alt") or "").strip()
+                    except Exception:
+                        image_alt = ""
                     post_text = best_text_from_post(post)
                     try:
                         full_post_text = clean_post_text(post.inner_text(timeout=3000))
@@ -645,6 +656,7 @@ def find_first_post_image(page) -> Optional[Dict[str, str]]:
                         "image_url": image_url,
                         "photo_url": photo_url,
                         "text": post_text,
+                        "image_alt": image_alt,
                         "published_at": published_at,
                         "published_at_raw": published_at_raw,
                     }
@@ -1300,7 +1312,9 @@ def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = image.size
     bar_height = max(48, height // 14)
-    canvas = Image.new("RGB", (width, height + bar_height), (255, 255, 255))
+    # Stesso giallo usato nelle card di Pane&Co (255, 214, 65), cosi' la
+    # fascia con la data ha lo stesso stile in tutte le rosticcerie.
+    canvas = Image.new("RGB", (width, height + bar_height), (255, 214, 65))
     canvas.paste(image, (0, 0))
     draw = ImageDraw.Draw(canvas)
     font = _load_bold_font(int(bar_height * 0.45))
@@ -1308,7 +1322,7 @@ def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
     text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
     x = (width - text_w) / 2 - bbox[0]
     y = height + (bar_height - text_h) / 2 - bbox[1]
-    draw.text((x, y), date_text, fill=(60, 60, 60), font=font)
+    draw.text((x, y), date_text, fill=(16, 16, 16), font=font)
     output = io.BytesIO()
     canvas.save(output, format="JPEG", quality=92)
     return output.getvalue()
@@ -1384,6 +1398,45 @@ def _widest_dark_column_run(image: Image.Image) -> Optional[Tuple[int, int]]:
     if best_start is None:
         return None
     return best_start, best_end
+
+
+CLOSURE_NOTICE_PATTERN = re.compile(
+    r"\bchius[oi]\b|\bchiusura\b|\briapr\w*\b|\bferie\b|\bresteremo\s+chius\w*\b"
+    r"|\bsaremo\s+chius\w*\b",
+    re.IGNORECASE,
+)
+
+
+def looks_like_closure_notice(text: str) -> bool:
+    """Riconosce un post/cartello che avvisa di una chiusura per ferie o
+    simili (es. "chiusi da venerdì a lunedì", "riapriamo martedì"), cosi'
+    da poter evitare di trattarlo come una normale lavagna del menu del
+    giorno."""
+    return bool(CLOSURE_NOTICE_PATTERN.search(text or ""))
+
+
+def clean_facebook_alt_text(alt: str) -> str:
+    """Ripulisce il testo alternativo generato automaticamente da Facebook
+    per un'immagine, estraendo la frase citata quando presente (es.
+    "L'immagine può contenere: testo che dice 'AVVISIAMO...'") e scartando
+    le descrizioni generiche prive di informazioni utili."""
+    alt = (alt or "").strip()
+    if not alt:
+        return ""
+    match = re.search(
+        r"(?:testo che dice|text that says)\s*[:\s]*[\"'“](.+?)[\"'”]",
+        alt,
+        re.IGNORECASE,
+    )
+    if match:
+        return match.group(1).strip()
+    if re.search(
+        r"nessuna descrizione|may be an image|image may contain|no photo description",
+        alt,
+        re.IGNORECASE,
+    ):
+        return ""
+    return alt
 
 
 def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
@@ -2225,7 +2278,18 @@ def extract_pages() -> List[Dict]:
             if name == "Fantasia":
                 image_bytes = crop_fantasia_chalkboard(image_bytes)
             elif name == "Le delizie di Michela":
-                image_bytes = crop_michela_chalkboard(image_bytes)
+                closure_signal = f"{post.get('text', '')} {post.get('image_alt', '')}"
+                if looks_like_closure_notice(closure_signal):
+                    print(
+                        f"{name}: rilevato avviso di chiusura/ferie, mantengo la foto "
+                        "intera (niente ritaglio lavagna)."
+                    )
+                    if not clean_post_text(post.get("text", "")):
+                        alt_text = clean_facebook_alt_text(post.get("image_alt", ""))
+                        if alt_text:
+                            post["text"] = alt_text
+                else:
+                    image_bytes = crop_michela_chalkboard(image_bytes)
             elif name == "Santoro (Castellana)":
                 image_bytes = add_white_border(image_bytes, border=10)
 
