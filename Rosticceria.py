@@ -720,7 +720,7 @@ def find_first_post_image(page) -> Optional[Dict[str, str]]:
     return None
 
 
-ITALIAN_WEEKDAYS = {
+WEEKDAY_INDEX_BY_NAME = {
     "lunedi": 0,
     "martedi": 1,
     "mercoledi": 2,
@@ -752,7 +752,7 @@ def infer_weekday_date_from_text(text: str) -> str:
     if not match:
         return ""
 
-    target_weekday = ITALIAN_WEEKDAYS.get(match.group(1))
+    target_weekday = WEEKDAY_INDEX_BY_NAME.get(match.group(1))
     if target_weekday is None:
         return ""
 
@@ -2099,7 +2099,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         border_color = "#00c853" if p["updated"] else "#ffd641"
         bg_color = "#e3f8ea" if p["updated"] else "#fff7de"
         cards.append(f"""
-        <button type="button" class="card" style="border-color:{border_color};background-color:{bg_color}" onclick="openDetail({i})">
+        <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
             <span class="card-name">{title}</span>
             <span class="card-counter" id="card-counter-{i}"></span>
         </button>
@@ -2150,6 +2150,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       color: #ccc;
       font-size: 14px;
     }}
+    .signature {{
+      margin: 2px 0 0;
+      color: #fff;
+      font-size: 14px;
+    }}
     /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
     #phone-line {{
       display: none;
@@ -2186,6 +2191,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       padding: 12px;
       border: 4px solid #ffd641; /* Verde intenso se aggiornata oggi, giallo intenso altrimenti */
       border-radius: 12px;
+      /* Evita che una pressione prolungata (usata per riordinare le
+         caselle) selezioni il testo o apra il menu contestuale del
+         browser/telefono. */
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }}
     .card .card-name {{
       font-size: clamp(16px, 5vw, 26px);
@@ -2200,6 +2212,42 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 11px;
       font-weight: normal;
       color: #555;
+    }}
+    /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
+       tenendo premuta una casella, tutte "tremano" leggermente e quella
+       tenuta premuta lampeggia con la cornice; trascinandola sopra
+       un'altra le due si scambiano di posto. L'ordine scelto viene
+       salvato sul dispositivo (localStorage), non e' condiviso tra
+       dispositivi diversi. */
+    @keyframes cardJiggle {{
+      0%, 100% {{ transform: rotate(-1deg); }}
+      50% {{ transform: rotate(1deg); }}
+    }}
+    @keyframes cardBlink {{
+      0%, 100% {{ box-shadow: 0 0 0 0 rgba(0,123,255,0); }}
+      50% {{ box-shadow: 0 0 0 6px rgba(0,123,255,0.65); }}
+    }}
+    .card.jiggling {{
+      animation: cardJiggle 0.24s ease-in-out infinite;
+    }}
+    .card.dragging {{
+      animation: cardBlink 0.6s ease-in-out infinite;
+      cursor: grabbing;
+      z-index: 10;
+    }}
+    #reorder-done-btn {{
+      display: none;
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
     }}
     .error {{
       color: #ffd0d0;
@@ -2263,6 +2311,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       line-height: 1;
       padding: 6px 24px;
       cursor: pointer;
+    }}
+    #nav-position {{
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
     }}
   </style>
   <script>
@@ -2436,13 +2489,233 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
     }}
 
+    // --- Riordino personalizzato delle caselle iniziali (tenere premuto
+    // per "tremare" + trascinare per scambiare posto, come su iOS/Android).
+    // L'ordine e' salvato in localStorage: e' quindi personale per ogni
+    // dispositivo/browser, non condiviso tra dispositivi diversi ne'
+    // pubblicato sul sito.
+    const ORDER_STORAGE_KEY = 'rosticcerie-order-v1';
+    let order = PANELS.map((_, i) => i);
+    let reorderMode = false;
+    let dragState = null;
+    const LONG_PRESS_MS = 450;
+    const MOVE_CANCEL_PX = 10;
+
+    function loadSavedOrder() {{
+        try {{
+            const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+            if (!raw) return;
+            const savedNames = JSON.parse(raw);
+            if (!Array.isArray(savedNames)) return;
+            const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+            const restored = [];
+            const seen = new Set();
+            savedNames.forEach(name => {{
+                if (nameToIndex.has(name) && !seen.has(name)) {{
+                    restored.push(nameToIndex.get(name));
+                    seen.add(name);
+                }}
+            }});
+            // Eventuali rosticcerie nuove non presenti nell'ordine salvato
+            // vengono aggiunte in coda, nell'ordine con cui arrivano dal server.
+            PANELS.forEach((p, i) => {{
+                if (!seen.has(p.name)) {{
+                    restored.push(i);
+                    seen.add(p.name);
+                }}
+            }});
+            if (restored.length === PANELS.length) {{
+                order = restored;
+            }}
+        }} catch (e) {{
+            console.error('Ordine personalizzato non leggibile, uso quello di default', e);
+        }}
+    }}
+
+    function saveOrder() {{
+        try {{
+            localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order.map(i => PANELS[i].name)));
+        }} catch (e) {{
+            console.error("Impossibile salvare l'ordine personalizzato", e);
+        }}
+    }}
+
+    function applyOrderToGrid() {{
+        const grid = document.getElementById('grid-view');
+        order.forEach(pid => {{
+            const el = grid.querySelector('.card[data-pid="' + pid + '"]');
+            if (el) grid.appendChild(el);
+        }});
+    }}
+
+    function cardClicked(pid) {{
+        // Mentre si sta riordinando (casella tenuta premuta/trascinata)
+        // il tocco non deve aprire il dettaglio del menu.
+        if (reorderMode) return;
+        openDetail(order.indexOf(pid));
+    }}
+
+    function syncOrderFromDom() {{
+        const grid = document.getElementById('grid-view');
+        order = Array.from(grid.querySelectorAll('.card')).map(c => parseInt(c.dataset.pid, 10));
+    }}
+
+    function showDoneButton() {{
+        document.getElementById('reorder-done-btn').style.display = 'inline-block';
+    }}
+
+    function exitReorderMode() {{
+        reorderMode = false;
+        document.getElementById('grid-view').querySelectorAll('.card').forEach(c => {{
+            c.classList.remove('jiggling', 'dragging');
+        }});
+        document.getElementById('reorder-done-btn').style.display = 'none';
+        saveOrder();
+    }}
+
+    function startDrag(el, e) {{
+        reorderMode = true;
+        dragState = {{
+            el,
+            startX: e.clientX,
+            startY: e.clientY,
+        }};
+        el.classList.add('dragging');
+        el.style.touchAction = 'none';
+        document.getElementById('grid-view').querySelectorAll('.card').forEach(c => {{
+            if (c !== el) c.classList.add('jiggling');
+        }});
+        showDoneButton();
+        if (navigator.vibrate) {{
+            try {{ navigator.vibrate(15); }} catch (err) {{}}
+        }}
+    }}
+
+    function updateDrag(e) {{
+        if (!dragState) return;
+        e.preventDefault();
+        const dx = e.clientX - dragState.startX;
+        const dy = e.clientY - dragState.startY;
+        dragState.el.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.06)';
+
+        const grid = document.getElementById('grid-view');
+        const cards = Array.from(grid.querySelectorAll('.card'));
+        let target = null;
+        for (const c of cards) {{
+            if (c === dragState.el) continue;
+            const r = c.getBoundingClientRect();
+            if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {{
+                target = c;
+                break;
+            }}
+        }}
+        if (target) {{
+            // Decidiamo se inserire il trascinato prima o dopo il bersaglio
+            // guardando la posizione del PUNTATORE rispetto al centro del
+            // bersaglio (non il rettangolo dell'elemento trascinato, che a
+            // causa del transform non riflette piu' la sua posizione nel
+            // flusso della griglia).
+            const targetRect = target.getBoundingClientRect();
+            const centerX = targetRect.left + targetRect.width / 2;
+            const centerY = targetRect.top + targetRect.height / 2;
+            const before = (e.clientY < centerY - 2) ||
+                (Math.abs(e.clientY - centerY) <= 2 && e.clientX < centerX);
+            if (before) {{
+                grid.insertBefore(dragState.el, target);
+            }} else {{
+                grid.insertBefore(dragState.el, target.nextSibling);
+            }}
+            syncOrderFromDom();
+        }}
+    }}
+
+    function endDrag() {{
+        if (!dragState) return;
+        dragState.el.classList.remove('dragging');
+        dragState.el.style.transform = '';
+        dragState.el.style.touchAction = '';
+        dragState.el.classList.add('jiggling');
+        dragState = null;
+        syncOrderFromDom();
+        saveOrder();
+    }}
+
+    // Stato della "pressione" in corso (prima che diventi un trascinamento
+    // vero e proprio). E' condiviso (non per-casella) perche' puo' esserci
+    // al piu' una pressione/trascinamento attivo alla volta.
+    let pressTimer = null;
+    let pressStartX = 0;
+    let pressStartY = 0;
+    let pressMoved = false;
+
+    // Ascoltiamo pointermove/pointerup sulla finestra (non sulla singola
+    // casella): una volta avviato il trascinamento, la casella viene
+    // spostata nel DOM (insertBefore) per farle cambiare posizione nella
+    // griglia, e questo interrompe la pointer capture sull'elemento —
+    // senza un listener globale, gli eventi successivi al primo scambio
+    // andrebbero persi e il trascinamento si bloccherebbe dopo il primo
+    // spostamento.
+    function onWindowPointerMove(e) {{
+        if (dragState) {{
+            updateDrag(e);
+            return;
+        }}
+        const dx = e.clientX - pressStartX;
+        const dy = e.clientY - pressStartY;
+        if (Math.hypot(dx, dy) > MOVE_CANCEL_PX) {{
+            pressMoved = true;
+            clearTimeout(pressTimer);
+        }}
+    }}
+
+    function onWindowPointerUp() {{
+        clearTimeout(pressTimer);
+        if (dragState) {{
+            endDrag();
+        }}
+        window.removeEventListener('pointermove', onWindowPointerMove);
+        window.removeEventListener('pointerup', onWindowPointerUp);
+        window.removeEventListener('pointercancel', onWindowPointerUp);
+    }}
+
+    function attachDragHandlers() {{
+        const grid = document.getElementById('grid-view');
+        grid.querySelectorAll('.card').forEach(el => {{
+            el.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            el.addEventListener('pointerdown', (e) => {{
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                pressStartX = e.clientX;
+                pressStartY = e.clientY;
+                pressMoved = false;
+                clearTimeout(pressTimer);
+                pressTimer = setTimeout(() => {{
+                    if (!pressMoved) {{
+                        startDrag(el, e);
+                    }}
+                }}, LONG_PRESS_MS);
+                window.addEventListener('pointermove', onWindowPointerMove);
+                window.addEventListener('pointerup', onWindowPointerUp);
+                window.addEventListener('pointercancel', onWindowPointerUp);
+            }});
+        }});
+    }}
+
+    function initReorder() {{
+        loadSavedOrder();
+        applyOrderToGrid();
+        attachDragHandlers();
+    }}
+
     function renderDetail(i) {{
-        const n = PANELS.length;
+        const n = order.length;
         currentIndex = ((i % n) + n) % n;
-        const p = PANELS[currentIndex];
+        const p = PANELS[order[currentIndex]];
 
         document.getElementById('main-title').innerText = p.name;
         document.getElementById('main-updated').style.display = 'none';
+        document.getElementById('main-signature').style.display = 'none';
+        document.getElementById('nav-position').innerText = (currentIndex + 1) + '/' + n;
 
         const phoneLine = document.getElementById('phone-line');
         if (p.phone_tel) {{
@@ -2470,7 +2743,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         window.scrollTo(0, 0);
 
         if (!isAdmin) {{
-            const p = PANELS[currentIndex];
+            const p = PANELS[order[currentIndex]];
             fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {{}});
         }}
     }}
@@ -2484,6 +2757,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
         document.getElementById('main-updated').style.display = '';
+        document.getElementById('main-signature').style.display = '';
 
         const mainTitle = document.getElementById('main-title');
         if (isAdmin) {{
@@ -2498,7 +2772,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function handleTitleClick() {{
         const inDetail = document.getElementById('grid-view').style.display === 'none';
         if (inDetail) {{
-            const p = PANELS[currentIndex];
+            const p = PANELS[order[currentIndex]];
             if (p && p.url) {{
                 window.open(p.url, '_blank', 'noopener');
             }}
@@ -2512,13 +2786,16 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     window.onload = loadCounter;
+    document.addEventListener('DOMContentLoaded', initReorder);
   </script>
 </head>
 <body>
   <header id="main-header">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
+    <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
     <div id="phone-line"></div>
     <p id="main-updated" class="updated">{html.escape(today_label)}</p>
+    <p id="main-signature" class="signature">by Mazzarisi</p>
   </header>
 
   <main id="grid-view">
@@ -2531,6 +2808,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <div id="nav-bar">
     <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
+    <span id="nav-position"></span>
     <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
   </div>
 </body>
