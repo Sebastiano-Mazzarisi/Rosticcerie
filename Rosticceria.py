@@ -169,6 +169,7 @@ def clean_post_text(text: str) -> str:
         "All",
         "Most relevant",
         "Reply",
+        "All reactions:",
     }
 
     for raw_line in text.splitlines():
@@ -187,6 +188,7 @@ def clean_post_text(text: str) -> str:
             or lower_line.startswith("impastamò")
             or lower_line.startswith("le delizie di michela")
             or lower_line.startswith("santoro")
+            or lower_line.startswith("all reactions")
         ):
             continue
         lines.append(line)
@@ -1566,15 +1568,49 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
             except Exception:
                 image_url = ""
 
+            published_at = ""
+            published_at_raw = ""
+
             if href:
                 try:
                     detail_page = context.new_page()
                     try:
                         detail_page.goto(href, wait_until="domcontentloaded", timeout=60000)
                         detail_page.wait_for_timeout(3000)
-                        larger_image_url = find_largest_visible_image_url(detail_page)
-                        if larger_image_url:
-                            image_url = larger_image_url
+
+                        # Immagine a piena risoluzione: il meta tag "og:image"
+                        # di Facebook la riporta sempre, anche senza login e
+                        # indipendentemente dal rendering della pagina - a
+                        # differenza della ricerca visuale qui sotto, che in
+                        # ambiente headless/anonimo puo' non trovare nulla e
+                        # farci ripiegare sulla piccola miniatura ritagliata
+                        # della griglia "Foto".
+                        try:
+                            og_image_url = (
+                                detail_page.locator('meta[property="og:image"]')
+                                .first.get_attribute("content", timeout=3000)
+                                or ""
+                            )
+                        except Exception:
+                            og_image_url = ""
+                        if og_image_url:
+                            image_url = og_image_url
+                        else:
+                            larger_image_url = find_largest_visible_image_url(detail_page)
+                            if larger_image_url:
+                                image_url = larger_image_url
+
+                        # Data di pubblicazione reale dell'avviso (non la data
+                        # odierna): cerchiamo un'etichetta di tempo nella
+                        # pagina della foto, come gia' si fa per i post di
+                        # testo normali.
+                        try:
+                            raw_time = best_published_time_from_post(detail_page.locator("body"))
+                        except Exception:
+                            raw_time = ""
+                        if raw_time:
+                            published_at_raw = raw_time
+                            published_at = normalize_facebook_time(raw_time)
                     finally:
                         detail_page.close()
                 except Exception:
@@ -1583,14 +1619,18 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
             if not image_url:
                 continue
 
+            if not published_at:
+                # Ultima risorsa, solo se non troviamo alcuna data reale.
+                published_at = rome_now().strftime("%d/%m/%Y circa")
+
             caption = clean_facebook_alt_text(alt_text) or alt_text
             return {
                 "image_url": image_url,
                 "photo_url": href,
                 "text": caption,
                 "image_alt": alt_text,
-                "published_at": rome_now().strftime("%d/%m/%Y"),
-                "published_at_raw": "",
+                "published_at": published_at,
+                "published_at_raw": published_at_raw,
             }
     except Exception:
         pass
