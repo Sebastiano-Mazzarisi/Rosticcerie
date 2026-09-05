@@ -671,6 +671,7 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
     ]
 
     fallback_post = None
+    truncated_fallback_post = None
     for selector in post_selectors:
         posts = page.locator(selector).all()
         for post in posts[:20]:
@@ -686,8 +687,6 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
             post_text = full_text
             if not post_text:
                 continue
-            if truncated:
-                continue
 
             published_at = infer_date_from_text(post_text) or infer_date_from_text(raw_text)
             published_at_raw = published_at or best_published_time_from_post(post) or raw_text
@@ -697,6 +696,14 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
                 "published_at": normalized_published_at,
                 "published_at_raw": published_at_raw,
             }
+
+            if truncated:
+                # Non siamo riusciti a espandere "Altro" (tipico senza un
+                # login valido): meglio un menu incompleto che nessun menu,
+                # ma solo come ultima riserva se non troviamo di meglio.
+                if truncated_fallback_post is None and len(post_text) > 20:
+                    truncated_fallback_post = candidate
+                continue
 
             lower_text = post_text.lower()
             has_required_terms = all(term.lower() in lower_text for term in (required_terms or []))
@@ -709,7 +716,7 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
         if fallback_post:
             return fallback_post
 
-    return None
+    return fallback_post or truncated_fallback_post
 
 
 def find_largest_visible_image_url(page) -> str:
@@ -732,7 +739,7 @@ def cookies_look_authenticated(cookies: List[Dict]) -> bool:
     return bool(names & FACEBOOK_LOGIN_COOKIE_NAMES)
 
 
-def extract_first_facebook_image(facebook_url: str) -> Dict[str, str]:
+def extract_first_facebook_image(facebook_url: str, prefer_active_closure: bool = False) -> Dict[str, str]:
     cookie_path = os.path.join(script_dir(), COOKIE_FILE)
 
     with sync_playwright() as playwright:
@@ -765,6 +772,14 @@ def extract_first_facebook_image(facebook_url: str) -> Dict[str, str]:
                 pass
             except Exception:
                 pass
+
+            if prefer_active_closure:
+                try:
+                    closure_post = find_active_closure_post_via_photos(context, facebook_url)
+                except Exception:
+                    closure_post = None
+                if closure_post:
+                    return closure_post
 
             page.wait_for_timeout(5000)
             for _ in range(4):
@@ -1317,6 +1332,12 @@ def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
     canvas = Image.new("RGB", (width, height + bar_height), (255, 214, 65))
     canvas.paste(image, (0, 0))
     draw = ImageDraw.Draw(canvas)
+    # Cornice grigia attorno alla fascia gialla, per staccarla dalla foto.
+    draw.rectangle(
+        (0, height, width - 1, height + bar_height - 1),
+        outline=(120, 120, 120),
+        width=3,
+    )
     font = _load_bold_font(int(bar_height * 0.45))
     bbox = draw.textbbox((0, 0), date_text, font=font)
     text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
@@ -1424,7 +1445,8 @@ def clean_facebook_alt_text(alt: str) -> str:
     if not alt:
         return ""
     match = re.search(
-        r"(?:testo che dice|text that says)\s*[:\s]*[\"'“](.+?)[\"'”]",
+        r"(?:testo che dice|text that says|raffigurante il seguente testo)"
+        r"\s*[:\s]*[\"'“](.+?)[\"'”]",
         alt,
         re.IGNORECASE,
     )
@@ -1437,6 +1459,139 @@ def clean_facebook_alt_text(alt: str) -> str:
     ):
         return ""
     return alt
+
+
+def parse_closure_date_range(text: str, reference_date: datetime.date):
+    """Cerca nel testo un intervallo del tipo "da venerdi' 4 (settembre) a
+    lunedi' 7 settembre" e restituisce (data_inizio, data_fine), usando
+    l'anno della data di riferimento. Restituisce None se non trova un
+    intervallo valido o riconoscibile."""
+    if not text:
+        return None
+    lower = text.lower()
+    month_pattern = "|".join(ITALIAN_MONTHS.keys())
+    match = re.search(
+        rf"da\s+(?:\w+\s+)?(\d{{1,2}})(?:\s+({month_pattern}))?\s+a\s+"
+        rf"(?:\w+\s+)?(\d{{1,2}})\s+({month_pattern})",
+        lower,
+    )
+    if not match:
+        return None
+
+    start_day = int(match.group(1))
+    start_month_name = match.group(2)
+    end_day = int(match.group(3))
+    end_month_name = match.group(4)
+    end_month = ITALIAN_MONTHS.get(end_month_name)
+    start_month = ITALIAN_MONTHS.get(start_month_name) if start_month_name else end_month
+    if not start_month or not end_month:
+        return None
+
+    year = reference_date.year
+    try:
+        start_date = datetime.date(year, start_month, start_day)
+        end_date = datetime.date(year, end_month, end_day)
+    except ValueError:
+        return None
+    if end_date < start_date:
+        # L'intervallo attraversa il cambio di anno (es. dicembre -> gennaio).
+        end_date = datetime.date(year + 1, end_month, end_day)
+    return start_date, end_date
+
+
+def build_photos_tab_url(facebook_url: str) -> str:
+    """Costruisce l'URL della scheda "Foto" di una pagina Facebook."""
+    if "sk=photos" in facebook_url:
+        return facebook_url
+    separator = "&" if "?" in facebook_url else "?"
+    return f"{facebook_url}{separator}sk=photos"
+
+
+def find_active_closure_post_via_photos(context, facebook_url: str):
+    """Scandisce la scheda "Foto" della pagina (consultabile anche senza
+    login, a differenza del feed principale) alla ricerca di un avviso di
+    chiusura per ferie ancora valido oggi, anche se nel frattempo e' stato
+    pubblicato un post piu' recente (es. il menu del giorno di un giorno
+    prima dell'inizio della chiusura). Si basa sul testo alternativo che
+    Facebook genera automaticamente per ogni foto, che include spesso il
+    testo scritto su un cartello fotografato. Restituisce None se non trova
+    nulla di pertinente, cosi' che il chiamante possa proseguire con
+    l'estrazione normale."""
+    today = rome_now().date()
+    try:
+        photos_page = context.new_page()
+    except Exception:
+        return None
+
+    try:
+        photos_page.goto(build_photos_tab_url(facebook_url), wait_until="domcontentloaded", timeout=60000)
+        photos_page.wait_for_timeout(3500)
+        try:
+            photos_page.get_by_role("button", name="Consenti tutti i cookie").click(timeout=3000)
+        except Exception:
+            pass
+
+        try:
+            anchors = photos_page.locator('a[href*="/photo"]').all()
+        except Exception:
+            anchors = []
+
+        for anchor in anchors[:15]:
+            try:
+                image = anchor.locator("img").first
+                alt_text = (image.get_attribute("alt") or "").strip()
+            except Exception:
+                continue
+            if not alt_text or not looks_like_closure_notice(alt_text):
+                continue
+            date_range = parse_closure_date_range(alt_text, today)
+            if not date_range or not (date_range[0] <= today <= date_range[1]):
+                continue
+
+            try:
+                href = anchor.get_attribute("href") or ""
+            except Exception:
+                href = ""
+            try:
+                image_url = image.get_attribute("src") or ""
+            except Exception:
+                image_url = ""
+
+            if href:
+                try:
+                    detail_page = context.new_page()
+                    try:
+                        detail_page.goto(href, wait_until="domcontentloaded", timeout=60000)
+                        detail_page.wait_for_timeout(3000)
+                        larger_image_url = find_largest_visible_image_url(detail_page)
+                        if larger_image_url:
+                            image_url = larger_image_url
+                    finally:
+                        detail_page.close()
+                except Exception:
+                    pass
+
+            if not image_url:
+                continue
+
+            caption = clean_facebook_alt_text(alt_text) or alt_text
+            return {
+                "image_url": image_url,
+                "photo_url": href,
+                "text": caption,
+                "image_alt": alt_text,
+                "published_at": rome_now().strftime("%d/%m/%Y"),
+                "published_at_raw": "",
+            }
+    except Exception:
+        pass
+    finally:
+        try:
+            photos_page.close()
+        except Exception:
+            pass
+
+    return None
 
 
 def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
@@ -2272,7 +2427,10 @@ def extract_pages() -> List[Dict]:
 
         print(f"Cerco la prima immagine su Facebook: {name}...")
         try:
-            post = extract_first_facebook_image(facebook_page["url"])
+            post = extract_first_facebook_image(
+                facebook_page["url"],
+                prefer_active_closure=(name == "Le delizie di Michela"),
+            )
             image_bytes = download_image(post["image_url"])
             
             if name == "Fantasia":
