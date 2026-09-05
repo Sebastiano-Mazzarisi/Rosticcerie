@@ -10,7 +10,7 @@ on:
       - 'Rosticceria.py'
       - 'requirements.txt'
   schedule:
-    - cron: '*/5 9-12 * * *'
+    - cron: '*/5 7-11 * * *'
       timezone: "Europe/Rome"
   workflow_dispatch:
 
