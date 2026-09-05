@@ -1707,7 +1707,20 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                 # nuovo caricamento completo) e non scatta il redirect al
                 # login.
                 try:
-                    anchor.click(timeout=5000)
+                    clicked = False
+                    for _ in range(2):
+                        try:
+                            anchor.click(timeout=5000)
+                            clicked = True
+                            break
+                        except Exception:
+                            photos_page.wait_for_timeout(500)
+                    if not clicked:
+                        # Non siamo riusciti ad aprire il visualizzatore: teniamo
+                        # l'URL della miniatura gia' raccolto (verra' comunque
+                        # scartato piu' sotto se troppo piccolo) invece di
+                        # rinunciare subito a questa foto.
+                        raise RuntimeError("click sulla foto non riuscito")
                     photos_page.wait_for_timeout(2500)
 
                     try:
@@ -1758,9 +1771,40 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
             if not image_url:
                 continue
 
+            # Sicurezza: nonostante il tentativo sopra di aprire la foto in
+            # grande, a volte resta comunque l'URL di una piccola miniatura
+            # (es. l'anteprima nella griglia "Foto"), che una volta
+            # scaricata risulta visibilmente ritagliata ai lati (il testo
+            # del cartello viene tagliato a meta' parola). Scartiamo quindi
+            # le immagini troppo piccole per essere la foto intera e
+            # proviamo con la prossima nella griglia, invece di pubblicare
+            # un avviso illeggibile.
+            try:
+                probe_bytes = download_image(image_url)
+                probe_image = Image.open(io.BytesIO(probe_bytes))
+                if min(probe_image.size) < 380:
+                    print(
+                        "Le delizie di Michela: immagine avviso troppo piccola "
+                        f"({probe_image.size[0]}x{probe_image.size[1]}), probabile "
+                        "miniatura ritagliata: la scarto e provo la prossima foto."
+                    )
+                    continue
+            except Exception:
+                pass
+
             if not published_at:
-                # Ultima risorsa, solo se non troviamo alcuna data reale.
-                published_at = rome_now().strftime("%d/%m/%Y circa")
+                # Ultima risorsa, se non troviamo la data reale di
+                # pubblicazione dell'avviso: usiamo il giorno prima
+                # dell'inizio della chiusura (l'ultimo giorno di apertura)
+                # invece della data odierna. Con la chiusura gia' in corso,
+                # mostrare "oggi" nella fascia sotto la foto farebbe
+                # sembrare quella la data del menu, quando in realta' il
+                # locale e' chiuso da giorni.
+                if date_range:
+                    fallback_date = date_range[0] - datetime.timedelta(days=1)
+                    published_at = fallback_date.strftime("%d/%m/%Y circa")
+                else:
+                    published_at = rome_now().strftime("%d/%m/%Y circa")
 
             caption = clean_facebook_alt_text(alt_text) or alt_text
             return {
@@ -2575,10 +2619,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     function startDrag(el, e) {{
         reorderMode = true;
+        // Punto in cui l'utente ha "afferrato" la casella, relativo al suo
+        // angolo in alto a sinistra (prima di applicare qualunque
+        // transform): serve per calcolare ad ogni spostamento la nuova
+        // posizione senza accumulare l'offset dalla pressione iniziale.
+        const startRect = el.getBoundingClientRect();
         dragState = {{
             el,
-            startX: e.clientX,
-            startY: e.clientY,
+            grabOffsetX: e.clientX - startRect.left,
+            grabOffsetY: e.clientY - startRect.top,
         }};
         el.classList.add('dragging');
         el.style.touchAction = 'none';
@@ -2594,9 +2643,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function updateDrag(e) {{
         if (!dragState) return;
         e.preventDefault();
-        const dx = e.clientX - dragState.startX;
-        const dy = e.clientY - dragState.startY;
-        dragState.el.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.06)';
 
         const grid = document.getElementById('grid-view');
         const cards = Array.from(grid.querySelectorAll('.card'));
@@ -2627,6 +2673,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             }}
             syncOrderFromDom();
         }}
+
+        // Ricalcoliamo SEMPRE la posizione statica (senza transform) della
+        // casella trascinata, per poi spostarla di conseguenza dal
+        // puntatore: se invece si accumula lo scostamento dalla pressione
+        // iniziale (come in precedenza), dopo un primo scambio la casella
+        // si ritrova in una cella diversa da quella di partenza e il
+        // trascinamento "salta" lontano dal dito/puntatore.
+        dragState.el.style.transform = '';
+        const staticRect = dragState.el.getBoundingClientRect();
+        const dx = e.clientX - dragState.grabOffsetX - staticRect.left;
+        const dy = e.clientY - dragState.grabOffsetY - staticRect.top;
+        dragState.el.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.06)';
     }}
 
     function endDrag() {{
