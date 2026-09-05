@@ -196,11 +196,25 @@ def clean_post_text(text: str) -> str:
     return "\n".join(lines).strip()
 
 
+_INVISIBLE_CHARS_RE = re.compile(
+    "[\u200b\u200c\u200d\u200e\u200f\u202a\u202b\u202c\u202d\u202e"
+    "\u2066\u2067\u2068\u2069\ufeff\u00a0]"
+)
+
+
 def clean_text_menu_post(text: str) -> str:
     cleaned_lines = []
 
     for raw_line in clean_post_text(text).splitlines():
         line = raw_line.strip()
+        if not line:
+            continue
+        # Facebook a volte inserisce caratteri invisibili (marcatori di
+        # direzione del testo, spazi unificatori, ecc.) attorno a numeri o
+        # icone dei contatori: li rimuoviamo prima di valutare la
+        # lunghezza "visibile" della riga, altrimenti righe di un solo
+        # carattere visibile sfuggirebbero al controllo sotto.
+        line = _INVISIBLE_CHARS_RE.sub("", line).strip()
         if not line:
             continue
         if re.fullmatch(r"\d+\s*(?:h|min|m|g|d)", line, re.IGNORECASE):
@@ -211,7 +225,7 @@ def clean_text_menu_post(text: str) -> str:
             continue
         if re.fullmatch(r"facebook", line, re.IGNORECASE):
             continue
-        if len(line) == 1:
+        if len(line) <= 1:
             continue
 
         line = re.sub(r"\s*Vedi meno\s*$", "", line, flags=re.IGNORECASE).strip()
@@ -231,7 +245,24 @@ def clean_text_menu_post(text: str) -> str:
             continue
         cleaned_lines.append(line)
 
-    return "\n".join(cleaned_lines).strip()
+    # Rete di sicurezza: se restano comunque diverse righe consecutive di
+    # 1-2 caratteri visibili (es. le cifre di un contatore Facebook
+    # spezzettate riga per riga), le eliminiamo in blocco: nel testo di un
+    # vero menu non compaiono mai sequenze cosi'.
+    filtered_lines = []
+    i = 0
+    total = len(cleaned_lines)
+    while i < total:
+        j = i
+        while j < total and len(cleaned_lines[j]) <= 2:
+            j += 1
+        if j - i >= 4:
+            i = j
+            continue
+        filtered_lines.append(cleaned_lines[i])
+        i += 1
+
+    return "\n".join(filtered_lines).strip()
 
 
 def has_see_more_marker(text: str) -> bool:
