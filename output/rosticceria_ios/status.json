@@ -1,20 +1,20 @@
 {
-  "updated_at": "2026-09-05T09:13:24",
+  "updated_at": "2026-09-05T09:49:11",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 05/09/26",
-      "published_at": "05/09/2026 09:39 circa",
-      "published_at_raw": "1h",
+      "published_at": "05/09/2026 09:47 circa",
+      "published_at_raw": "2h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "5 Settembre.\nMenù del giorno.",
-      "published_at": "05/09/2026 09:54 circa",
-      "published_at_raw": "1h",
+      "published_at": "05/09/2026 09:47 circa",
+      "published_at_raw": "2h",
       "error": null
     },
     {
@@ -28,34 +28,34 @@
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "1d\n·\nAll reactions:\n1",
-      "published_at": "04/09/2026 circa",
-      "published_at_raw": "1d",
+      "text": "AVVISIAMO LA CLIENTELA CHE SAREMO CHIUSI DA VENERDÌ 4 A LUNEDI 7 SETTEMBRE CI RIVEDIAMO MARTEDÌS 8 SETTEMBRE",
+      "published_at": "05/09/2026",
+      "published_at_raw": "",
       "error": null
     },
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 5 Settembre",
-      "published_at": "05/09/2026 09:40 circa",
-      "published_at_raw": "1h",
+      "published_at": "05/09/2026 09:48 circa",
+      "published_at_raw": "2h",
       "error": null
     },
     {
       "name": "Pane&Co",
       "image": "Pane_Co.jpg",
-      "text": "Menu 5 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette tricolore all'amatriciana - €6.50\n- Tagliolino con fagiolini, pomodoro fresco e cacio affumicato - €8.50\n- Orecchiette con ciliegino, rucola e salsiccia - €8.50\n- Risotto con gamberetti, patate e zafferano - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Trancio di pesce spada alla pizzaiola - €8.50\n  Con pomodorini, origano e olive\n- Spezzatino di capocollo con funghi misti - €7.50",
+      "text": "Menu 5 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Strozzapreti alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Gnocchi di patate alla sorrentina - €8.00\n- Capunti con fagiolini, cacio e datterino giallo - €8.50\n- Zuppa di ceci, piselli e orzo - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa con olive e capperi - €8.50\n- Alette di pollo al forno con patate - €7.50\n  4 pezzi",
       "published_at": "05/09/2026",
       "published_at_raw": "5 Settembre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
-      "image": null,
-      "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Non ho trovato nessun post testuale del menu nella pagina Facebook: https://www.facebook.com/BollentiPiatti"
+      "image": "Bollenti_piatti.jpg",
+      "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FAVE E CICORIA 5,0\n●PENNETTE ALLA CRUDAIOLA ALLA VALTELLINESE 5,5… See more",
+      "published_at": "05/09/2026 10:49 circa",
+      "published_at_raw": "1h",
+      "error": null
     }
   ]
 }
