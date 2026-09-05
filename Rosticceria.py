@@ -209,6 +209,10 @@ def clean_text_menu_post(text: str) -> str:
             continue
         if re.fullmatch(r"\d+", line):
             continue
+        if re.fullmatch(r"facebook", line, re.IGNORECASE):
+            continue
+        if len(line) == 1:
+            continue
 
         line = re.sub(r"\s*Vedi meno\s*$", "", line, flags=re.IGNORECASE).strip()
         line = re.sub(r"\s*See less\s*$", "", line, flags=re.IGNORECASE).strip()
