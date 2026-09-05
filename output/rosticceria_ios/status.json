@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-05T21:23:39",
+  "updated_at": "2026-09-05T21:28:41",
   "pages": [
     {
       "name": "Fantasia",
@@ -28,9 +28,9 @@
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "AVVISIAMO LA CLIENTELA CHE SAREMO CHIUSI DA VENERDÌ 4 A LUNEDI 7 SETTEMBRE CI RIVEDIAMO MARTEDÌS 8 SETTEMBRE",
-      "published_at": "01/01/2000 circa",
-      "published_at_raw": "",
+      "text": "2d\n·\n1",
+      "published_at": "03/09/2026 circa",
+      "published_at_raw": "2d",
       "error": null
     },
     {
@@ -53,7 +53,7 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FAVE E CICORIA 5,0\n●PENNETTE ALLA CRUDAIOLA ALLA VALTELLINESE 5,5",
-      "published_at": "05/09/2026 10:23 circa",
+      "published_at": "05/09/2026 10:28 circa",
       "published_at_raw": "13h",
       "error": null
     }
