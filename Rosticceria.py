@@ -1575,8 +1575,10 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                 try:
                     detail_page = context.new_page()
                     try:
+                        print(f"DEBUG Michela: apro pagina foto {href}")
                         detail_page.goto(href, wait_until="domcontentloaded", timeout=60000)
                         detail_page.wait_for_timeout(2000)
+                        print(f"DEBUG Michela: pagina foto caricata, url finale={detail_page.url}")
 
                         # Immagine a piena risoluzione: proviamo prima il meta
                         # tag "og:image" (quando presente, e' il modo piu'
@@ -1593,17 +1595,39 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                                 .first.get_attribute("content", timeout=3000)
                                 or ""
                             )
-                        except Exception:
+                        except Exception as debug_exc:
                             og_image_url = ""
+                            print(f"DEBUG Michela: errore lettura og:image: {debug_exc}")
+                        print(f"DEBUG Michela: og_image_url={og_image_url!r}")
                         if og_image_url:
                             image_url = og_image_url
                         else:
-                            for _ in range(6):
+                            for debug_attempt in range(6):
                                 larger_image_url = find_largest_visible_image_url(detail_page)
+                                print(
+                                    f"DEBUG Michela: tentativo {debug_attempt + 1} ricerca "
+                                    f"immagine grande -> {larger_image_url!r}"
+                                )
                                 if larger_image_url:
                                     image_url = larger_image_url
                                     break
                                 detail_page.wait_for_timeout(1500)
+
+                        try:
+                            debug_imgs = detail_page.locator("img").all()
+                            print(f"DEBUG Michela: trovate {len(debug_imgs)} tag <img> nella pagina foto")
+                            for debug_idx, debug_img in enumerate(debug_imgs[:20]):
+                                try:
+                                    debug_box = debug_img.bounding_box(timeout=500)
+                                except Exception:
+                                    debug_box = None
+                                try:
+                                    debug_src = (debug_img.get_attribute("src") or "")[:140]
+                                except Exception:
+                                    debug_src = ""
+                                print(f"DEBUG Michela: img[{debug_idx}] box={debug_box} src={debug_src}")
+                        except Exception as debug_exc:
+                            print(f"DEBUG Michela: errore enumerazione <img>: {debug_exc}")
 
                         # Data di pubblicazione reale dell'avviso (non la data
                         # odierna): cerchiamo un'etichetta di tempo nella
@@ -1611,21 +1635,38 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                         # testo normali. A questo punto la pagina ha avuto
                         # tutto il tempo del ciclo precedente per caricarsi.
                         raw_time = ""
-                        for _ in range(4):
+                        for debug_attempt in range(4):
                             try:
                                 raw_time = best_published_time_from_post(detail_page.locator("body"))
-                            except Exception:
+                            except Exception as debug_exc:
                                 raw_time = ""
+                                print(f"DEBUG Michela: errore ricerca data tentativo {debug_attempt + 1}: {debug_exc}")
+                            print(f"DEBUG Michela: tentativo {debug_attempt + 1} ricerca data -> {raw_time!r}")
                             if raw_time:
                                 break
                             detail_page.wait_for_timeout(1000)
                         if raw_time:
                             published_at_raw = raw_time
                             published_at = normalize_facebook_time(raw_time)
+
+                        try:
+                            detail_page.screenshot(
+                                path=os.path.join(script_dir(), "error_michela_debug.png"),
+                                full_page=True,
+                            )
+                            with open(
+                                os.path.join(script_dir(), "error_michela_debug.html"),
+                                "w",
+                                encoding="utf-8",
+                            ) as debug_file:
+                                debug_file.write(detail_page.content())
+                            print("DEBUG Michela: diagnostica pagina foto salvata (error_michela_debug.png/.html)")
+                        except Exception as debug_exc:
+                            print(f"DEBUG Michela: errore salvataggio diagnostica pagina foto: {debug_exc}")
                     finally:
                         detail_page.close()
-                except Exception:
-                    pass
+                except Exception as debug_exc:
+                    print(f"DEBUG Michela: eccezione durante apertura/analisi pagina foto: {debug_exc}")
 
             if not image_url:
                 continue
