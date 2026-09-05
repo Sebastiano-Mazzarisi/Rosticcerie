@@ -1576,15 +1576,17 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                     detail_page = context.new_page()
                     try:
                         detail_page.goto(href, wait_until="domcontentloaded", timeout=60000)
-                        detail_page.wait_for_timeout(3000)
+                        detail_page.wait_for_timeout(2000)
 
-                        # Immagine a piena risoluzione: il meta tag "og:image"
-                        # di Facebook la riporta sempre, anche senza login e
-                        # indipendentemente dal rendering della pagina - a
-                        # differenza della ricerca visuale qui sotto, che in
-                        # ambiente headless/anonimo puo' non trovare nulla e
-                        # farci ripiegare sulla piccola miniatura ritagliata
-                        # della griglia "Foto".
+                        # Immagine a piena risoluzione: proviamo prima il meta
+                        # tag "og:image" (quando presente, e' il modo piu'
+                        # affidabile, indipendente dal rendering), poi la
+                        # ricerca visuale qui sotto - che pero' in ambiente
+                        # headless/anonimo puo' impiegare piu' tempo del
+                        # solito a caricare l'immagine grande, percio'
+                        # ritentiamo piu' volte prima di arrenderci e
+                        # ripiegare sulla piccola miniatura ritagliata della
+                        # griglia "Foto".
                         try:
                             og_image_url = (
                                 detail_page.locator('meta[property="og:image"]')
@@ -1596,18 +1598,27 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                         if og_image_url:
                             image_url = og_image_url
                         else:
-                            larger_image_url = find_largest_visible_image_url(detail_page)
-                            if larger_image_url:
-                                image_url = larger_image_url
+                            for _ in range(6):
+                                larger_image_url = find_largest_visible_image_url(detail_page)
+                                if larger_image_url:
+                                    image_url = larger_image_url
+                                    break
+                                detail_page.wait_for_timeout(1500)
 
                         # Data di pubblicazione reale dell'avviso (non la data
                         # odierna): cerchiamo un'etichetta di tempo nella
                         # pagina della foto, come gia' si fa per i post di
-                        # testo normali.
-                        try:
-                            raw_time = best_published_time_from_post(detail_page.locator("body"))
-                        except Exception:
-                            raw_time = ""
+                        # testo normali. A questo punto la pagina ha avuto
+                        # tutto il tempo del ciclo precedente per caricarsi.
+                        raw_time = ""
+                        for _ in range(4):
+                            try:
+                                raw_time = best_published_time_from_post(detail_page.locator("body"))
+                            except Exception:
+                                raw_time = ""
+                            if raw_time:
+                                break
+                            detail_page.wait_for_timeout(1000)
                         if raw_time:
                             published_at_raw = raw_time
                             published_at = normalize_facebook_time(raw_time)
