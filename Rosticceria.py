@@ -15,6 +15,7 @@ import time
 import argparse
 import datetime
 import html
+import unicodedata
 from zoneinfo import ZoneInfo
 from typing import Dict, List, Optional, Tuple
 
@@ -736,14 +737,17 @@ def infer_weekday_date_from_text(text: str) -> str:
     della settimana (oggi compreso). Utile per i "menu del giorno" (es.
     Bollenti piatti) che non riportano mai una data esplicita ne' un orario
     di pubblicazione leggibile, solo il nome del giorno."""
-    normalized = (
-        text.lower()
-        .replace("\u00ec", "i")
-        .replace("\u00e8", "e")
+    # Rimuoviamo tutti gli accenti (non solo quelli di "menu"/"venerdi"),
+    # cosi' "MENU'"/"MENÙ" e le varianti dei giorni con o senza accento
+    # vengono tutte riconosciute allo stesso modo.
+    unaccented = "".join(
+        char
+        for char in unicodedata.normalize("NFKD", text.lower())
+        if not unicodedata.combining(char)
     )
     match = re.search(
         r"\bmenu\s+di\s+(lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)\b",
-        normalized,
+        unaccented,
     )
     if not match:
         return ""
