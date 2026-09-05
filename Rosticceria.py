@@ -225,6 +225,8 @@ def clean_text_menu_post(text: str) -> str:
             continue
         if re.fullmatch(r"facebook", line, re.IGNORECASE):
             continue
+        if re.match(r"^(?:Commenta come|Comment as)\b", line, re.IGNORECASE):
+            continue
         if len(line) <= 1:
             continue
 
@@ -737,6 +739,11 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
             published_at = infer_date_from_text(post_text) or infer_date_from_text(raw_text)
             published_at_raw = published_at or best_published_time_from_post(post) or raw_text
             normalized_published_at = published_at or normalize_facebook_time(published_at_raw) or normalize_facebook_time(raw_text)
+            print(
+                "DEBUG data menu: published_at=" + repr(published_at)
+                + " published_at_raw=" + repr(published_at_raw[:80])
+                + " normalized_published_at=" + repr(normalized_published_at)
+            )
             candidate = {
                 "text": post_text,
                 "published_at": normalized_published_at,
@@ -1365,14 +1372,35 @@ def crop_fantasia_chalkboard(image_bytes: bytes) -> bytes:
 def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
     """Aggiunge sotto la foto una fascia bianca con la data del menu,
     allungando l'immagine invece di sovrapporsi al contenuto: utile quando
-    la lavagna fotografata non riporta la data."""
+    la lavagna fotografata non riporta la data. La scritta viene
+    dimensionata in proporzione alla larghezza della foto (circa il 70%
+    della larghezza), cosi' resta leggibile sia sulle foto piccole sia su
+    quelle molto grandi (es. l'avviso ferie di Michela)."""
     date_text = format_menu_date(published_at)
     if not date_text:
         return image_bytes
 
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = image.size
-    bar_height = max(48, height // 14)
+
+    # Calcoliamo il font in modo che il testo della data occupi circa il
+    # 70% della larghezza della foto, invece di dipendere solo
+    # dall'altezza: su una foto molto grande (es. l'avviso ferie di
+    # Michela) la scritta risultava troppo piccola rispetto al disegno.
+    probe = Image.new("RGB", (10, 10))
+    probe_draw = ImageDraw.Draw(probe)
+    target_text_width = width * 0.70
+    probe_size = 100
+    probe_font = _load_bold_font(probe_size)
+    probe_bbox = probe_draw.textbbox((0, 0), date_text, font=probe_font)
+    probe_width = probe_bbox[2] - probe_bbox[0]
+    if probe_width > 0:
+        font_size = max(24, int(probe_size * target_text_width / probe_width))
+    else:
+        font_size = max(24, height // 14)
+    font = _load_bold_font(font_size)
+    bar_height = max(48, int(font_size / 0.45))
+
     # Stesso giallo usato nelle card di Pane&Co (255, 214, 65), cosi' la
     # fascia con la data ha lo stesso stile in tutte le rosticcerie.
     canvas = Image.new("RGB", (width, height + bar_height), (255, 214, 65))
@@ -1384,7 +1412,6 @@ def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
         outline=(120, 120, 120),
         width=3,
     )
-    font = _load_bold_font(int(bar_height * 0.45))
     bbox = draw.textbbox((0, 0), date_text, font=font)
     text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
     x = (width - text_w) / 2 - bbox[0]
@@ -1622,8 +1649,11 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                 # nuovo caricamento completo) e non scatta il redirect al
                 # login.
                 try:
+                    url_before_click = photos_page.url
                     anchor.click(timeout=5000)
                     photos_page.wait_for_timeout(2500)
+                    print("DEBUG Michela: url prima del click=" + repr(url_before_click))
+                    print("DEBUG Michela: url dopo il click=" + repr(photos_page.url))
 
                     try:
                         og_image_url = (
@@ -1633,15 +1663,22 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                         )
                     except Exception:
                         og_image_url = ""
+                    print("DEBUG Michela: og_image_url=" + repr(og_image_url))
                     if og_image_url:
                         image_url = og_image_url
                     else:
-                        for _ in range(6):
+                        for debug_attempt in range(6):
                             larger_image_url = find_largest_visible_image_url(photos_page)
+                            print(
+                                "DEBUG Michela: tentativo " + str(debug_attempt)
+                                + " larger_image_url=" + repr(larger_image_url)
+                            )
                             if larger_image_url:
                                 image_url = larger_image_url
                                 break
                             photos_page.wait_for_timeout(1000)
+
+                    print("DEBUG Michela: image_url finale scelto=" + repr(image_url))
 
                     # Data di pubblicazione reale dell'avviso (non la data
                     # odierna): cerchiamo un'etichetta di tempo nel
@@ -1656,6 +1693,7 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                         if raw_time:
                             break
                         photos_page.wait_for_timeout(800)
+                    print("DEBUG Michela: raw_time=" + repr(raw_time))
                     if raw_time:
                         published_at_raw = raw_time
                         published_at = normalize_facebook_time(raw_time)
@@ -1667,8 +1705,8 @@ def find_active_closure_post_via_photos(context, facebook_url: str):
                         photos_page.wait_for_timeout(500)
                     except Exception:
                         pass
-                except Exception:
-                    pass
+                except Exception as click_exc:
+                    print("DEBUG Michela: eccezione nel blocco click: " + repr(click_exc))
 
             if not image_url:
                 continue
