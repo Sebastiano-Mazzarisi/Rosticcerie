@@ -2248,48 +2248,126 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }});
     }}
 
+    function sleep(ms) {{
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }}
+
+    function parseRetryAfterSeconds(text) {{
+        const match = /try again in\s*([\d.]+)\s*s/i.exec(text || '');
+        return match ? Math.ceil(parseFloat(match[1])) : 10;
+    }}
+
+    // A differenza di fetchWithRetry, questa funzione controlla anche lo
+    // stato HTTP e il contenuto della risposta: l'API gratuita di Abacus,
+    // se interrogata troppo rapidamente (es. azzerando un contatore con
+    // molte visualizzazioni), risponde con HTTP 429 e un corpo tipo
+    // {{"error": "Too many requests..."}}. fetch() non considera questo un
+    // errore di rete, quindi senza questo controllo il codice leggeva
+    // "value" da una risposta di errore, lo interpretava come 0 e
+    // azzerava il contatore solo sullo schermo, senza aver davvero
+    // azzerato nulla sul server: al ricaricamento della pagina il valore
+    // precedente ricompariva.
+    async function fetchJsonWithRetry(url, attempts) {{
+        for (let attempt = 1; attempt <= attempts; attempt++) {{
+            let response;
+            try {{
+                response = await fetch(url);
+            }} catch (err) {{
+                if (attempt === attempts) {{
+                    throw err;
+                }}
+                await sleep(1000);
+                continue;
+            }}
+
+            if (response.status === 429) {{
+                const body = await response.text();
+                if (attempt === attempts) {{
+                    throw new Error('Troppe richieste: ' + body);
+                }}
+                await sleep((parseRetryAfterSeconds(body) + 1) * 1000);
+                continue;
+            }}
+
+            if (!response.ok) {{
+                if (attempt === attempts) {{
+                    throw new Error('Risposta HTTP ' + response.status);
+                }}
+                await sleep(800);
+                continue;
+            }}
+
+            const data = await response.json();
+            if (typeof data.value !== 'number') {{
+                if (attempt === attempts) {{
+                    throw new Error('Risposta senza "value": ' + JSON.stringify(data));
+                }}
+                await sleep(800);
+                continue;
+            }}
+            return data;
+        }}
+        throw new Error('fetchJsonWithRetry: tentativi esauriti per ' + url);
+    }}
+
     let totalClicksByPanel = [];
     let offsetClicksByPanel = [];
 
-    function loadCounter() {{
-        if (isAdmin) {{
-            // L'offset di azzeramento e' condiviso (salvato su Abacus), non solo sul dispositivo
-            const tasks = PANELS.map((p, i) => Promise.all([
-                fetchWithRetry(counterGetUrlFor(p.name), 3).then(r => r.json()),
-                fetchWithRetry(offsetGetUrlFor(p.name), 3).then(r => r.json())
-            ]).then(([totalData, offsetData]) => {{
-                totalClicksByPanel[i] = totalData.value || 0;
-                offsetClicksByPanel[i] = offsetData.value || 0;
-            }}));
-            Promise.all(tasks).then(() => {{
-                updateAdminTitle();
-                updateCardCounters();
-            }}).catch(e => console.error(e));
+    async function loadCounter() {{
+        if (!isAdmin) return;
+        // Leggiamo i contatori uno alla volta (non tutti insieme) e con una
+        // piccola pausa tra una richiesta e l'altra, per restare sotto il
+        // limite di frequenza dell'API gratuita di Abacus.
+        for (let i = 0; i < PANELS.length; i++) {{
+            const p = PANELS[i];
+            try {{
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
+                totalClicksByPanel[i] = totalData.value;
+                offsetClicksByPanel[i] = offsetData.value;
+            }} catch (e) {{
+                console.error('Impossibile leggere il contatore di ' + p.name, e);
+            }}
+            await sleep(150);
         }}
+        updateAdminTitle();
+        updateCardCounters();
     }}
 
     async function resetCounterGlobally() {{
         const mainTitle = document.getElementById('main-title');
-        mainTitle.innerText = 'Azzeramento in corso...';
-        try {{
-            for (let i = 0; i < PANELS.length; i++) {{
-                const p = PANELS[i];
-                const totalData = await fetchWithRetry(counterGetUrlFor(p.name), 3).then(r => r.json());
-                const target = totalData.value || 0;
-                let offsetData = await fetchWithRetry(offsetGetUrlFor(p.name), 3).then(r => r.json());
-                let current = offsetData.value || 0;
+        for (let i = 0; i < PANELS.length; i++) {{
+            const p = PANELS[i];
+            mainTitle.innerText = 'Azzeramento in corso... (' + (i + 1) + '/' + PANELS.length + ')';
+            try {{
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
+                const target = totalData.value;
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
+                let current = offsetData.value;
                 while (current < target) {{
-                    await fetchWithRetry(offsetHitUrlFor(p.name), 3);
+                    // L'unico modo per "azzerare" un contatore di sola
+                    // lettura/incremento come quello di Abacus e' portare
+                    // l'offset allo stesso valore del totale: la pausa tra
+                    // un incremento e l'altro evita di superare il limite
+                    // di frequenza dell'API (che altrimenti interrompeva
+                    // l'azzeramento quasi subito sui contatori con molte
+                    // visualizzazioni).
+                    await fetchJsonWithRetry(offsetHitUrlFor(p.name), 4);
                     current++;
+                    await sleep(300);
                 }}
                 totalClicksByPanel[i] = target;
                 offsetClicksByPanel[i] = current;
+            }} catch (e) {{
+                // Un errore su una rosticceria non deve bloccare
+                // l'azzeramento delle altre: proseguiamo con la prossima
+                // invece di interrompere tutto il ciclo.
+                console.error('Azzeramento fallito per ' + p.name, e);
             }}
-        }} catch (e) {{
-            console.error(e);
+            updateAdminTitle();
+            updateCardCounters();
+            await sleep(200);
         }}
-        updateAdminTitle();
-        updateCardCounters();
     }}
 
     function updateAdminTitle() {{
