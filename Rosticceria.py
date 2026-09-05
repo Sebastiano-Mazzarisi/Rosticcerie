@@ -209,7 +209,16 @@ def clean_text_menu_post(text: str) -> str:
             continue
 
         line = re.sub(r"\s*Vedi meno\s*$", "", line, flags=re.IGNORECASE).strip()
-        line = re.sub(r"\s*(?:…|\.\.\.)\s*Altro(?:\.\.\.)?\s*$", "", line, flags=re.IGNORECASE).strip()
+        line = re.sub(r"\s*See less\s*$", "", line, flags=re.IGNORECASE).strip()
+        # "Altro"/"See more" (a seconda della lingua dell'interfaccia di
+        # Facebook) indicano un post troncato: il testo che segue non e'
+        # presente, quindi rimuoviamo solo l'etichetta finale.
+        line = re.sub(
+            r"\s*(?:…|\.\.\.)\s*(?:Altro(?:\.\.\.)?|See more)\s*$",
+            "",
+            line,
+            flags=re.IGNORECASE,
+        ).strip()
         if re.match(r"^men[uù]\s+di\b", line, re.IGNORECASE):
             continue
         if not line:
