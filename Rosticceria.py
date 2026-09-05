@@ -383,7 +383,13 @@ def best_published_time_from_post(post) -> str:
     for selector in selectors:
         try:
             for element in post.locator(selector).all():
-                for attribute in ("title", "aria-label", "datetime", "href"):
+                # Nota: "href" e' escluso di proposito. I link ai permalink dei
+                # post Facebook (es. /stories/.../?...__cft__[0]=...) sono
+                # stringhe alfanumeriche lunghe che possono contenere per caso
+                # sequenze tipo "23h" o lettere isolate come "h"/"g"/"d", e
+                # venivano scambiate per un'etichetta di tempo relativa
+                # (es. "23 ore fa"), producendo date completamente sbagliate.
+                for attribute in ("title", "aria-label", "datetime"):
                     value = element.get_attribute(attribute)
                     if value:
                         candidates.append(value.strip())
@@ -478,22 +484,27 @@ def normalize_facebook_time(value: str) -> str:
             return published.strftime("%d/%m/%Y %H:%M")
         return now.strftime("%d/%m/%Y circa")
 
-    match = re.search(r"(\d+)\s*(min|m|minuti)", lower_value)
+    # I confini di parola (\b) sono importanti: senza di essi una stringa
+    # "casuale" (es. un URL o un ID interno di Facebook) puo' contenere per
+    # coincidenza una cifra seguita da una lettera come "h"/"g"/"d"/"w" in
+    # mezzo ad altri caratteri, venendo interpretata come un tempo relativo
+    # e producendo una data completamente inventata.
+    match = re.search(r"\b(\d{1,3})\s*(min|minuti|m)\b", lower_value)
     if match:
         minutes = int(match.group(1))
         return (now - datetime.timedelta(minutes=minutes)).strftime("%d/%m/%Y %H:%M circa")
 
-    match = re.search(r"(\d+)\s*(h|ore?|ora|hours?)", lower_value)
+    match = re.search(r"\b(\d{1,3})\s*(h|ore?|ora|hours?)\b", lower_value)
     if match:
         hours = int(match.group(1))
         return (now - datetime.timedelta(hours=hours)).strftime("%d/%m/%Y %H:%M circa")
 
-    match = re.search(r"(\d+)\s*(g|gg|giorno|giorni|d|days?)", lower_value)
+    match = re.search(r"\b(\d{1,3})\s*(g|gg|giorno|giorni|d|days?)\b", lower_value)
     if match:
         days = int(match.group(1))
         return (now - datetime.timedelta(days=days)).strftime("%d/%m/%Y circa")
 
-    match = re.search(r"(\d+)\s*(sett|settiman[ae]|settimane|w|weeks?)", lower_value)
+    match = re.search(r"\b(\d{1,3})\s*(sett|settiman[ae]|settimane|w|weeks?)\b", lower_value)
     if match:
         weeks = int(match.group(1))
         return (now - datetime.timedelta(weeks=weeks)).strftime("%d/%m/%Y circa")
@@ -516,9 +527,15 @@ def looks_like_facebook_time(value: str) -> bool:
     value = value.strip().lower()
     if not value:
         return False
-    if value.startswith(("http://", "https://")) and not re.search(
+    if value.startswith(("http://", "https://", "/")) and not re.search(
         r"\b\d{1,2}/\d{1,2}/\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b", value
     ):
+        return False
+    # Gli URL/permalink dei post Facebook (es. "/stories/.../?...&__cft__..."
+    # oppure con "__tn__=") non sono mai una vera etichetta di tempo, anche se
+    # contengono per caso cifre e lettere isolate: li escludiamo subito,
+    # prima ancora di controllare le parole "relative" qui sotto.
+    if any(marker in value for marker in ("=", "&", "__")):
         return False
 
     month_words = list(ITALIAN_MONTHS.keys()) + [
@@ -541,40 +558,22 @@ def looks_like_facebook_time(value: str) -> bool:
         "december",
         "dec",
     ]
-    relative_words = [
-        "min",
-        "minuti",
-        "h",
-        "ore",
-        "ora",
-        "ieri",
-        "oggi",
-        "yesterday",
-        "today",
-        "g",
-        "gg",
-        "giorno",
-        "giorni",
-        "d",
-        "day",
-        "days",
-        "sett",
-        "settimana",
-        "settimane",
-        "w",
-        "week",
-        "weeks",
-    ]
+    # I confini di parola (\b) evitano che una cifra seguita per coincidenza
+    # da una lettera isolata dentro una stringa piu' lunga (non un vero
+    # "23h"/"1d" restituito da Facebook) venga scambiata per un tempo
+    # relativo valido.
+    relative_pattern = re.compile(
+        r"\b\d{1,3}\s*(min|minuti|m|h|ore?|ora|hours?|gg|giorno|giorni|g|days?|d"
+        r"|settiman[ae]|settimane|sett|weeks?|w)\b"
+    )
     has_digit = any(char.isdigit() for char in value)
-    
-    words_in_value = set(re.findall(r"[a-zàèéìòù]+", value))
 
     return has_digit and (
         any(month in value for month in month_words)
-        or bool(words_in_value & set(relative_words))
+        or bool(relative_pattern.search(value))
         or bool(re.search(r"\b\d{1,2}/\d{1,2}/\d{2,4}\b", value))
         or bool(re.search(r"\b\d{4}-\d{2}-\d{2}\b", value))
-        or ":" in value
+        or bool(re.search(r"\b\d{1,2}:\d{2}\b", value))
     )
 
 
@@ -992,6 +991,10 @@ def extract_paneeco_menu() -> Dict:
     published_at = normalize_paneeco_date(data.get("date", ""))
     menu_text = paneeco_text(data.get("date", ""), categories)
     image_bytes = render_paneeco_image(format_menu_date(published_at), categories)
+    # Aggiunge sotto l'immagine la stessa fascia bianca con la data usata per
+    # tutte le altre rosticcerie, cosi' anche Pane&Co la mostra "sotto la
+    # foto" e non solo nell'intestazione della card.
+    image_bytes = add_date_footer(image_bytes, published_at)
 
     return {
         "name": PANECO_PAGE["name"],
