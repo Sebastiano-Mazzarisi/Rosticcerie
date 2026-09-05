@@ -69,9 +69,12 @@ PANECO_PAGE = {
     "name": "Pane&Co",
     "url": "https://www.paneeco.it/menu",
 }
+SOURCE_URLS = {page["name"]: page["url"] for page in FACEBOOK_PAGES}
+SOURCE_URLS.update({page["name"]: page["url"] for page in TEXT_FACEBOOK_PAGES})
+SOURCE_URLS[PANECO_PAGE["name"]] = PANECO_PAGE["url"]
 COOKIE_FILE = "cookies.txt"
 PUBLISH_DIR = os.path.join("output", "rosticceria_ios")
-RUN_START = datetime.time(9, 0)
+RUN_START = datetime.time(7, 0)
 RUN_END = datetime.time(12, 0)
 RUN_INTERVAL_MINUTES = 1
 ITALIAN_MONTHS = {
@@ -414,6 +417,39 @@ def best_published_time_from_post(post) -> str:
 
 def rome_now() -> datetime.datetime:
     return datetime.datetime.now(ZoneInfo("Europe/Rome"))
+
+
+ITALIAN_WEEKDAYS = [
+    "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica",
+]
+ITALIAN_MONTH_NAMES = [
+    "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+    "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre",
+]
+
+
+def italian_long_date(value: datetime.date) -> str:
+    """Restituisce la data nel formato esteso italiano richiesto, ad
+    esempio 'Venerdì 4 settembre' (giorno della settimana con iniziale
+    maiuscola, mese minuscolo, senza anno)."""
+    weekday = ITALIAN_WEEKDAYS[value.weekday()].capitalize()
+    month = ITALIAN_MONTH_NAMES[value.month - 1]
+    return f"{weekday} {value.day} {month}"
+
+
+def format_menu_date(value: str) -> str:
+    """Converte una data 'DD/MM/YYYY' (con eventuale testo/orario dopo,
+    come prodotto da normalize_facebook_time/normalize_paneeco_date) nel
+    formato esteso italiano. Restituisce stringa vuota se non riconosciuta,
+    cosi' chi chiama puo' scegliere di non stampare nulla."""
+    match = re.search(r"(\d{2})/(\d{2})/(\d{4})", value or "")
+    if not match:
+        return ""
+    try:
+        day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+        return italian_long_date(datetime.date(year, month, day))
+    except ValueError:
+        return ""
 
 
 def normalize_facebook_time(value: str) -> str:
@@ -955,7 +991,7 @@ def extract_paneeco_menu() -> Dict:
 
     published_at = normalize_paneeco_date(data.get("date", ""))
     menu_text = paneeco_text(data.get("date", ""), categories)
-    image_bytes = render_paneeco_image(data.get("date", ""), categories)
+    image_bytes = render_paneeco_image(format_menu_date(published_at), categories)
 
     return {
         "name": PANECO_PAGE["name"],
@@ -1086,9 +1122,9 @@ def render_text_menu_image(title: str, text: str, published_at: str = "") -> byt
     draw.text((margin, y), title, fill=ink, font=title_font)
     y += 64
 
-    display_date = published_at or infer_date_from_text(clean_text)
+    display_date = format_menu_date(published_at or infer_date_from_text(clean_text))
     if display_date:
-        draw.text((margin + 10, y), f"Menu del giorno: {display_date}", fill=muted, font=date_font)
+        draw.text((margin + 10, y), display_date, fill=muted, font=date_font)
         y += 52
 
     card_top = y
@@ -1161,7 +1197,7 @@ def render_paneeco_image(date_label: str, categories: List[Dict]) -> bytes:
     draw.text((margin, y), "Pane&Co", fill=ink, font=title_font)
     y += 64
     if date_label:
-        draw.text((margin, y), f"Menu del giorno: {date_label}", fill=muted, font=date_font)
+        draw.text((margin, y), date_label, fill=muted, font=date_font)
         y += 48
     y += 12
 
@@ -1254,10 +1290,9 @@ def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
     """Aggiunge sotto la foto una fascia bianca con la data del menu,
     allungando l'immagine invece di sovrapporsi al contenuto: utile quando
     la lavagna fotografata non riporta la data."""
-    match = re.search(r"\d{2}/\d{2}/\d{4}", published_at or "")
-    if not match:
+    date_text = format_menu_date(published_at)
+    if not date_text:
         return image_bytes
-    date_text = f"Menu del giorno: {match.group(0)}"
 
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     width, height = image.size
@@ -1617,7 +1652,7 @@ def add_phone_overlay(image_bytes: bytes, phone_number: str) -> bytes:
 
 
 def write_publish_index(panels: List[Dict], output_dir: str) -> None:
-    updated_at = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    today_label = italian_long_date(rome_now().date())
     phone_numbers = {
         "Fantasia": "080-405.41.39",
         "Cibària": "080-645.07.99",
@@ -1654,6 +1689,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             "image": image_url,
             "error": error or "",
             "updated": is_updated,
+            "url": SOURCE_URLS.get(name, ""),
         })
 
     panels_json = json.dumps(panels_data, ensure_ascii=False)
@@ -1794,6 +1830,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       height: auto;
       display: block;
       margin: 0 auto;
+    }}
+
+    /* Su schermi da PC la foto occupa circa un terzo della larghezza
+       (equivalente a 3 colonne), invece di riempire tutto lo schermo. */
+    @media (min-width: 900px) {{
+      #detail-content img {{
+        width: 33%;
+      }}
     }}
 
     /* Fascia nera inferiore con le frecce di navigazione */
@@ -1975,7 +2019,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     function handleTitleClick() {{
-        if (isAdmin && document.getElementById('grid-view').style.display !== 'none') {{
+        const inDetail = document.getElementById('grid-view').style.display === 'none';
+        if (inDetail) {{
+            const p = PANELS[currentIndex];
+            if (p && p.url) {{
+                window.open(p.url, '_blank', 'noopener');
+            }}
+            return;
+        }}
+        if (isAdmin) {{
             if (confirm("Vuoi davvero azzerare il contatore? (Verra' azzerato per tutti i dispositivi)")) {{
                 resetCounterGlobally();
             }}
@@ -1989,7 +2041,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   <header id="main-header">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
     <div id="phone-line"></div>
-    <p id="main-updated" class="updated">Aggiornato: {html.escape(updated_at)}</p>
+    <p id="main-updated" class="updated">{html.escape(today_label)}</p>
   </header>
 
   <main id="grid-view">
@@ -2169,11 +2221,12 @@ def extract_pages() -> List[Dict]:
             
             if name == "Fantasia":
                 image_bytes = crop_fantasia_chalkboard(image_bytes)
-                image_bytes = add_date_footer(image_bytes, post.get("published_at", ""))
             elif name == "Le delizie di Michela":
                 image_bytes = crop_michela_chalkboard(image_bytes)
             elif name == "Santoro (Castellana)":
                 image_bytes = add_white_border(image_bytes, border=10)
+
+            image_bytes = add_date_footer(image_bytes, post.get("published_at", ""))
 
             image_path = save_image(image_bytes, facebook_page["output_image"])
             print(f"{name}: immagine salvata in {image_path}")
