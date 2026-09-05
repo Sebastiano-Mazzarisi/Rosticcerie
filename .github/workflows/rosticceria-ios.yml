@@ -10,8 +10,15 @@ on:
       - 'Rosticceria.py'
       - 'requirements.txt'
   schedule:
-    - cron: '*/5 7-12 * * *'
-      timezone: "Europe/Rome"
+    # Nota: niente campo "timezone" qui. In pratica, su questo repository,
+    # gli schedule con "timezone" non sono mai partiti da soli (0 esecuzioni
+    # automatiche in oltre 24 ore, a fronte di decine di occasioni utili) -
+    # sembra un problema di affidabilita' di questa funzione recente di
+    # GitHub Actions. Usiamo quindi un intervallo UTC piu' ampio (copre sia
+    # l'ora legale che quella solare italiana) e lasciamo che sia lo script
+    # Python sottostante a decidere con precisione, in orario italiano vero,
+    # se e' davvero il momento di lavorare (vedi step successivo).
+    - cron: '*/5 5-11 * * *'
   workflow_dispatch:
 
 concurrency:
