@@ -305,6 +305,9 @@ def has_see_more_marker(text: str) -> bool:
 
 def expand_facebook_see_more(post, page) -> None:
     selectors = [
+        'button:has-text("Altro")',
+        'button:has-text("Mostra altro")',
+        'button:has-text("See more")',
         'div[role="button"]:has-text("Altro")',
         'div[role="button"]:has-text("Mostra altro")',
         'div[role="button"]:has-text("See more")',
@@ -318,6 +321,11 @@ def expand_facebook_see_more(post, page) -> None:
 
     for _ in range(4):
         clicked = False
+        try:
+            post.scroll_into_view_if_needed(timeout=1500)
+            page.wait_for_timeout(250)
+        except Exception:
+            pass
         try:
             before_text = post.inner_text(timeout=1000)
         except Exception:
