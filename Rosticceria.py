@@ -807,8 +807,11 @@ def find_first_post_image(page) -> Optional[Dict[str, str]]:
                     date_in_post_text = infer_date_from_text(post_text) or infer_date_from_text(full_post_text)
                     facebook_time = best_published_time_from_post(post)
                     normalized_facebook_time = normalize_facebook_time(facebook_time)
-                    published_at_raw = facebook_time or date_in_post_text
-                    published_at = normalized_facebook_time or date_in_post_text or rome_now().strftime("%d/%m/%Y")
+                    # Quando Facebook mostra una data esplicita nel post
+                    # (es. "29 agosto alle 13:22"), e' piu' affidabile del
+                    # primo indicatore temporale relativo trovato nel DOM.
+                    published_at_raw = date_in_post_text or facebook_time
+                    published_at = date_in_post_text or normalized_facebook_time or rome_now().strftime("%d/%m/%Y")
                     try:
                         photo_url = best_image.evaluate(
                             "image => { const link = image.closest('a[href]'); return link ? link.href : ''; }"
