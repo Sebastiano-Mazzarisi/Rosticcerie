@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-09-06T06:51:49",
+  "updated_at": "2026-09-06T07:03:47",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 05/09/26",
-      "published_at": "05/09/2026 09:49 circa",
+      "published_at": "05/09/2026 10:01 circa",
       "published_at_raw": "23h",
       "error": null
     },
@@ -13,8 +13,8 @@
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "5 Settembre.\nMenù del giorno.",
-      "published_at": "05/09/2026 09:49 circa",
-      "published_at_raw": "23h",
+      "published_at": "05/09/2026 circa",
+      "published_at_raw": "1d",
       "error": null
     },
     {
@@ -53,7 +53,7 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FAVE E CICORIA 5,0\n●PENNETTE ALLA CRUDAIOLA ALLA VALTELLINESE 5,5",
-      "published_at": "05/09/2026 10:51 circa",
+      "published_at": "05/09/2026 11:03 circa",
       "published_at_raw": "22h",
       "error": null
     }
