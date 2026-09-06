@@ -2084,6 +2084,29 @@ def infer_date_from_text(text: str) -> str:
     return ""
 
 
+def infer_latest_date_from_text(text: str) -> str:
+    """Restituisce l'ultima data esplicita trovata nel testo.
+
+    Alcuni menu (in particolare Impastamò) indicano un intervallo, ad esempio
+    ``30/08 - 7/09``: per il pannello va mostrata la data di fine validità,
+    non la data tecnica di pubblicazione del post Facebook.
+    """
+    matches = re.findall(r"\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b", text or "")
+    if not matches:
+        return ""
+    year_now = rome_now().year
+    dates = []
+    for day_raw, month_raw, year_raw in matches:
+        year = int(year_raw) if year_raw else year_now
+        if year < 100:
+            year += 2000
+        try:
+            dates.append(datetime.date(year, int(month_raw), int(day_raw)))
+        except ValueError:
+            continue
+    return max(dates).strftime("%d/%m/%Y") if dates else ""
+
+
 def panel_published_at(panel: Dict) -> str:
     return panel.get("published_at") or infer_date_from_text(panel.get("text", ""))
 
@@ -3312,6 +3335,15 @@ def extract_pages() -> List[Dict]:
             elif name == "Santoro (Castellana)":
                 image_bytes = add_white_border(image_bytes, border=10)
 
+            # Per Impastamò la grafica puo' indicare un intervallo di
+            # validita' (es. "30/08 - 7/09"): usa la data finale esplicita
+            # invece della data di pubblicazione Facebook.
+            explicit_menu_date = infer_latest_date_from_text(
+                f"{post.get('text', '')} {post.get('image_alt', '')}"
+            ) if name == "Impastamò" else ""
+            if explicit_menu_date:
+                post["published_at"] = explicit_menu_date
+                post["published_at_raw"] = explicit_menu_date
             image_bytes = add_date_footer(image_bytes, post.get("published_at", ""))
 
             image_path = save_image(image_bytes, facebook_page["output_image"])
