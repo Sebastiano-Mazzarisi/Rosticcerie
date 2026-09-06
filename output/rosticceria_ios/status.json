@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-09-06T07:03:47",
+  "updated_at": "2026-09-06T07:54:27",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 05/09/26",
-      "published_at": "05/09/2026 10:01 circa",
-      "published_at_raw": "23h",
+      "published_at": "05/09/2026 circa",
+      "published_at_raw": "1d",
       "error": null
     },
     {
@@ -42,8 +42,8 @@
       "error": null
     },
     {
-      "name": "Pane&Co",
-      "image": "Pane_Co.jpg",
+      "name": "Pane & Co",
+      "image": "Pane___Co.jpg",
       "text": "Menu 6 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Strozzapreti alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Gnocchi di patate alla sorrentina - €8.00\n- Capunti con fagiolini, cacio e datterino giallo - €8.50\n- Risotto con pesce spada al profumo di agrumi - €8.50\n- Zuppa di ceci, piselli e orzo - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa con olive e capperi - €8.50\n- Alette di pollo al forno con patate - €7.50\n  4 pezzi",
       "published_at": "06/09/2026",
       "published_at_raw": "6 Settembre",
@@ -52,9 +52,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FAVE E CICORIA 5,0\n●PENNETTE ALLA CRUDAIOLA ALLA VALTELLINESE 5,5",
-      "published_at": "05/09/2026 11:03 circa",
-      "published_at_raw": "22h",
+      "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FAVE E CICORIA 5,0\n●PENNETTE ALLA CRUDAIOLA ALLA VALTELLINESE 5,5…",
+      "published_at": "05/09/2026 10:54 circa",
+      "published_at_raw": "23h",
       "error": null
     }
   ]
