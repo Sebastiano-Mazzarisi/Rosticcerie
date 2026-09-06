@@ -2311,7 +2311,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     h1#main-title {{
       margin: 0;
       font-size: 32px;
-      color: #007bff; /* Azzurro */
+      color: #14532d; /* Verde scuro */
       cursor: pointer;
     }}
     .updated {{
