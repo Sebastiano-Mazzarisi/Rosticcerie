@@ -2237,8 +2237,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
          caselle) selezioni il testo o apra il menu contestuale del
-         browser/telefono. */
-      touch-action: manipulation;
+         browser/telefono. "none" (non "manipulation") e' necessario:
+         altrimenti il browser puo' interpretare il primo piccolo
+         movimento del dito, durante l'attesa della pressione lunga,
+         come l'inizio di uno scorrimento nativo della pagina, che poi
+         "cattura" il gesto e blocca il trascinamento successivo. */
+      touch-action: none;
       -webkit-touch-callout: none;
       -webkit-user-select: none;
       user-select: none;
@@ -2279,19 +2283,28 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       cursor: grabbing;
       z-index: 10;
     }}
-    #reorder-done-btn {{
+    #reorder-actions {{
       display: none;
       position: absolute;
       top: 14px;
       right: 16px;
-      background: #007bff;
-      color: #fff;
+      gap: 8px;
+    }}
+    #reorder-actions button {{
       border: none;
       border-radius: 999px;
       padding: 8px 18px;
       font-size: 15px;
       font-weight: bold;
       cursor: pointer;
+    }}
+    #reorder-reset-btn {{
+      background: #e9ecef;
+      color: #333;
+    }}
+    #reorder-done-btn {{
+      background: #007bff;
+      color: #fff;
     }}
     .error {{
       color: #ffd0d0;
@@ -2604,8 +2617,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         order = Array.from(grid.querySelectorAll('.card')).map(c => parseInt(c.dataset.pid, 10));
     }}
 
-    function showDoneButton() {{
-        document.getElementById('reorder-done-btn').style.display = 'inline-block';
+    function showReorderActions() {{
+        document.getElementById('reorder-actions').style.display = 'flex';
     }}
 
     function exitReorderMode() {{
@@ -2613,7 +2626,36 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('grid-view').querySelectorAll('.card').forEach(c => {{
             c.classList.remove('jiggling', 'dragging');
         }});
-        document.getElementById('reorder-done-btn').style.display = 'none';
+        document.getElementById('reorder-actions').style.display = 'none';
+        saveOrder();
+    }}
+
+    const DEFAULT_ORDER_NAMES = [
+        'Fantasia', 'Cibària', 'Pane&Co', 'Impastamò',
+        'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
+    ];
+
+    function resetOrderToDefault() {{
+        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+        const restored = [];
+        const seen = new Set();
+        DEFAULT_ORDER_NAMES.forEach(name => {{
+            if (nameToIndex.has(name) && !seen.has(name)) {{
+                restored.push(nameToIndex.get(name));
+                seen.add(name);
+            }}
+        }});
+        // Eventuali rosticcerie non presenti nell'elenco di default (es.
+        // aggiunte in futuro) vengono messe in coda, cosi' il pulsante
+        // Reset non le fa sparire.
+        PANELS.forEach((p, i) => {{
+            if (!seen.has(p.name)) {{
+                restored.push(i);
+                seen.add(p.name);
+            }}
+        }});
+        order = restored;
+        applyOrderToGrid();
         saveOrder();
     }}
 
@@ -2634,7 +2676,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('grid-view').querySelectorAll('.card').forEach(c => {{
             if (c !== el) c.classList.add('jiggling');
         }});
-        showDoneButton();
+        showReorderActions();
         if (navigator.vibrate) {{
             try {{ navigator.vibrate(15); }} catch (err) {{}}
         }}
@@ -2759,9 +2801,84 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }});
     }}
 
+    function moveCardByKeyboard(el, key) {{
+        const grid = document.getElementById('grid-view');
+        const cards = Array.from(grid.querySelectorAll('.card'));
+        const idx = cards.indexOf(el);
+        if (idx === -1) return;
+
+        // Il numero di colonne cambia con la larghezza dello schermo
+        // (2 su telefono, 4 su schermi larghi): lo leggiamo dal CSS
+        // effettivamente applicato invece di darlo per scontato, cosi'
+        // "su"/"giu'" spostano sempre alla riga giusta.
+        const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+
+        let targetIdx = null;
+        if (key === 'ArrowLeft') targetIdx = idx - 1;
+        else if (key === 'ArrowRight') targetIdx = idx + 1;
+        else if (key === 'ArrowUp') targetIdx = idx - columns;
+        else if (key === 'ArrowDown') targetIdx = idx + columns;
+        if (targetIdx === null || targetIdx < 0 || targetIdx >= cards.length) return;
+
+        const a = el;
+        const b = cards[targetIdx];
+        const aNext = a.nextSibling;
+        const bNext = b.nextSibling;
+        if (aNext === b) {{
+            grid.insertBefore(b, a);
+        }} else if (bNext === a) {{
+            grid.insertBefore(a, b);
+        }} else {{
+            grid.insertBefore(a, bNext);
+            grid.insertBefore(b, aNext);
+        }}
+
+        syncOrderFromDom();
+        reorderMode = true;
+        showReorderActions();
+        el.focus();
+    }}
+
+    function handleGlobalKeydown(e) {{
+        const inDetail = document.getElementById('grid-view').style.display === 'none';
+        if (inDetail) {{
+            if (e.key === 'ArrowRight') {{
+                e.preventDefault();
+                showNext();
+            }} else if (e.key === 'ArrowLeft') {{
+                e.preventDefault();
+                showPrev();
+            }} else if (e.key === 'Escape') {{
+                e.preventDefault();
+                closeDetail();
+            }}
+            // Freccia su/giu': non le intercettiamo, cosi' restano libere
+            // di far scorrere la pagina/l'immagine come richiesto.
+            return;
+        }}
+
+        if (e.key === 'Escape') {{
+            if (dragState || reorderMode) {{
+                e.preventDefault();
+                if (dragState) {{ endDrag(); }}
+                exitReorderMode();
+            }}
+            return;
+        }}
+
+        if (e.key.indexOf('Arrow') === 0) {{
+            const focused = document.activeElement;
+            if (focused && focused.classList && focused.classList.contains('card')) {{
+                e.preventDefault();
+                moveCardByKeyboard(focused, e.key);
+            }}
+        }}
+    }}
+
     function initReorder() {{
         loadSavedOrder();
         applyOrderToGrid();
+        document.addEventListener('keydown', handleGlobalKeydown);
         attachDragHandlers();
     }}
 
@@ -2850,7 +2967,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 <body>
   <header id="main-header">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
-    <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
+    <div id="reorder-actions">
+      <button type="button" id="reorder-reset-btn" onclick="resetOrderToDefault()">Reset</button>
+      <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
+    </div>
     <div id="phone-line"></div>
     <p id="main-updated" class="updated">{html.escape(today_label)}</p>
     <p id="main-signature" class="signature">by Mazzarisi</p>
