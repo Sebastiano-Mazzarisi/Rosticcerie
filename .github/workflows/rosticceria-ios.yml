@@ -126,8 +126,18 @@ jobs:
                 break
               fi
               echo "Push rifiutato (probabile collisione con un altro commit su main), riprovo dopo un rebase..."
+              # I file in output/rosticceria_ios sono generati da questa
+              # esecuzione: salvali prima di riallineare il branch remoto,
+              # altrimenti il rebase puo' entrare in conflitto proprio su
+              # Rosticcerie.html/index.html/status.json.
+              rm -rf /tmp/rosticcerie-ios-generated
+              mkdir -p /tmp/rosticcerie-ios-generated
+              cp -a output/rosticceria_ios/. /tmp/rosticcerie-ios-generated/
               git fetch origin main
-              git rebase origin/main
+              git reset --hard origin/main
+              cp -a /tmp/rosticcerie-ios-generated/. output/rosticceria_ios/
+              git add output/rosticceria_ios
+              git commit -m "Aggiorna foto rosticcerie" || true
               sleep 3
             done
           fi
