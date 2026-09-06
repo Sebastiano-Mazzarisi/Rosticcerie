@@ -934,6 +934,12 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
                 # richiesti (es. "secondi piatti"), invece di fermarci al
                 # primo trovato anche se si interrompe prima nel testo e
                 # mostra quindi solo i primi piatti.
+                # Se il chiamante richiede sezioni precise (come "secondi
+                # piatti" per Bollenti piatti), un post troncato che non le
+                # contiene non e' un candidato valido: continuare la ricerca
+                # evita di pubblicare soltanto l'inizio del menu.
+                if required_terms and not has_required_terms:
+                    continue
                 if len(post_text) > 20 and (
                     truncated_fallback_post is None
                     or (has_required_terms and not truncated_fallback_has_terms)
