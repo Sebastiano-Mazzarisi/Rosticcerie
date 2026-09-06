@@ -61,13 +61,13 @@ FACEBOOK_PAGES = [
 TEXT_FACEBOOK_PAGES = [
     {
         "name": "Bollenti piatti",
-        "display_name": "Bollenti Piatti",
+        "display_name": "Bollenti piatti",
         "url": "https://www.facebook.com/BollentiPiatti",
         "required_terms": ["secondi piatti"],
     },
 ]
 PANECO_PAGE = {
-    "name": "Pane&Co",
+    "name": "Pane & Co",
     "url": "https://www.paneeco.it/menu",
 }
 SOURCE_URLS = {page["name"]: page["url"] for page in FACEBOOK_PAGES}
@@ -103,6 +103,37 @@ ITALIAN_MONTHS = {
     "nov": 11,
     "dicembre": 12,
     "dic": 12,
+}
+# Facebook mostra le date assolute in inglese (es. "August 29 at 1:22 PM")
+# quando si naviga senza un login valido ed il post e' troppo vecchio per un
+# tempo relativo ("2 g", "3 h", ...): senza questa tabella quella data non
+# veniva riconosciuta affatto e il chiamante ripiegava sulla data odierna,
+# facendo sembrare "appena aggiornato" un post vecchio di settimane.
+ENGLISH_MONTHS = {
+    "january": 1,
+    "jan": 1,
+    "february": 2,
+    "feb": 2,
+    "march": 3,
+    "mar": 3,
+    "april": 4,
+    "apr": 4,
+    "may": 5,
+    "june": 6,
+    "jun": 6,
+    "july": 7,
+    "jul": 7,
+    "august": 8,
+    "aug": 8,
+    "september": 9,
+    "sept": 9,
+    "sep": 9,
+    "october": 10,
+    "oct": 10,
+    "november": 11,
+    "nov": 11,
+    "december": 12,
+    "dec": 12,
 }
 # Cookie che compaiono solo dopo un login Facebook riuscito. Se mancano,
 # stiamo navigando come visitatori anonimi e Facebook mostra molte meno
@@ -285,7 +316,7 @@ def expand_facebook_see_more(post, page) -> None:
         'a:has-text("See more")',
     ]
 
-    for _ in range(3):
+    for _ in range(4):
         clicked = False
         try:
             before_text = post.inner_text(timeout=1000)
@@ -301,7 +332,7 @@ def expand_facebook_see_more(post, page) -> None:
                         continue
                     if not element.is_visible(timeout=700):
                         continue
-                    element.click(timeout=1500, force=True)
+                    element.click(timeout=2000, force=True)
                     page.wait_for_timeout(900)
                     clicked = True
                     break
@@ -348,13 +379,49 @@ def expand_facebook_see_more(post, page) -> None:
                 clicked = False
 
         if not clicked:
-            return
+            # Il pulsante "Altro" potrebbe non essere ancora comparso (pagina
+            # ancora in caricamento): a differenza di prima, non rinunciamo
+            # subito al primo tentativo a vuoto, ma aspettiamo un attimo e
+            # riproviamo, fino a esaurire i tentativi previsti dal ciclo.
+            page.wait_for_timeout(700)
+            continue
         try:
             after_text = post.inner_text(timeout=1000)
         except Exception:
             after_text = ""
         if after_text and after_text != before_text and "Altro" not in after_text:
             return
+
+    # Ultima rete di sicurezza, indipendentemente dal fatto che uno dei
+    # tentativi di click sopra sia riuscito o no: alcuni post mostrano il
+    # testo completo gia' presente nella pagina, solo tagliato via CSS
+    # (line-clamp/altezza massima) invece che davvero assente dal DOM finche'
+    # non si clicca. In quel caso forziamo la visibilita' del testo intero e
+    # rimuoviamo l'eventuale etichetta "Altro"/"See more" residua, cosi' il
+    # testo completo (ora leggibile) non venga comunque scartato come
+    # troncato da has_see_more_marker.
+    try:
+        post.evaluate(
+            """post => {
+                post.querySelectorAll('*').forEach(el => {
+                    const style = window.getComputedStyle(el);
+                    if (style && style.webkitLineClamp && style.webkitLineClamp !== 'none') {
+                        el.style.setProperty('-webkit-line-clamp', 'unset', 'important');
+                        el.style.setProperty('display', 'block', 'important');
+                        el.style.setProperty('max-height', 'none', 'important');
+                        el.style.setProperty('overflow', 'visible', 'important');
+                    }
+                });
+                post.querySelectorAll('div[role="button"], a, span').forEach(el => {
+                    const label = (el.innerText || el.textContent || '').trim();
+                    if (/^(?:\\u2026|\\.\\.\\.)?\\s*(altro\\.?|mostra altro|see more)$/i.test(label)) {
+                        el.remove();
+                    }
+                });
+            }"""
+        )
+    except Exception:
+        pass
 
 
 def menu_date_line_from_text(text: str) -> str:
@@ -572,6 +639,38 @@ def normalize_facebook_time(value: str) -> str:
             published = published.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=0, microsecond=0)
         return published.strftime("%d/%m/%Y %H:%M")
 
+    # Data assoluta in inglese (es. "August 29 at 1:22 PM", "Aug 29, 2025"):
+    # vedi il commento sopra ENGLISH_MONTHS.
+    english_month_pattern = "|".join(ENGLISH_MONTHS.keys())
+    match = re.search(
+        rf"\b({english_month_pattern})\s+(\d{{1,2}})(?:st|nd|rd|th)?(?:,?\s+(\d{{4}}))?"
+        rf"(?:\s+at\s+(\d{{1,2}})[:.](\d{{2}})\s*(am|pm)?)?",
+        lower_value,
+    )
+    if match:
+        month = ENGLISH_MONTHS[match.group(1)]
+        day = int(match.group(2))
+        explicit_year = match.group(3)
+        year = int(explicit_year) if explicit_year else now.year
+        try:
+            candidate = datetime.date(year, month, day)
+            if not explicit_year and candidate > now.date():
+                # Nessun anno esplicito e la data risulterebbe nel futuro:
+                # il post e' quasi certamente dell'anno precedente.
+                candidate = datetime.date(year - 1, month, day)
+            if match.group(4) and match.group(5):
+                hour = int(match.group(4))
+                minute = match.group(5)
+                meridiem = (match.group(6) or "").lower()
+                if meridiem == "pm" and hour != 12:
+                    hour += 12
+                elif meridiem == "am" and hour == 12:
+                    hour = 0
+                return f"{candidate.strftime('%d/%m/%Y')} {hour:02d}:{minute}"
+            return candidate.strftime("%d/%m/%Y")
+        except ValueError:
+            pass
+
     inferred = infer_date_from_text(value)
     if inferred:
         return inferred
@@ -772,7 +871,9 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
     ]
 
     fallback_post = None
+    fallback_post_has_terms = False
     truncated_fallback_post = None
+    truncated_fallback_has_terms = False
     for selector in post_selectors:
         posts = page.locator(selector).all()
         for post in posts[:20]:
@@ -799,30 +900,48 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
                 # un orario di pubblicazione leggibile ne' una data esplicita,
                 # solo il nome del giorno (es. "MENU DI SABATO"): in
                 # quel caso risaliamo alla data dell'ultima occorrenza di
-                # quel giorno della settimana (oggi compreso).
-                or infer_weekday_date_from_text(post_text)
+                # quel giorno della settimana (oggi compreso). Cerchiamo
+                # questo riferimento nel testo GREZZO (raw_text) e non in
+                # quello ripulito (post_text): clean_text_menu_post scarta
+                # apposta le righe "Menu di <giorno>" in quanto ridondanti
+                # per la visualizzazione, ma cosi' facendo le rendeva anche
+                # invisibili a questa deduzione della data, che quindi non
+                # trovava mai nulla.
+                or infer_weekday_date_from_text(raw_text)
             )
             candidate = {
                 "text": post_text,
                 "published_at": normalized_published_at,
                 "published_at_raw": published_at_raw,
             }
+            lower_text = post_text.lower()
+            has_required_terms = all(term.lower() in lower_text for term in (required_terms or []))
 
             if truncated:
                 # Non siamo riusciti a espandere "Altro" (tipico senza un
                 # login valido): meglio un menu incompleto che nessun menu,
-                # ma solo come ultima riserva se non troviamo di meglio.
-                if truncated_fallback_post is None and len(post_text) > 20:
+                # ma solo come ultima riserva se non troviamo di meglio. Tra
+                # piu' candidati troncati (es. altri post scorrendo la
+                # pagina), preferiamo comunque quello che contiene i termini
+                # richiesti (es. "secondi piatti"), invece di fermarci al
+                # primo trovato anche se si interrompe prima nel testo e
+                # mostra quindi solo i primi piatti.
+                if len(post_text) > 20 and (
+                    truncated_fallback_post is None
+                    or (has_required_terms and not truncated_fallback_has_terms)
+                ):
                     truncated_fallback_post = candidate
+                    truncated_fallback_has_terms = has_required_terms
                 continue
 
-            lower_text = post_text.lower()
-            has_required_terms = all(term.lower() in lower_text for term in (required_terms or []))
             if has_required_terms and ("menu" in lower_text or "menù" in lower_text) and normalized_published_at:
                 return candidate
 
-            if fallback_post is None and len(post_text) > 20:
+            if len(post_text) > 20 and (
+                fallback_post is None or (has_required_terms and not fallback_post_has_terms)
+            ):
                 fallback_post = candidate
+                fallback_post_has_terms = has_required_terms
 
         if fallback_post:
             return fallback_post
@@ -1049,6 +1168,12 @@ def extract_first_facebook_text_menu(page_config: Dict[str, str]) -> Dict[str, s
                         text,
                         post.get("published_at", ""),
                     )
+                    # Aggiunge sotto l'immagine la stessa fascia bianca con la
+                    # data usata per tutte le altre rosticcerie (vedi
+                    # extract_pages/extract_paneeco_menu), cosi' anche i menu
+                    # testuali come "Bollenti piatti" la mostrano "sotto la
+                    # foto" e non solo (se presente) nell'intestazione.
+                    image_bytes = add_date_footer(image_bytes, post.get("published_at", ""))
                     return {
                         "name": page_config["name"],
                         "image_bytes": image_bytes,
@@ -1335,7 +1460,7 @@ def render_paneeco_image(date_label: str, categories: List[Dict]) -> bytes:
     draw = ImageDraw.Draw(image)
 
     y = margin
-    draw.text((margin, y), "Pane&Co", fill=ink, font=title_font)
+    draw.text((margin, y), "Pane & Co", fill=ink, font=title_font)
     y += 64
     if date_label:
         draw.text((margin, y), date_label, fill=muted, font=date_font)
@@ -2102,7 +2227,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Impastamò": "392-536.15.36",
         "Le delizie di Michela": "080-521.22.33",
         "Santoro (Castellana)": "080-859.83.13",
-        "Pane&Co": "080-405.49.00",
+        "Pane & Co": "080-405.49.00",
         "Bollenti piatti": "334-318.58.44",
     }
     today = rome_now().date()
@@ -2191,8 +2316,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     .updated {{
       margin: 4px 0 0;
-      color: #ccc;
-      font-size: 14px;
+      color: #fff;
+      font-size: 16px;
     }}
     .signature {{
       margin: 2px 0 0;
@@ -2631,7 +2756,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     const DEFAULT_ORDER_NAMES = [
-        'Fantasia', 'Cibària', 'Pane&Co', 'Impastamò',
+        'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
         'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
     ];
 
