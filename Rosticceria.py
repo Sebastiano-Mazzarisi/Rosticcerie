@@ -2282,11 +2282,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     cards = []
     for i, p in enumerate(panels_data):
         title = html.escape(p["name"])
-        border_color = "#00c853" if p["updated"] else "#ffd641"
-        bg_color = "#e3f8ea" if p["updated"] else "#fff7de"
+        border_color = "#00c853" if p["updated"] else "#555555"
+        bg_color = "#e3f8ea" if p["updated"] else "#e5e5e5"
+        name_color = "#111" if p["updated"] else "#555555"
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
-            <span class="card-name">{title}</span>
+            <span class="card-name" style="color:{name_color}">{title}</span>
             <span class="card-counter" id="card-counter-{i}"></span>
         </button>
         """)
@@ -2366,7 +2367,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       appearance: none;
       -webkit-appearance: none;
       font: inherit;
-      background: #fff7de; /* Sostituito inline per riga: verde/giallo tenue */
+      background: #e5e5e5; /* Verde tenue per i menu aggiornati, grigio per gli altri */
       box-sizing: border-box;
       cursor: pointer;
       min-height: 110px;
@@ -2375,7 +2376,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       justify-content: center;
       text-align: center;
       padding: 12px;
-      border: 4px solid #ffd641; /* Verde intenso se aggiornata oggi, giallo intenso altrimenti */
+      border: 4px solid #555555; /* Verde se aggiornata oggi, grigio scuro altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
          caselle) selezioni il testo o apra il menu contestuale del
