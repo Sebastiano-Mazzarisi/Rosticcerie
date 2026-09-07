@@ -2282,8 +2282,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     cards = []
     for i, p in enumerate(panels_data):
         title = html.escape(p["name"])
-        border_color = "#00c853" if p["updated"] else "#555555"
-        bg_color = "#e3f8ea" if p["updated"] else "#e5e5e5"
+        border_color = "#ffd641" if p["updated"] else "#555555"
+        bg_color = "#fff7de" if p["updated"] else "#e5e5e5"
         name_color = "#111" if p["updated"] else "#555555"
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
@@ -2367,7 +2367,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       appearance: none;
       -webkit-appearance: none;
       font: inherit;
-      background: #e5e5e5; /* Verde tenue per i menu aggiornati, grigio per gli altri */
+      background: #e5e5e5; /* Giallo tenue per i menu aggiornati, grigio per gli altri */
       box-sizing: border-box;
       cursor: pointer;
       min-height: 110px;
@@ -2376,7 +2376,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       justify-content: center;
       text-align: center;
       padding: 12px;
-      border: 4px solid #555555; /* Verde se aggiornata oggi, grigio scuro altrimenti */
+      border: 4px solid #555555; /* Giallo se aggiornata oggi, grigio scuro altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
          caselle) selezioni il testo o apra il menu contestuale del
@@ -3022,8 +3022,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.querySelectorAll('.card[data-pid]').forEach(card => {{
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel) return;
-            card.style.borderColor = panel.updated ? '#00c853' : '#555555';
-            card.style.backgroundColor = panel.updated ? '#e3f8ea' : '#e5e5e5';
+            card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
+            card.style.backgroundColor = panel.updated ? '#fff7de' : '#e5e5e5';
             card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#555555';
         }});
         loadSavedOrder();
