@@ -223,7 +223,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788708614", "error": "", "updated": false, "url": "https://www.facebook.com/RosticceriaFantasia"}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788708614", "error": "", "updated": false, "url": "https://www.facebook.com/cibaria.asporto"}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788708614", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=61560452176728"}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788708614", "error": "", "updated": false, "url": "https://www.facebook.com/profile.php?id=100045208848338"}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788708614", "error": "", "updated": true, "url": "https://www.facebook.com/santorogastronomia"}, {"name": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788708614", "error": "", "updated": true, "url": "https://www.paneeco.it/menu"}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788708614", "error": "", "updated": false, "url": "https://www.facebook.com/BollentiPiatti"}];
+    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788775351", "error": "", "updated": true, "url": "https://www.facebook.com/RosticceriaFantasia"}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788775351", "error": "", "updated": true, "url": "https://www.facebook.com/cibaria.asporto"}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788775351", "error": "", "updated": false, "url": "https://www.facebook.com/profile.php?id=61560452176728"}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788775351", "error": "", "updated": false, "url": "https://www.facebook.com/profile.php?id=100045208848338"}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788775351", "error": "", "updated": true, "url": "https://www.facebook.com/santorogastronomia"}, {"name": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788775351", "error": "", "updated": true, "url": "https://www.paneeco.it/menu"}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788775351", "error": "", "updated": true, "url": "https://www.facebook.com/BollentiPiatti"}];
     let currentIndex = -1;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -819,23 +819,23 @@
       <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
     </div>
     <div id="phone-line"></div>
-    <p id="main-updated" class="updated">Domenica 6 settembre</p>
+    <p id="main-updated" class="updated">Lunedì 7 settembre</p>
     <p id="main-signature" class="signature">by Mazzarisi</p>
   </header>
 
   <main id="grid-view">
     
-        <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(0)">
+        <button type="button" class="card" data-pid="0" style="border-color:#00c853;background-color:#e3f8ea" onclick="cardClicked(0)">
             <span class="card-name">Fantasia</span>
             <span class="card-counter" id="card-counter-0"></span>
         </button>
         
-        <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(1)">
+        <button type="button" class="card" data-pid="1" style="border-color:#00c853;background-color:#e3f8ea" onclick="cardClicked(1)">
             <span class="card-name">Cibària</span>
             <span class="card-counter" id="card-counter-1"></span>
         </button>
         
-        <button type="button" class="card" data-pid="2" style="border-color:#00c853;background-color:#e3f8ea" onclick="cardClicked(2)">
+        <button type="button" class="card" data-pid="2" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(2)">
             <span class="card-name">Impastamò</span>
             <span class="card-counter" id="card-counter-2"></span>
         </button>
@@ -855,7 +855,7 @@
             <span class="card-counter" id="card-counter-5"></span>
         </button>
         
-        <button type="button" class="card" data-pid="6" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(6)">
+        <button type="button" class="card" data-pid="6" style="border-color:#00c853;background-color:#e3f8ea" onclick="cardClicked(6)">
             <span class="card-name">Bollenti piatti</span>
             <span class="card-counter" id="card-counter-6"></span>
         </button>
