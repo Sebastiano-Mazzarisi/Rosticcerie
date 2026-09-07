@@ -3019,6 +3019,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     function initReorder() {{
+        document.querySelectorAll('.card[data-pid]').forEach(card => {{
+            const panel = PANELS[Number(card.dataset.pid)];
+            if (!panel) return;
+            card.style.borderColor = panel.updated ? '#00c853' : '#555555';
+            card.style.backgroundColor = panel.updated ? '#e3f8ea' : '#e5e5e5';
+            card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#555555';
+        }});
         loadSavedOrder();
         applyOrderToGrid();
         document.addEventListener('keydown', handleGlobalKeydown);
