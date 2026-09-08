@@ -1131,9 +1131,11 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
                 continue
             if not image_url.startswith("http") or "emoji.php" in image_url:
                 continue
-            # La prima foto puo' essere l'avviso: il menu successivo e' una
-            # foto senza descrizione di chiusura.
+            # La prima foto puo' essere copertina o avviso: il menu viene
+            # identificato dal testo alternativo OCR di Facebook.
             if looks_like_closure_notice(image_alt):
+                continue
+            if not looks_like_real_menu(image_alt):
                 continue
 
             try:
@@ -1149,17 +1151,15 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
                 else:
                     raise RuntimeError("link foto non trovato")
                 photos_page.wait_for_timeout(2000)
-                larger_image_url = photos_page.locator(
-                    'meta[property="og:image"]'
-                ).first.get_attribute("content", timeout=2000)
-                if larger_image_url and larger_image_url.startswith("http"):
-                    image_url = larger_image_url
                 photos_page.keyboard.press("Escape")
                 photos_page.wait_for_timeout(500)
             except Exception:
                 pass
 
             try:
+                # In sessione anonima og:image puo' puntare alla foto profilo.
+                # La miniatura contiene comunque un URL CDN convertibile.
+                image_url = re.sub(r"(?:ctp=|s)\d+x\d+", "s960x960", image_url)
                 image_bytes = download_image(image_url)
                 width, height = Image.open(io.BytesIO(image_bytes)).size
                 if min(width, height) < 380:
