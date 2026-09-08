@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="300">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Rosticcerie">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta property="og:title" content="Rosticcerie">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html">
+  <meta property="og:image" content="https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/apple-touch-icon.png">
+  <title>Rosticcerie</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    /* Fascia nera superiore */
+    header {
+      background: #000;
+      padding: 18px 16px;
+      border-bottom: 1px solid #333;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      text-align: center;
+    }
+    h1#main-title {
+      margin: 0;
+      font-size: 32px;
+      color: #00c853; /* Verde brillante */
+      cursor: pointer;
+    }
+    .updated {
+      margin: 4px 0 0;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .signature {
+      margin: 2px 0 0;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
+    #phone-line {
+      display: none;
+      text-align: center;
+      padding: 10px 16px 0;
+    }
+    #phone-line a {
+      color: #00c853;
+      font-size: 20px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    /* Griglia dei bottoni iniziali: distanziati di 10px tra loro e dai margini */
+    main {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .card {
+      position: relative;
+      appearance: none;
+      -webkit-appearance: none;
+      font: inherit;
+      background: #e5e5e5; /* Giallo tenue per i menu aggiornati, grigio per gli altri */
+      box-sizing: border-box;
+      cursor: pointer;
+      min-height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px;
+      border: 4px solid #555555; /* Giallo se aggiornata oggi, grigio scuro altrimenti */
+      border-radius: 12px;
+      /* Evita che una pressione prolungata (usata per riordinare le
+         caselle) selezioni il testo o apra il menu contestuale del
+         browser/telefono. "none" (non "manipulation") e' necessario:
+         altrimenti il browser puo' interpretare il primo piccolo
+         movimento del dito, durante l'attesa della pressione lunga,
+         come l'inizio di uno scorrimento nativo della pagina, che poi
+         "cattura" il gesto e blocca il trascinamento successivo. */
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .card .card-name {
+      font-size: clamp(16px, 5vw, 26px);
+      color: #111; /* Nomi neri */
+      font-weight: bold;
+    }
+    .card-counter {
+      display: none;
+      position: absolute;
+      bottom: 4px;
+      right: 8px;
+      font-size: 11px;
+      font-weight: normal;
+      color: #555;
+    }
+    /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
+       tenendo premuta una casella, tutte "tremano" leggermente e quella
+       tenuta premuta lampeggia con la cornice; trascinandola sopra
+       un'altra le due si scambiano di posto. L'ordine scelto viene
+       salvato sul dispositivo (localStorage), non e' condiviso tra
+       dispositivi diversi. */
+    @keyframes cardJiggle {
+      0%, 100% { transform: rotate(-1deg); }
+      50% { transform: rotate(1deg); }
+    }
+    @keyframes cardBlink {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,123,255,0); }
+      50% { box-shadow: 0 0 0 6px rgba(0,123,255,0.65); }
+    }
+    .card.jiggling {
+      animation: cardJiggle 0.24s ease-in-out infinite;
+    }
+    .card.dragging {
+      animation: cardBlink 0.6s ease-in-out infinite;
+      cursor: grabbing;
+      z-index: 10;
+    }
+    #reorder-actions {
+      display: none;
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      gap: 8px;
+    }
+    #reorder-actions button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #reorder-reset-btn {
+      background: #e9ecef;
+      color: #333;
+    }
+    #reorder-done-btn {
+      background: #007bff;
+      color: #fff;
+    }
+    .error {
+      color: #ffd0d0;
+      font-size: 16px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Layout per monitor normali/piccoli */
+    @media (max-width: 1200px) {
+      main {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    /* Dettaglio a tutto schermo */
+    #detail-view {
+      display: none;
+      padding-bottom: 85px; /* Spazio per la fascia con le frecce */
+    }
+    #detail-content {
+      padding: 12px;
+      cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
+    }
+    #detail-content img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* Su schermi da PC la foto occupa circa un terzo della larghezza
+       (equivalente a 3 colonne), invece di riempire tutto lo schermo. */
+    @media (min-width: 900px) {
+      #detail-content img {
+        width: 33%;
+      }
+    }
+
+    /* Fascia nera inferiore con le frecce di navigazione */
+    #nav-bar {
+      display: none;
+      background: #000;
+      padding: 14px 24px;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      z-index: 100;
+      border-top: 1px solid #333;
+      box-sizing: border-box;
+    }
+    #nav-bar button {
+      appearance: none;
+      -webkit-appearance: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 30px;
+      line-height: 1;
+      padding: 6px 24px;
+      cursor: pointer;
+    }
+    #nav-position {
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+  <script>
+    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/RosticceriaFantasia"}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/cibaria.asporto"}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=61560452176728"}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=100045208848338"}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/santorogastronomia"}, {"name": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.paneeco.it/menu"}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/BollentiPiatti"}];
+    let currentIndex = -1;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get('v') === '57';
+    // Uso un'API globale gratuita per il contatore, un contatore separato per ogni rosticceria
+    const ABACUS_BASE = 'https://abacus.jasoncameron.dev';
+    const COUNTER_NAMESPACE = 'rosticcerie-fantasia';
+
+    function slugify(s) {
+        return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+            .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+    function counterKeyFor(name) { return 'menu-views-' + slugify(name); }
+    function offsetKeyFor(name) { return 'menu-views-offset-' + slugify(name); }
+    function counterGetUrlFor(name) { return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }
+    function counterHitUrlFor(name) { return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }
+    function offsetGetUrlFor(name) { return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + offsetKeyFor(name); }
+    function offsetHitUrlFor(name) { return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + offsetKeyFor(name); }
+
+    function fetchWithRetry(url, attempts) {
+        return fetch(url).catch(err => {
+            if (attempts > 1) {
+                return new Promise(resolve => setTimeout(resolve, 800)).then(() => fetchWithRetry(url, attempts - 1));
+            }
+            throw err;
+        });
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function parseRetryAfterSeconds(text) {
+        const match = /try again in\s*([\d.]+)\s*s/i.exec(text || '');
+        return match ? Math.ceil(parseFloat(match[1])) : 10;
+    }
+
+    // A differenza di fetchWithRetry, questa funzione controlla anche lo
+    // stato HTTP e il contenuto della risposta: l'API gratuita di Abacus,
+    // se interrogata troppo rapidamente (es. azzerando un contatore con
+    // molte visualizzazioni), risponde con HTTP 429 e un corpo tipo
+    // {"error": "Too many requests..."}. fetch() non considera questo un
+    // errore di rete, quindi senza questo controllo il codice leggeva
+    // "value" da una risposta di errore, lo interpretava come 0 e
+    // azzerava il contatore solo sullo schermo, senza aver davvero
+    // azzerato nulla sul server: al ricaricamento della pagina il valore
+    // precedente ricompariva.
+    async function fetchJsonWithRetry(url, attempts) {
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            let response;
+            try {
+                response = await fetch(url);
+            } catch (err) {
+                if (attempt === attempts) {
+                    throw err;
+                }
+                await sleep(1000);
+                continue;
+            }
+
+            if (response.status === 429) {
+                const body = await response.text();
+                if (attempt === attempts) {
+                    throw new Error('Troppe richieste: ' + body);
+                }
+                await sleep((parseRetryAfterSeconds(body) + 1) * 1000);
+                continue;
+            }
+
+            if (!response.ok) {
+                if (attempt === attempts) {
+                    throw new Error('Risposta HTTP ' + response.status);
+                }
+                await sleep(800);
+                continue;
+            }
+
+            const data = await response.json();
+            if (typeof data.value !== 'number') {
+                if (attempt === attempts) {
+                    throw new Error('Risposta senza "value": ' + JSON.stringify(data));
+                }
+                await sleep(800);
+                continue;
+            }
+            return data;
+        }
+        throw new Error('fetchJsonWithRetry: tentativi esauriti per ' + url);
+    }
+
+    let totalClicksByPanel = [];
+    let offsetClicksByPanel = [];
+
+    async function loadCounter() {
+        if (!isAdmin) return;
+        // Leggiamo i contatori uno alla volta (non tutti insieme) e con una
+        // piccola pausa tra una richiesta e l'altra, per restare sotto il
+        // limite di frequenza dell'API gratuita di Abacus.
+        for (let i = 0; i < PANELS.length; i++) {
+            const p = PANELS[i];
+            try {
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
+                totalClicksByPanel[i] = totalData.value;
+                offsetClicksByPanel[i] = offsetData.value;
+            } catch (e) {
+                console.error('Impossibile leggere il contatore di ' + p.name, e);
+            }
+            await sleep(150);
+        }
+        updateAdminTitle();
+        updateCardCounters();
+    }
+
+    async function resetCounterGlobally() {
+        const mainTitle = document.getElementById('main-title');
+        for (let i = 0; i < PANELS.length; i++) {
+            const p = PANELS[i];
+            mainTitle.innerText = 'Azzeramento in corso... (' + (i + 1) + '/' + PANELS.length + ')';
+            try {
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
+                const target = totalData.value;
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
+                let current = offsetData.value;
+                while (current < target) {
+                    // L'unico modo per "azzerare" un contatore di sola
+                    // lettura/incremento come quello di Abacus e' portare
+                    // l'offset allo stesso valore del totale: la pausa tra
+                    // un incremento e l'altro evita di superare il limite
+                    // di frequenza dell'API (che altrimenti interrompeva
+                    // l'azzeramento quasi subito sui contatori con molte
+                    // visualizzazioni).
+                    await fetchJsonWithRetry(offsetHitUrlFor(p.name), 4);
+                    current++;
+                    await sleep(300);
+                }
+                totalClicksByPanel[i] = target;
+                offsetClicksByPanel[i] = current;
+            } catch (e) {
+                // Un errore su una rosticceria non deve bloccare
+                // l'azzeramento delle altre: proseguiamo con la prossima
+                // invece di interrompere tutto il ciclo.
+                console.error('Azzeramento fallito per ' + p.name, e);
+            }
+            updateAdminTitle();
+            updateCardCounters();
+            await sleep(200);
+        }
+    }
+
+    function updateAdminTitle() {
+        let val = 0;
+        for (let i = 0; i < PANELS.length; i++) {
+            val += Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
+        }
+        document.getElementById('main-title').innerText = `Rosticcerie (${val.toLocaleString('it-IT')})`;
+    }
+
+    function updateCardCounters() {
+        if (!isAdmin) return;
+        for (let i = 0; i < PANELS.length; i++) {
+            const el = document.getElementById('card-counter-' + i);
+            if (!el) continue;
+            const val = Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
+            el.innerText = val.toLocaleString('it-IT');
+            el.style.display = 'block';
+        }
+    }
+
+    // --- Riordino personalizzato delle caselle iniziali (tenere premuto
+    // per "tremare" + trascinare per scambiare posto, come su iOS/Android).
+    // L'ordine e' salvato in localStorage: e' quindi personale per ogni
+    // dispositivo/browser, non condiviso tra dispositivi diversi ne'
+    // pubblicato sul sito.
+    const ORDER_STORAGE_KEY = 'rosticcerie-order-v1';
+    let order = PANELS.map((_, i) => i);
+    let reorderMode = false;
+    let dragState = null;
+    const LONG_PRESS_MS = 450;
+    const MOVE_CANCEL_PX = 10;
+
+    function loadSavedOrder() {
+        try {
+            const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+            if (!raw) return;
+            const savedNames = JSON.parse(raw);
+            if (!Array.isArray(savedNames)) return;
+            const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+            const restored = [];
+            const seen = new Set();
+            savedNames.forEach(name => {
+                if (nameToIndex.has(name) && !seen.has(name)) {
+                    restored.push(nameToIndex.get(name));
+                    seen.add(name);
+                }
+            });
+            // Eventuali rosticcerie nuove non presenti nell'ordine salvato
+            // vengono aggiunte in coda, nell'ordine con cui arrivano dal server.
+            PANELS.forEach((p, i) => {
+                if (!seen.has(p.name)) {
+                    restored.push(i);
+                    seen.add(p.name);
+                }
+            });
+            if (restored.length === PANELS.length) {
+                order = restored;
+            }
+        } catch (e) {
+            console.error('Ordine personalizzato non leggibile, uso quello di default', e);
+        }
+    }
+
+    function saveOrder() {
+        try {
+            localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order.map(i => PANELS[i].name)));
+        } catch (e) {
+            console.error("Impossibile salvare l'ordine personalizzato", e);
+        }
+    }
+
+    function applyOrderToGrid() {
+        const grid = document.getElementById('grid-view');
+        order.forEach(pid => {
+            const el = grid.querySelector('.card[data-pid="' + pid + '"]');
+            if (el) grid.appendChild(el);
+        });
+    }
+
+    function cardClicked(pid) {
+        // Mentre si sta riordinando (casella tenuta premuta/trascinata)
+        // il tocco non deve aprire il dettaglio del menu.
+        if (reorderMode) return;
+        openDetail(order.indexOf(pid));
+    }
+
+    function syncOrderFromDom() {
+        const grid = document.getElementById('grid-view');
+        order = Array.from(grid.querySelectorAll('.card')).map(c => parseInt(c.dataset.pid, 10));
+    }
+
+    function showReorderActions() {
+        document.getElementById('reorder-actions').style.display = 'flex';
+    }
+
+    function exitReorderMode() {
+        reorderMode = false;
+        document.getElementById('grid-view').querySelectorAll('.card').forEach(c => {
+            c.classList.remove('jiggling', 'dragging');
+        });
+        document.getElementById('reorder-actions').style.display = 'none';
+        saveOrder();
+    }
+
+    const DEFAULT_ORDER_NAMES = [
+        'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
+        'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
+    ];
+
+    function resetOrderToDefault() {
+        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+        const restored = [];
+        const seen = new Set();
+        DEFAULT_ORDER_NAMES.forEach(name => {
+            if (nameToIndex.has(name) && !seen.has(name)) {
+                restored.push(nameToIndex.get(name));
+                seen.add(name);
+            }
+        });
+        // Eventuali rosticcerie non presenti nell'elenco di default (es.
+        // aggiunte in futuro) vengono messe in coda, cosi' il pulsante
+        // Reset non le fa sparire.
+        PANELS.forEach((p, i) => {
+            if (!seen.has(p.name)) {
+                restored.push(i);
+                seen.add(p.name);
+            }
+        });
+        order = restored;
+        applyOrderToGrid();
+        saveOrder();
+    }
+
+    function startDrag(el, e) {
+        reorderMode = true;
+        // Punto in cui l'utente ha "afferrato" la casella, relativo al suo
+        // angolo in alto a sinistra (prima di applicare qualunque
+        // transform): serve per calcolare ad ogni spostamento la nuova
+        // posizione senza accumulare l'offset dalla pressione iniziale.
+        const startRect = el.getBoundingClientRect();
+        dragState = {
+            el,
+            grabOffsetX: e.clientX - startRect.left,
+            grabOffsetY: e.clientY - startRect.top,
+        };
+        el.classList.add('dragging');
+        el.style.touchAction = 'none';
+        document.getElementById('grid-view').querySelectorAll('.card').forEach(c => {
+            if (c !== el) c.classList.add('jiggling');
+        });
+        showReorderActions();
+        if (navigator.vibrate) {
+            try { navigator.vibrate(15); } catch (err) {}
+        }
+    }
+
+    function updateDrag(e) {
+        if (!dragState) return;
+        e.preventDefault();
+
+        const grid = document.getElementById('grid-view');
+        const cards = Array.from(grid.querySelectorAll('.card'));
+        let target = null;
+        for (const c of cards) {
+            if (c === dragState.el) continue;
+            const r = c.getBoundingClientRect();
+            if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+                target = c;
+                break;
+            }
+        }
+        if (target) {
+            // Decidiamo se inserire il trascinato prima o dopo il bersaglio
+            // guardando la posizione del PUNTATORE rispetto al centro del
+            // bersaglio (non il rettangolo dell'elemento trascinato, che a
+            // causa del transform non riflette piu' la sua posizione nel
+            // flusso della griglia).
+            const targetRect = target.getBoundingClientRect();
+            const centerX = targetRect.left + targetRect.width / 2;
+            const centerY = targetRect.top + targetRect.height / 2;
+            const before = (e.clientY < centerY - 2) ||
+                (Math.abs(e.clientY - centerY) <= 2 && e.clientX < centerX);
+            if (before) {
+                grid.insertBefore(dragState.el, target);
+            } else {
+                grid.insertBefore(dragState.el, target.nextSibling);
+            }
+            syncOrderFromDom();
+        }
+
+        // Ricalcoliamo SEMPRE la posizione statica (senza transform) della
+        // casella trascinata, per poi spostarla di conseguenza dal
+        // puntatore: se invece si accumula lo scostamento dalla pressione
+        // iniziale (come in precedenza), dopo un primo scambio la casella
+        // si ritrova in una cella diversa da quella di partenza e il
+        // trascinamento "salta" lontano dal dito/puntatore.
+        dragState.el.style.transform = '';
+        const staticRect = dragState.el.getBoundingClientRect();
+        const dx = e.clientX - dragState.grabOffsetX - staticRect.left;
+        const dy = e.clientY - dragState.grabOffsetY - staticRect.top;
+        dragState.el.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.06)';
+    }
+
+    function endDrag() {
+        if (!dragState) return;
+        dragState.el.classList.remove('dragging');
+        dragState.el.style.transform = '';
+        dragState.el.style.touchAction = '';
+        dragState.el.classList.add('jiggling');
+        dragState = null;
+        syncOrderFromDom();
+        saveOrder();
+    }
+
+    // Stato della "pressione" in corso (prima che diventi un trascinamento
+    // vero e proprio). E' condiviso (non per-casella) perche' puo' esserci
+    // al piu' una pressione/trascinamento attivo alla volta.
+    let pressTimer = null;
+    let pressStartX = 0;
+    let pressStartY = 0;
+    let pressMoved = false;
+
+    // Ascoltiamo pointermove/pointerup sulla finestra (non sulla singola
+    // casella): una volta avviato il trascinamento, la casella viene
+    // spostata nel DOM (insertBefore) per farle cambiare posizione nella
+    // griglia, e questo interrompe la pointer capture sull'elemento —
+    // senza un listener globale, gli eventi successivi al primo scambio
+    // andrebbero persi e il trascinamento si bloccherebbe dopo il primo
+    // spostamento.
+    function onWindowPointerMove(e) {
+        if (dragState) {
+            updateDrag(e);
+            return;
+        }
+        const dx = e.clientX - pressStartX;
+        const dy = e.clientY - pressStartY;
+        if (Math.hypot(dx, dy) > MOVE_CANCEL_PX) {
+            pressMoved = true;
+            clearTimeout(pressTimer);
+        }
+    }
+
+    function onWindowPointerUp() {
+        clearTimeout(pressTimer);
+        if (dragState) {
+            endDrag();
+        }
+        window.removeEventListener('pointermove', onWindowPointerMove);
+        window.removeEventListener('pointerup', onWindowPointerUp);
+        window.removeEventListener('pointercancel', onWindowPointerUp);
+    }
+
+    function attachDragHandlers() {
+        const grid = document.getElementById('grid-view');
+        grid.querySelectorAll('.card').forEach(el => {
+            el.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            el.addEventListener('pointerdown', (e) => {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                pressStartX = e.clientX;
+                pressStartY = e.clientY;
+                pressMoved = false;
+                clearTimeout(pressTimer);
+                pressTimer = setTimeout(() => {
+                    if (!pressMoved) {
+                        startDrag(el, e);
+                    }
+                }, LONG_PRESS_MS);
+                window.addEventListener('pointermove', onWindowPointerMove);
+                window.addEventListener('pointerup', onWindowPointerUp);
+                window.addEventListener('pointercancel', onWindowPointerUp);
+            });
+        });
+    }
+
+    function moveCardByKeyboard(el, key) {
+        const grid = document.getElementById('grid-view');
+        const cards = Array.from(grid.querySelectorAll('.card'));
+        const idx = cards.indexOf(el);
+        if (idx === -1) return;
+
+        // Il numero di colonne cambia con la larghezza dello schermo
+        // (2 su telefono, 4 su schermi larghi): lo leggiamo dal CSS
+        // effettivamente applicato invece di darlo per scontato, cosi'
+        // "su"/"giu'" spostano sempre alla riga giusta.
+        const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+
+        let targetIdx = null;
+        if (key === 'ArrowLeft') targetIdx = idx - 1;
+        else if (key === 'ArrowRight') targetIdx = idx + 1;
+        else if (key === 'ArrowUp') targetIdx = idx - columns;
+        else if (key === 'ArrowDown') targetIdx = idx + columns;
+        if (targetIdx === null || targetIdx < 0 || targetIdx >= cards.length) return;
+
+        const a = el;
+        const b = cards[targetIdx];
+        const aNext = a.nextSibling;
+        const bNext = b.nextSibling;
+        if (aNext === b) {
+            grid.insertBefore(b, a);
+        } else if (bNext === a) {
+            grid.insertBefore(a, b);
+        } else {
+            grid.insertBefore(a, bNext);
+            grid.insertBefore(b, aNext);
+        }
+
+        syncOrderFromDom();
+        reorderMode = true;
+        showReorderActions();
+        el.focus();
+    }
+
+    function handleGlobalKeydown(e) {
+        const inDetail = document.getElementById('grid-view').style.display === 'none';
+        if (inDetail) {
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                showNext();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                showPrev();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeDetail();
+            }
+            // Freccia su/giu': non le intercettiamo, cosi' restano libere
+            // di far scorrere la pagina/l'immagine come richiesto.
+            return;
+        }
+
+        if (e.key === 'Escape') {
+            if (dragState || reorderMode) {
+                e.preventDefault();
+                if (dragState) { endDrag(); }
+                exitReorderMode();
+            }
+            return;
+        }
+
+        if (e.key.indexOf('Arrow') === 0) {
+            const focused = document.activeElement;
+            if (focused && focused.classList && focused.classList.contains('card')) {
+                e.preventDefault();
+                moveCardByKeyboard(focused, e.key);
+            }
+        }
+    }
+
+    function initReorder() {
+        document.querySelectorAll('.card[data-pid]').forEach(card => {
+            const panel = PANELS[Number(card.dataset.pid)];
+            if (!panel) return;
+            card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
+            card.style.backgroundColor = panel.updated ? '#fff7de' : '#e5e5e5';
+            card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#555555';
+        });
+        loadSavedOrder();
+        applyOrderToGrid();
+        document.addEventListener('keydown', handleGlobalKeydown);
+        attachDragHandlers();
+    }
+
+    function renderDetail(i) {
+        const n = order.length;
+        currentIndex = ((i % n) + n) % n;
+        const p = PANELS[order[currentIndex]];
+
+        document.getElementById('main-title').innerText = p.name;
+        document.getElementById('main-updated').style.display = 'none';
+        document.getElementById('main-signature').style.display = 'none';
+        document.getElementById('nav-position').innerText = (currentIndex + 1) + '/' + n;
+
+        const phoneLine = document.getElementById('phone-line');
+        if (p.phone_tel) {
+            phoneLine.innerHTML = '<a href="tel:' + p.phone_tel + '" onclick="event.stopPropagation()">' + p.phone_display + '</a>';
+            phoneLine.style.display = 'block';
+        } else {
+            phoneLine.innerHTML = '';
+            phoneLine.style.display = 'none';
+        }
+
+        const content = document.getElementById('detail-content');
+        if (p.image) {
+            content.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '">';
+        } else {
+            content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
+        }
+    }
+
+    function openDetail(i) {
+        document.getElementById('grid-view').style.display = 'none';
+
+        renderDetail(i);
+        document.getElementById('detail-view').style.display = 'block';
+        document.getElementById('nav-bar').style.display = 'flex';
+        window.scrollTo(0, 0);
+
+        if (!isAdmin) {
+            const p = PANELS[order[currentIndex]];
+            fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {});
+        }
+    }
+
+    function showPrev() { renderDetail(currentIndex - 1); }
+    function showNext() { renderDetail(currentIndex + 1); }
+
+    function closeDetail() {
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('phone-line').style.display = 'none';
+        document.getElementById('nav-bar').style.display = 'none';
+        document.getElementById('grid-view').style.display = 'grid';
+        document.getElementById('main-updated').style.display = '';
+        document.getElementById('main-signature').style.display = '';
+
+        const mainTitle = document.getElementById('main-title');
+        if (isAdmin) {
+            updateAdminTitle();
+        } else {
+            mainTitle.innerText = 'Rosticcerie';
+        }
+
+        window.scrollTo(0, 0);
+    }
+
+    async function forceFreshReload() {
+        // Svuota le cache gestite dalla pagina e apre un URL sempre nuovo.
+        try {
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }
+        } catch (e) {
+            console.warn('Cache non svuotabile', e);
+        }
+
+        const freshUrl = new URL(window.location.href);
+        freshUrl.searchParams.set('refresh', Date.now().toString());
+        window.location.replace(freshUrl.toString());
+    }
+
+    function attachRefreshHandlers() {
+        ['main-updated', 'main-signature'].forEach(id => {
+            const element = document.getElementById(id);
+            if (!element) return;
+            element.setAttribute('role', 'button');
+            element.setAttribute('tabindex', '0');
+            element.setAttribute('title', 'Aggiorna i dati');
+            element.addEventListener('click', forceFreshReload);
+            element.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    forceFreshReload();
+                }
+            });
+        });
+    }
+
+    function handleTitleClick() {
+        const inDetail = document.getElementById('grid-view').style.display === 'none';
+        if (inDetail) {
+            const p = PANELS[order[currentIndex]];
+            if (p && p.url) {
+                window.open(p.url, '_blank', 'noopener');
+            }
+            return;
+        }
+        if (isAdmin) {
+            if (confirm("Vuoi davvero azzerare il contatore? (Verra' azzerato per tutti i dispositivi)")) {
+                resetCounterGlobally();
+            }
+        }
+    }
+
+    window.onload = loadCounter;
+    document.addEventListener('DOMContentLoaded', () => {
+        initReorder();
+        attachRefreshHandlers();
+    });
+  </script>
+</head>
+<body>
+  <header id="main-header">
+    <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
+    <div id="reorder-actions">
+      <button type="button" id="reorder-reset-btn" onclick="resetOrderToDefault()">Reset</button>
+      <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
+    </div>
+    <div id="phone-line"></div>
+    <p id="main-updated" class="updated" onclick="forceFreshReload()">Martedì 8 settembre</p>
+    <p id="main-signature" class="signature" onclick="forceFreshReload()">by Mazzarisi</p>
+  </header>
+
+  <main id="grid-view">
+    
+        <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(0)">
+            <span class="card-name" style="color:#111">Fantasia</span>
+            <span class="card-counter" id="card-counter-0"></span>
+        </button>
+        
+        <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(1)">
+            <span class="card-name" style="color:#111">Cibària</span>
+            <span class="card-counter" id="card-counter-1"></span>
+        </button>
+        
+        <button type="button" class="card" data-pid="2" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(2)">
+            <span class="card-name" style="color:#111">Impastamò</span>
+            <span class="card-counter" id="card-counter-2"></span>
+        </button>
+        
+        <button type="button" class="card" data-pid="3" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(3)">
+            <span class="card-name" style="color:#111">Le delizie di Michela</span>
+            <span class="card-counter" id="card-counter-3"></span>
+        </button>
+        
+        <button type="button" class="card" data-pid="4" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(4)">
+            <span class="card-name" style="color:#111">Santoro (Castellana)</span>
+            <span class="card-counter" id="card-counter-4"></span>
+        </button>
+        
+        <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(5)">
+            <span class="card-name" style="color:#111">Pane &amp; Co</span>
+            <span class="card-counter" id="card-counter-5"></span>
+        </button>
+        
+        <button type="button" class="card" data-pid="6" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(6)">
+            <span class="card-name" style="color:#111">Bollenti piatti</span>
+            <span class="card-counter" id="card-counter-6"></span>
+        </button>
+        
+  </main>
+
+  <div id="detail-view">
+    <div id="detail-content" onclick="closeDetail()"></div>
+  </div>
+
+  <div id="nav-bar">
+    <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
+    <span id="nav-position"></span>
+    <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
+  </div>
+</body>
+</html>
