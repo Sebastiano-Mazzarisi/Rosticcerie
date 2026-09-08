@@ -3116,6 +3116,39 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         window.scrollTo(0, 0);
     }}
 
+    async function forceFreshReload() {{
+        // Svuota le cache gestite dalla pagina e apre un URL sempre nuovo.
+        try {{
+            if ('caches' in window) {{
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }}
+        }} catch (e) {{
+            console.warn('Cache non svuotabile', e);
+        }}
+
+        const freshUrl = new URL(window.location.href);
+        freshUrl.searchParams.set('refresh', Date.now().toString());
+        window.location.replace(freshUrl.toString());
+    }}
+
+    function attachRefreshHandlers() {{
+        ['main-updated', 'main-signature'].forEach(id => {{
+            const element = document.getElementById(id);
+            if (!element) return;
+            element.setAttribute('role', 'button');
+            element.setAttribute('tabindex', '0');
+            element.setAttribute('title', 'Aggiorna i dati');
+            element.addEventListener('click', forceFreshReload);
+            element.addEventListener('keydown', (event) => {{
+                if (event.key === 'Enter' || event.key === ' ') {{
+                    event.preventDefault();
+                    forceFreshReload();
+                }}
+            }});
+        }});
+    }}
+
     function handleTitleClick() {{
         const inDetail = document.getElementById('grid-view').style.display === 'none';
         if (inDetail) {{
@@ -3133,7 +3166,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     window.onload = loadCounter;
-    document.addEventListener('DOMContentLoaded', initReorder);
+    document.addEventListener('DOMContentLoaded', () => {{
+        initReorder();
+        attachRefreshHandlers();
+    }});
   </script>
 </head>
 <body>
