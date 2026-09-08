@@ -3552,10 +3552,7 @@ def extract_pages() -> List[Dict]:
             panels.append(panel)
         except Exception as exc:
             existing_panel = existing_publish_panel_if_today(name, require_today=False)
-            # Per Bollenti piatti non riutilizziamo una vecchia immagine:
-            # nasconderebbe il fallimento dell'estrazione e continuerebbe a
-            # mostrare il menu troncato gia' pubblicato.
-            if existing_panel and name != "Bollenti piatti":
+            if existing_panel:
                 print(f"{name}: menu completo non leggibile ora, tengo l'ultimo menu salvato.")
                 panels.append(existing_panel)
             else:
