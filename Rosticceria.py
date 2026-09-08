@@ -3343,7 +3343,10 @@ def extract_pages() -> List[Dict]:
     for facebook_page in FACEBOOK_PAGES:
         name = facebook_page["name"]
         existing_panel = existing_publish_panel_if_today(name)
-        if existing_panel:
+        # Impastamo' puo' pubblicare prima un annuncio di riapertura e poi il
+        # menu nello stesso giorno: non riutilizziamo quindi una foto gia'
+        # salvata, altrimenti non arriveremmo mai al post del menu.
+        if existing_panel and name != "Impastamò":
             print(f"{name}: foto di oggi già presente, salto la verifica.")
             panels.append(existing_panel)
             continue
@@ -3396,7 +3399,7 @@ def extract_pages() -> List[Dict]:
             )
         except Exception as exc:
             existing_panel = existing_publish_panel_if_today(name, require_today=False)
-            if existing_panel:
+            if existing_panel and name != "Impastamò":
                 print(f"{name}: Facebook non leggibile ora, tengo l'ultima foto salvata.")
                 panels.append(existing_panel)
             else:
