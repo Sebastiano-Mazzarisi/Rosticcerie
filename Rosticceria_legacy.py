@@ -16,6 +16,7 @@ import argparse
 import datetime
 import html
 import unicodedata
+import urllib.parse
 from zoneinfo import ZoneInfo
 from typing import Dict, List, Optional, Tuple
 
@@ -1100,13 +1101,71 @@ def find_largest_visible_image_url(page) -> str:
     return best_url
 
 
+def facebook_image_url_variants(image_url: str) -> List[str]:
+    """Restituisce varianti CDN evitando, quando possibile, il crop quadrato
+    usato dalle miniature Facebook."""
+    if not image_url:
+        return []
+
+    variants: List[str] = []
+
+    def add(url: str) -> None:
+        if url and url.startswith("http") and url not in variants:
+            variants.append(url)
+
+    try:
+        parsed = urllib.parse.urlsplit(image_url)
+        query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+
+        no_crop_query = [
+            (key, value)
+            for key, value in query
+            if key not in {"stp", "cstp", "ctp"}
+        ]
+        add(
+            urllib.parse.urlunsplit(
+                (
+                    parsed.scheme,
+                    parsed.netloc,
+                    parsed.path,
+                    urllib.parse.urlencode(no_crop_query),
+                    parsed.fragment,
+                )
+            )
+        )
+
+        no_stp_query = [
+            (key, "s960x960" if key == "ctp" else value)
+            for key, value in query
+            if key not in {"stp", "cstp"}
+        ]
+        add(
+            urllib.parse.urlunsplit(
+                (
+                    parsed.scheme,
+                    parsed.netloc,
+                    parsed.path,
+                    urllib.parse.urlencode(no_stp_query),
+                    parsed.fragment,
+                )
+            )
+        )
+    except Exception:
+        pass
+
+    add(re.sub(r"(?:ctp=|s)\d+x\d+", "s960x960", image_url))
+    add(image_url)
+    return variants
+
+
 def cookies_look_authenticated(cookies: List[Dict]) -> bool:
     names = {cookie.get("name", "") for cookie in cookies}
     return bool(names & FACEBOOK_LOGIN_COOKIE_NAMES)
 
 
 def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dict[str, str]]:
-    """Cerca una foto-menu nella griglia Foto quando il feed e' oscurato dal login."""
+    """Cerca una foto-menu nella griglia Foto quando il menu e' pubblicato
+    come immagine senza testo nel feed."""
     photos_page = context.new_page()
     try:
         photos_page.goto(
@@ -1156,33 +1215,98 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
 
         # I link /photo mantengono l'ordine delle immagini recenti.
         candidates.sort(key=lambda item: not item["is_photo_link"])
+        menu_candidates = []
         for candidate in candidates[:80]:
             image_url = candidate.get("src", "")
             image_alt = (candidate.get("alt", "") or "").strip()
-            if looks_like_closure_notice(image_alt):
+            clean_alt = clean_facebook_alt_text(image_alt) or image_alt
+            score = menu_photo_score(clean_alt)
+            if score < 0:
+                print(
+                    "Scarto foto avviso dalla griglia Foto: "
+                    f"{clean_post_text(clean_alt)[:90]}"
+                )
                 continue
-            if not looks_like_real_menu(image_alt):
+            if score <= 0:
                 continue
 
             photo_href = candidate.get("href", "")
 
-            try:
-                image_url = re.sub(r"(?:ctp=|s)\d+x\d+", "s960x960", image_url)
-                image_bytes = download_image(image_url)
-                width, height = Image.open(io.BytesIO(image_bytes)).size
-                if min(width, height) < 380:
+            image_urls_to_try = []
+            if photo_href:
+                try:
+                    photo_page = context.new_page()
+                    photo_page.goto(photo_href, wait_until="domcontentloaded", timeout=60000)
+                    photo_page.wait_for_timeout(2500)
+                    visible_url = find_largest_visible_image_url(photo_page)
+                    photo_page.close()
+                    if visible_url:
+                        image_urls_to_try.append(visible_url)
+                except Exception:
+                    try:
+                        photo_page.close()
+                    except Exception:
+                        pass
+            image_urls_to_try.extend(facebook_image_url_variants(image_url))
+
+            selected_image_url = ""
+            for variant_url in image_urls_to_try:
+                try:
+                    image_bytes = download_image(variant_url)
+                    width, height = Image.open(io.BytesIO(image_bytes)).size
+                    if min(width, height) < 380:
+                        continue
+                    selected_image_url = variant_url
+                    # Se la foto e' verticale, abbiamo evitato il crop
+                    # quadrato della miniatura Facebook.
+                    if height > width:
+                        break
+                    if not selected_image_url:
+                        selected_image_url = variant_url
+                except Exception:
                     continue
-            except Exception:
+            if not selected_image_url:
                 continue
 
-            print("Impastamo': foto menu trovata nella griglia Foto tramite OCR Facebook.")
+            menu_candidates.append(
+                {
+                    "image_url": selected_image_url,
+                    "photo_url": photo_href,
+                    "text": clean_alt,
+                    "image_alt": image_alt,
+                    "published_at": rome_now().strftime("%d/%m/%Y"),
+                    "published_at_raw": "foto menu trovata nella griglia Foto",
+                    "score": score,
+                }
+            )
+            print(
+                "Candidato menu Foto punteggio "
+                f"{score}: {clean_post_text(clean_alt)[:90]}"
+            )
+            if score >= 1000:
+                print(
+                    "Scelgo subito il primo menu forte dalla griglia Foto."
+                )
+                return {
+                    "image_url": selected_image_url,
+                    "photo_url": photo_href,
+                    "text": clean_alt,
+                    "image_alt": image_alt,
+                    "published_at": rome_now().strftime("%d/%m/%Y"),
+                    "published_at_raw": "foto menu trovata nella griglia Foto",
+                }
+
+        if menu_candidates:
+            menu_candidates.sort(key=lambda item: item["score"], reverse=True)
+            selected = menu_candidates[0]
+            print(
+                "Scelgo la foto menu dalla griglia Foto con punteggio "
+                f"{selected['score']}."
+            )
             return {
-                "image_url": image_url,
-                "photo_url": photo_href,
-                "text": "",
-                "image_alt": image_alt,
-                "published_at": rome_now().strftime("%d/%m/%Y"),
-                "published_at_raw": "foto menu trovata nella griglia Foto",
+                key: value
+                for key, value in selected.items()
+                if key != "score"
             }
     except Exception:
         return None
@@ -1199,6 +1323,7 @@ def extract_first_facebook_image(
     prefer_active_closure: bool = False,
     skip_closure_notices: bool = False,
     skip_first_today_post: bool = False,
+    photo_grid_first: bool = False,
 ) -> Dict[str, str]:
     cookie_path = os.path.join(script_dir(), COOKIE_FILE)
 
@@ -1241,11 +1366,14 @@ def extract_first_facebook_image(
                 if closure_post:
                     return closure_post
 
-            if skip_closure_notices:
+            if photo_grid_first:
                 menu_photo = find_first_menu_photo_via_photos(context, facebook_url)
                 if menu_photo:
-                    print("Impastamo': menu trovato nella griglia Foto di Facebook.")
+                    print("Menu trovato nella griglia Foto di Facebook.")
                     return menu_photo
+                raise RuntimeError(
+                    "Menu non trovato nella griglia Foto: trovati solo avvisi o foto non riconosciute."
+                )
 
             page.wait_for_timeout(5000)
             try:
@@ -1967,6 +2095,29 @@ def looks_like_menu_notice(text: str) -> bool:
 def looks_like_real_menu(text: str) -> bool:
     """Distingue un menu effettivo da un annuncio che cita genericamente i menu."""
     return bool(REAL_MENU_PATTERN.search(text or ""))
+
+
+def menu_photo_score(text: str) -> int:
+    """Assegna un punteggio a una foto candidata: positivo per menu veri,
+    negativo per avvisi di chiusura/riapertura."""
+    value = (text or "").lower()
+    if not value:
+        return 0
+
+    if looks_like_closure_notice(value) and not looks_like_real_menu(value):
+        return -1000
+
+    score = 0
+    if looks_like_real_menu(value):
+        score += 1000
+    if re.search(r"\bmen[uù]\b|\bmenu\b", value, re.IGNORECASE):
+        score += 200
+    for term in ("antipasti", "primi", "secondi", "contorni"):
+        if term in value:
+            score += 120
+    if re.search(r"\b\d{1,2}\s*/\s*\d{1,2}\b", value):
+        score += 80
+    return score
 
 
 def clean_facebook_alt_text(alt: str) -> str:
