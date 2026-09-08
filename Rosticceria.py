@@ -808,7 +808,9 @@ def image_score(image) -> int:
 
 
 def find_first_post_image(
-    page, skip_closure_notices: bool = False
+    page,
+    skip_closure_notices: bool = False,
+    skip_first_today_post: bool = False,
 ) -> Optional[Dict[str, str]]:
     post_selectors = [
         'div[role="article"]',
@@ -816,6 +818,7 @@ def find_first_post_image(
     ]
     candidates = []
     post_index = 0
+    skipped_first_today_post = False
 
     for selector in post_selectors:
         posts = page.locator(selector).all()
@@ -880,6 +883,17 @@ def find_first_post_image(
                     # primo indicatore temporale relativo trovato nel DOM.
                     published_at_raw = date_in_post_text or facebook_time
                     published_at = date_in_post_text or normalized_facebook_time or rome_now().strftime("%d/%m/%Y")
+                    if (
+                        skip_first_today_post
+                        and not skipped_first_today_post
+                        and parse_status_date(published_at) == rome_now().date()
+                    ):
+                        skipped_first_today_post = True
+                        print(
+                            "Impastamò: salto per prova il primo post di oggi "
+                            "e cerco quello successivo."
+                        )
+                        continue
                     try:
                         photo_url = best_image.evaluate(
                             "image => { const link = image.closest('a[href]'); return link ? link.href : ''; }"
@@ -1089,6 +1103,7 @@ def extract_first_facebook_image(
     facebook_url: str,
     prefer_active_closure: bool = False,
     skip_closure_notices: bool = False,
+    skip_first_today_post: bool = False,
 ) -> Dict[str, str]:
     cookie_path = os.path.join(script_dir(), COOKIE_FILE)
 
@@ -1137,7 +1152,11 @@ def extract_first_facebook_image(
             except Exception:
                 pass
             for _ in range(4):
-                post = find_first_post_image(page, skip_closure_notices=skip_closure_notices)
+                post = find_first_post_image(
+                    page,
+                    skip_closure_notices=skip_closure_notices,
+                    skip_first_today_post=skip_first_today_post,
+                )
                 if post:
                     photo_url = post.get("photo_url", "")
                     if photo_url:
@@ -3460,6 +3479,7 @@ def extract_pages() -> List[Dict]:
                 facebook_page["url"],
                 prefer_active_closure=(name == "Le delizie di Michela"),
                 skip_closure_notices=(name == "Impastamò"),
+                skip_first_today_post=(name == "Impastamò"),
             )
             image_bytes = download_image(post["image_url"])
             
