@@ -857,8 +857,11 @@ def find_first_post_image(
                         full_post_text = clean_post_text(post.inner_text(timeout=3000))
                     except Exception:
                         full_post_text = post_text
-                    if skip_closure_notices and looks_like_closure_notice(
-                        f"{post_text} {full_post_text} {image_alt}"
+                    combined_text = f"{post_text} {full_post_text} {image_alt}"
+                    if (
+                        skip_closure_notices
+                        and looks_like_closure_notice(combined_text)
+                        and not looks_like_menu_notice(combined_text)
                     ):
                         print(
                             "Impastamò: salto l'immagine dell'annuncio di riapertura "
@@ -1776,6 +1779,11 @@ CLOSURE_NOTICE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+MENU_NOTICE_PATTERN = re.compile(
+    r"\bmen[uù]\b|\bmenu\b|\bprimi\b|\bsecondi\b|\bcontorni\b|\bantipasti\b|\bpiatti\b",
+    re.IGNORECASE,
+)
+
 
 def looks_like_closure_notice(text: str) -> bool:
     """Riconosce un post/cartello che avvisa di una chiusura per ferie o
@@ -1783,6 +1791,10 @@ def looks_like_closure_notice(text: str) -> bool:
     da poter evitare di trattarlo come una normale lavagna del menu del
     giorno."""
     return bool(CLOSURE_NOTICE_PATTERN.search(text or ""))
+
+
+def looks_like_menu_notice(text: str) -> bool:
+    return bool(MENU_NOTICE_PATTERN.search(text or ""))
 
 
 def clean_facebook_alt_text(alt: str) -> str:
