@@ -1595,11 +1595,17 @@ def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
     probe_bbox = probe_draw.textbbox((0, 0), date_text, font=probe_font)
     probe_width = probe_bbox[2] - probe_bbox[0]
     if probe_width > 0:
-        font_size = max(24, int(probe_size * target_text_width / probe_width))
+        font_size = max(18, int(probe_size * target_text_width / probe_width))
     else:
-        font_size = max(24, height // 14)
+        font_size = max(18, height // 14)
     font = _load_bold_font(font_size)
-    bar_height = max(48, int(font_size / 0.45))
+    while font_size > 12:
+        bbox = probe_draw.textbbox((0, 0), date_text, font=font)
+        if bbox[2] - bbox[0] <= width - 12:
+            break
+        font_size -= 1
+        font = _load_bold_font(font_size)
+    bar_height = max(42, min(86, int(font_size / 0.45)))
 
     # Stesso giallo usato nelle card di Pane&Co (255, 214, 65), cosi' la
     # fascia con la data ha lo stesso stile in tutte le rosticcerie.
@@ -1633,7 +1639,11 @@ def add_white_border(image_bytes: bytes, border: int = 10) -> bytes:
     return output.getvalue()
 
 
-def _widest_dark_column_run(image: Image.Image) -> Optional[Tuple[int, int]]:
+def _widest_dark_column_run(
+    image: Image.Image,
+    dark_threshold: int = 130,
+    min_dark_ratio: float = 0.45,
+) -> Optional[Tuple[int, int]]:
     """Individua il blocco contiguo di colonne scure piu' ampio nell'immagine
     (tipicamente la lavagna). Restituisce (inizio, fine) oppure None se non
     trova nulla di sufficientemente scuro."""
@@ -1648,10 +1658,10 @@ def _widest_dark_column_run(image: Image.Image) -> Optional[Tuple[int, int]]:
         total_pixels = 0
         for y in range(y_start, y_end, step):
             r, g, b = image.getpixel((x, y))
-            if (r + g + b) / 3 < 130:
+            if (r + g + b) / 3 < dark_threshold:
                 dark_pixels += 1
             total_pixels += 1
-        is_dark_col.append(total_pixels > 0 and (dark_pixels / total_pixels) >= 0.45)
+        is_dark_col.append(total_pixels > 0 and (dark_pixels / total_pixels) >= min_dark_ratio)
 
     # Riempie piccoli buchi (rumore) tra colonne scure per unire un blocco continuo
     max_gap = max(5, width // 100)
@@ -1974,7 +1984,7 @@ def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
     if width < 100 or height < 100:
         return image_bytes
 
-    bounds = _widest_dark_column_run(image)
+    bounds = _widest_dark_column_run(image, dark_threshold=100, min_dark_ratio=0.25)
     if bounds is None:
         return image_bytes
     best_start, best_end = bounds
@@ -1985,7 +1995,10 @@ def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
         # tenere la foto intera piuttosto che un ritaglio inutile o illeggibile.
         return image_bytes
 
-    margin = 25
+    # Michela pubblica spesso lavagnette alte e strette: anche pochi pixel di
+    # parete laterale rubano spazio utile al testo. Usiamo quindi un margine
+    # molto piccolo, a differenza del ritaglio piu' permissivo usato altrove.
+    margin = max(3, min(8, width // 90))
     left = max(0, best_start - margin)
     right = min(width, best_end + margin)
     cropped = image.crop((left, 0, right, height))
@@ -1997,11 +2010,11 @@ def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
     # chiaramente piu' stretto e ben centrato, restringe ulteriormente,
     # eliminando i bordi inutili rimasti ai lati.
     cropped_width = cropped.size[0]
-    refine_bounds = _widest_dark_column_run(cropped)
+    refine_bounds = _widest_dark_column_run(cropped, dark_threshold=100, min_dark_ratio=0.25)
     if refine_bounds is not None:
         r_start, r_end = refine_bounds
         r_len = r_end - r_start
-        if max(cropped_width * 0.15, 150) <= r_len < cropped_width * 0.85:
+        if max(cropped_width * 0.15, 120) <= r_len < cropped_width * 0.95:
             r_left = max(0, r_start - margin)
             r_right = min(cropped_width, r_end + margin)
             cropped = cropped.crop((r_left, 0, r_right, height))
@@ -2201,10 +2214,19 @@ def write_publish_status(panels: List[Dict], output_dir: str) -> None:
 
 
 def _load_bold_font(size: int):
-    candidates = [
+    candidates = []
+    if os.name == "nt":
+        windir = os.environ.get("WINDIR", "C:\\Windows")
+        candidates.extend(
+            [
+                os.path.join(windir, "Fonts", "arialbd.ttf"),
+                os.path.join(windir, "Fonts", "segoeuib.ttf"),
+            ]
+        )
+    candidates.extend([
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-    ]
+    ])
     for path in candidates:
         if os.path.exists(path):
             try:
