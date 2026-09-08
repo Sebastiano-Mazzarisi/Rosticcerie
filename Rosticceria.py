@@ -331,6 +331,32 @@ def expand_facebook_see_more(post, page) -> None:
         except Exception:
             before_text = ""
 
+        # Nella pagina Facebook attuale "Altro..." spesso e' uno span di testo
+        # senza ruolo button: cerchiamolo direttamente nel post e facciamolo
+        # attivare con un click forzato.
+        try:
+            more_pattern = re.compile(
+                r"^(?:…|\.\.\.)?\s*(?:Altro|Mostra altro|See more)\s*\.*$",
+                re.IGNORECASE,
+            )
+            for element in post.get_by_text(more_pattern).all():
+                if not element.is_visible(timeout=700):
+                    continue
+                element.click(timeout=2500, force=True)
+                page.wait_for_timeout(1200)
+                clicked = True
+                break
+        except Exception:
+            pass
+
+        if clicked:
+            try:
+                after_text = post.inner_text(timeout=1500)
+            except Exception:
+                after_text = ""
+            if after_text and after_text != before_text and not has_see_more_marker(after_text):
+                return
+
         for selector in selectors:
             try:
                 for element in post.locator(selector).all():
