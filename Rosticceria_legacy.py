@@ -1114,51 +1114,59 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
             wait_until="domcontentloaded",
             timeout=60000,
         )
-        try:
-            photos_page.get_by_role("button", name="Consenti tutti i cookie").click(timeout=3000)
-        except Exception:
-            pass
-        photos_page.wait_for_timeout(4000)
-
-        # Nella versione anonima di Facebook il link e l'immagine possono
-        # essere fratelli nel DOM, non immagine discendente del link.
-        images = photos_page.locator("img").all()
-        for image in images[:80]:
+        for cookie_label in ("Consenti tutti i cookie", "Allow all cookies"):
             try:
-                image_url = image.get_attribute("src") or ""
-                image_alt = (image.get_attribute("alt") or "").strip()
+                photos_page.get_by_role("button", name=cookie_label).click(timeout=3000)
+                break
+            except Exception:
+                pass
+        photos_page.wait_for_timeout(4000)
+        photos_page.keyboard.press("Escape")
+        photos_page.wait_for_timeout(1000)
+
+        # Facebook espone la griglia come immagini lazy-loaded. Usiamo
+        # currentSrc e l'alt OCR, come nella diagnostica prova.py.
+        candidates = []
+        seen = set()
+        for image in photos_page.locator("img").all():
+            try:
+                data = image.evaluate(
+                    """image => ({
+                        src: image.currentSrc || image.src || '',
+                        alt: image.alt || '',
+                        width: image.naturalWidth || image.width || 0,
+                        height: image.naturalHeight || image.height || 0,
+                        href: image.closest('a[href]') ? image.closest('a[href]').href : ''
+                    })"""
+                )
             except Exception:
                 continue
+            image_url = data.get("src", "")
             if not image_url.startswith("http") or "emoji.php" in image_url:
                 continue
-            # La prima foto puo' essere copertina o avviso: il menu viene
-            # identificato dal testo alternativo OCR di Facebook.
+            if "scontent" not in image_url and "fbcdn" not in image_url:
+                continue
+            if data.get("width", 0) < 100 or data.get("height", 0) < 100:
+                continue
+            if image_url in seen:
+                continue
+            seen.add(image_url)
+            data["is_photo_link"] = "/photo" in data.get("href", "")
+            candidates.append(data)
+
+        # I link /photo mantengono l'ordine delle immagini recenti.
+        candidates.sort(key=lambda item: not item["is_photo_link"])
+        for candidate in candidates[:80]:
+            image_url = candidate.get("src", "")
+            image_alt = (candidate.get("alt", "") or "").strip()
             if looks_like_closure_notice(image_alt):
                 continue
             if not looks_like_real_menu(image_alt):
                 continue
 
-            try:
-                photo_href = image.evaluate(
-                    "image => { const link = image.closest('a[href]'); return link ? link.href : ''; }"
-                )
-            except Exception:
-                photo_href = ""
+            photo_href = candidate.get("href", "")
 
             try:
-                if photo_href:
-                    image.click(timeout=5000)
-                else:
-                    raise RuntimeError("link foto non trovato")
-                photos_page.wait_for_timeout(2000)
-                photos_page.keyboard.press("Escape")
-                photos_page.wait_for_timeout(500)
-            except Exception:
-                pass
-
-            try:
-                # In sessione anonima og:image puo' puntare alla foto profilo.
-                # La miniatura contiene comunque un URL CDN convertibile.
                 image_url = re.sub(r"(?:ctp=|s)\d+x\d+", "s960x960", image_url)
                 image_bytes = download_image(image_url)
                 width, height = Image.open(io.BytesIO(image_bytes)).size
@@ -1167,6 +1175,7 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
             except Exception:
                 continue
 
+            print("Impastamo': foto menu trovata nella griglia Foto tramite OCR Facebook.")
             return {
                 "image_url": image_url,
                 "photo_url": photo_href,
