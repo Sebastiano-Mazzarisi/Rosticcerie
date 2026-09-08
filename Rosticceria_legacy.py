@@ -1105,6 +1105,75 @@ def cookies_look_authenticated(cookies: List[Dict]) -> bool:
     return bool(names & FACEBOOK_LOGIN_COOKIE_NAMES)
 
 
+def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dict[str, str]]:
+    """Cerca una foto-menu nella griglia Foto quando il feed e' oscurato dal login."""
+    photos_page = context.new_page()
+    try:
+        photos_page.goto(
+            build_photos_tab_url(facebook_url),
+            wait_until="domcontentloaded",
+            timeout=60000,
+        )
+        try:
+            photos_page.get_by_role("button", name="Consenti tutti i cookie").click(timeout=3000)
+        except Exception:
+            pass
+        photos_page.wait_for_timeout(4000)
+
+        anchors = photos_page.locator('a[href*="/photo"]').all()
+        for anchor in anchors[:30]:
+            try:
+                image = anchor.locator("img").first
+                image_url = image.get_attribute("src") or ""
+                image_alt = (image.get_attribute("alt") or "").strip()
+            except Exception:
+                continue
+            if not image_url.startswith("http") or "emoji.php" in image_url:
+                continue
+            # La prima foto puo' essere l'avviso: il menu successivo e' una
+            # foto senza descrizione di chiusura.
+            if looks_like_closure_notice(image_alt):
+                continue
+
+            try:
+                anchor.click(timeout=5000)
+                photos_page.wait_for_timeout(2000)
+                larger_image_url = photos_page.locator(
+                    'meta[property="og:image"]'
+                ).first.get_attribute("content", timeout=2000)
+                if larger_image_url and larger_image_url.startswith("http"):
+                    image_url = larger_image_url
+                photos_page.keyboard.press("Escape")
+                photos_page.wait_for_timeout(500)
+            except Exception:
+                pass
+
+            try:
+                image_bytes = download_image(image_url)
+                width, height = Image.open(io.BytesIO(image_bytes)).size
+                if min(width, height) < 380:
+                    continue
+            except Exception:
+                continue
+
+            return {
+                "image_url": image_url,
+                "photo_url": "",
+                "text": "",
+                "image_alt": image_alt,
+                "published_at": rome_now().strftime("%d/%m/%Y"),
+                "published_at_raw": "foto menu trovata nella griglia Foto",
+            }
+    except Exception:
+        return None
+    finally:
+        try:
+            photos_page.close()
+        except Exception:
+            pass
+    return None
+
+
 def extract_first_facebook_image(
     facebook_url: str,
     prefer_active_closure: bool = False,
@@ -1151,6 +1220,12 @@ def extract_first_facebook_image(
                     closure_post = None
                 if closure_post:
                     return closure_post
+
+            if skip_closure_notices:
+                menu_photo = find_first_menu_photo_via_photos(context, facebook_url)
+                if menu_photo:
+                    print("Impastamo': menu trovato nella griglia Foto di Facebook.")
+                    return menu_photo
 
             page.wait_for_timeout(5000)
             try:
