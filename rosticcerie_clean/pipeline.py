@@ -11,6 +11,20 @@ def _existing(config: RosticceriaConfig, require_today: bool = True) -> Dict | N
     return legacy.existing_publish_panel_if_today(config.name, require_today=require_today)
 
 
+def _normalize_bollenti_panel(config: RosticceriaConfig, panel: Dict) -> Dict:
+    """Considera aggiornato Bollenti quando il menu e' valido ma manca la data DOM."""
+    if config.name != "Bollenti piatti":
+        return panel
+    text = panel.get("text", "").lower()
+    if panel.get("image_bytes") and legacy.looks_like_real_menu(text):
+        panel = dict(panel)
+        if not panel.get("published_at"):
+            panel["published_at"] = legacy.rome_now().strftime("%d/%m/%Y")
+        if not panel.get("published_at_raw"):
+            panel["published_at_raw"] = "menu valido senza data Facebook"
+    return panel
+
+
 def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
     existing = _existing(config)
     if existing and not config.force_refresh_today:
@@ -73,7 +87,9 @@ def _extract_facebook_text(config: RosticceriaConfig) -> Dict:
         "required_terms": list(config.required_terms),
     }
     print(f"{config.name}: cerco menu testuale Facebook...")
-    panel = legacy.extract_first_facebook_text_menu(page_config)
+    panel = _normalize_bollenti_panel(
+        config, legacy.extract_first_facebook_text_menu(page_config)
+    )
     legacy.save_image(panel["image_bytes"], f"Rosticceria_{legacy.safe_file_name(config.name)}.jpg")
     return panel
 
@@ -81,6 +97,14 @@ def _extract_facebook_text(config: RosticceriaConfig) -> Dict:
 def _fallback_panel(config: RosticceriaConfig, exc: Exception) -> Dict:
     existing = _existing(config, require_today=False)
     if existing:
+        if config.name == "Impastamò" and legacy.looks_like_closure_notice(
+            existing.get("text", "")
+        ):
+            print(f"{config.name}: ultimo dato salvato e' solo un avviso, non lo mostro come menu.")
+            return {
+                "name": config.name,
+                "error": "Menu non trovato: trovato solo un avviso di riapertura.",
+            }
         print(f"{config.name}: errore sorgente, tengo ultimo menu salvato: {exc}")
         return existing
     return {"name": config.name, "error": str(exc)}
@@ -101,4 +125,3 @@ def extract_all() -> List[Dict]:
         except Exception as exc:
             panels.append(_fallback_panel(config, exc))
     return panels
-
