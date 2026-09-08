@@ -831,6 +831,20 @@ def find_first_post_image(
                     best_image = image
                     best_score = score
 
+            # Facebook sometimes leaves the lazy-loaded image without a
+            # usable bounding box in headless mode. Keep a direct fallback
+            # so a later menu post is not discarded after an announcement.
+            if best_image is None:
+                for image in images:
+                    try:
+                        src = image.get_attribute("src") or ""
+                    except Exception:
+                        src = ""
+                    if src.startswith("http") and "emoji.php" not in src:
+                        best_image = image
+                        best_score = 1
+                        break
+
             if best_image and best_score:
                 image_url = best_image.get_attribute("src")
                 if image_url:
