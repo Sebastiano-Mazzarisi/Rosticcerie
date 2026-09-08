@@ -664,6 +664,20 @@ def image_score(image) -> int:
     return width * height
 
 
+CLOSURE_NOTICE_PATTERN = re.compile(
+    r"\bchius[oi]\b|\bchiusura\b|\bferie\b|\briapert\w*\b|\briapr\w*\b"
+    r"|\bsiamo\s+tornat[io]\b|\bnuovamente\s+apert[io]\b"
+    r"|\bdi\s+nuovo\s+apert[io]\b|\bsaremo\s+chius\w*\b",
+    re.IGNORECASE,
+)
+
+
+def looks_like_closure_notice(text: str) -> bool:
+    """Riconosce annunci di chiusura o riapertura, da saltare quando
+    cerchiamo l'immagine del menu di Impastamo'."""
+    return bool(CLOSURE_NOTICE_PATTERN.search(text or ""))
+
+
 def find_first_post_image(
     page, skip_closure_notices: bool = False
 ) -> Optional[Dict[str, str]]:
