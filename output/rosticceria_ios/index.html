@@ -40,15 +40,11 @@
       margin: 4px 0 0;
       color: #fff;
       font-size: 16px;
-      cursor: pointer;
-      user-select: none;
     }
     .signature {
       margin: 2px 0 0;
       color: #fff;
       font-size: 14px;
-      cursor: pointer;
-      user-select: none;
     }
     /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
     #phone-line {
@@ -227,7 +223,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788872353", "error": "", "updated": true, "url": "https://www.facebook.com/RosticceriaFantasia"}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788872353", "error": "", "updated": true, "url": "https://www.facebook.com/cibaria.asporto"}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788872353", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=61560452176728"}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788872353", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=100045208848338"}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788872353", "error": "", "updated": true, "url": "https://www.facebook.com/santorogastronomia"}, {"name": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788872353", "error": "", "updated": true, "url": "https://www.paneeco.it/menu"}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788872353", "error": "", "updated": true, "url": "https://www.facebook.com/BollentiPiatti"}];
+    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788875300", "error": "", "updated": true, "url": "https://www.facebook.com/RosticceriaFantasia"}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788875300", "error": "", "updated": true, "url": "https://www.facebook.com/cibaria.asporto"}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788875300", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=61560452176728"}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788875300", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=100045208848338"}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788875300", "error": "", "updated": true, "url": "https://www.facebook.com/santorogastronomia"}, {"name": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788875300", "error": "", "updated": true, "url": "https://www.paneeco.it/menu"}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788875300", "error": "", "updated": true, "url": "https://www.facebook.com/BollentiPiatti"}];
     let currentIndex = -1;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -803,7 +799,6 @@
     }
 
     async function forceFreshReload() {
-        // Svuota le cache gestite dalla pagina e apre un URL sempre nuovo.
         try {
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
@@ -812,27 +807,9 @@
         } catch (e) {
             console.warn('Cache non svuotabile', e);
         }
-
         const freshUrl = new URL(window.location.href);
         freshUrl.searchParams.set('refresh', Date.now().toString());
         window.location.replace(freshUrl.toString());
-    }
-
-    function attachRefreshHandlers() {
-        ['main-updated', 'main-signature'].forEach(id => {
-            const element = document.getElementById(id);
-            if (!element) return;
-            element.setAttribute('role', 'button');
-            element.setAttribute('tabindex', '0');
-            element.setAttribute('title', 'Aggiorna i dati');
-            element.addEventListener('click', forceFreshReload);
-            element.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    forceFreshReload();
-                }
-            });
-        });
     }
 
     function handleTitleClick() {
@@ -852,10 +829,7 @@
     }
 
     window.onload = loadCounter;
-    document.addEventListener('DOMContentLoaded', () => {
-        initReorder();
-        attachRefreshHandlers();
-    });
+    document.addEventListener('DOMContentLoaded', initReorder);
   </script>
 </head>
 <body>
