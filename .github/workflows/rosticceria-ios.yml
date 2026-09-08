@@ -98,6 +98,7 @@ jobs:
         with:
           name: facebook-debug
           path: |
+            debug_*.png
             error_*.png
             error_*.html
           if-no-files-found: ignore

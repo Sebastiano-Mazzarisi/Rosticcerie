@@ -814,10 +814,14 @@ def find_first_post_image(
         'div[role="article"]',
         "div[aria-posinset]",
     ]
+    candidates = []
+    post_index = 0
 
     for selector in post_selectors:
         posts = page.locator(selector).all()
         for post in posts[:20]:
+            current_post_index = post_index
+            post_index += 1
             try:
                 images = post.locator("img").all()
             except Exception:
@@ -882,7 +886,7 @@ def find_first_post_image(
                         )
                     except Exception:
                         photo_url = ""
-                    return {
+                    candidate = {
                         "image_url": image_url,
                         "photo_url": photo_url,
                         "text": post_text,
@@ -890,6 +894,37 @@ def find_first_post_image(
                         "published_at": published_at,
                         "published_at_raw": published_at_raw,
                     }
+                    if not skip_closure_notices:
+                        return candidate
+
+                    score = min(best_score / 10000, 100)
+                    if looks_like_menu_notice(combined_text):
+                        score += 1000
+                    if looks_like_closure_notice(combined_text):
+                        score -= 200
+                    score -= current_post_index * 5
+                    candidate["score"] = score
+                    candidate["post_index"] = current_post_index
+                    candidates.append(candidate)
+                    print(
+                        "Impastamò: candidato post "
+                        f"{current_post_index} punteggio {score:.1f} "
+                        f"testo: {clean_post_text(combined_text)[:80]}"
+                    )
+
+    if candidates:
+        candidates.sort(key=lambda item: item.get("score", 0), reverse=True)
+        best_candidate = candidates[0]
+        print(
+            "Impastamò: scelgo il post "
+            f"{best_candidate.get('post_index')} con punteggio "
+            f"{best_candidate.get('score', 0):.1f}."
+        )
+        return {
+            key: value
+            for key, value in best_candidate.items()
+            if key not in {"score", "post_index"}
+        }
 
     return None
 
@@ -1097,6 +1132,10 @@ def extract_first_facebook_image(
                     return closure_post
 
             page.wait_for_timeout(5000)
+            try:
+                page.screenshot(path="debug_facebook_feed.png", full_page=True)
+            except Exception:
+                pass
             for _ in range(4):
                 post = find_first_post_image(page, skip_closure_notices=skip_closure_notices)
                 if post:
