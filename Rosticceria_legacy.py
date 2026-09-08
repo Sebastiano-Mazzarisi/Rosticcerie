@@ -865,11 +865,17 @@ def find_first_post_image(
                     except Exception:
                         full_post_text = post_text
                     combined_text = f"{post_text} {full_post_text} {image_alt}"
+                    # Impastamò pubblica gli avvisi con una descrizione testuale,
+                    # mentre il menu del giorno e' normalmente una foto senza testo.
+                    textual_post = bool(clean_post_text(post_text or full_post_text))
                     if (
                         skip_closure_notices
+                        and textual_post
                         and looks_like_closure_notice(combined_text)
-                        and not looks_like_menu_notice(combined_text)
+                        and not looks_like_real_menu(combined_text)
                     ):
+                        if skip_first_today_post and not skipped_first_today_post:
+                            skipped_first_today_post = True
                         print(
                             "Impastamò: salto l'immagine dell'annuncio di riapertura "
                             "e cerco il post successivo con il menu."
@@ -912,7 +918,7 @@ def find_first_post_image(
                         return candidate
 
                     score = min(best_score / 10000, 100)
-                    if looks_like_menu_notice(combined_text):
+                    if looks_like_real_menu(combined_text):
                         score += 1000
                     if looks_like_closure_notice(combined_text):
                         score -= 200
@@ -1833,12 +1839,20 @@ def _widest_dark_column_run(
 CLOSURE_NOTICE_PATTERN = re.compile(
     r"\bchius[oi]\b|\bchiusura\b|\briapr\w*\b|\bferie\b|\bresteremo\s+chius\w*\b"
     r"|\bsaremo\s+chius\w*\b|\bsiamo\s+tornat[io]\b"
-    r"|\bnuovamente\s+apert[io]\b|\bdi\s+nuovo\s+apert[io]\b",
+    r"|\bnuovamente\s+apert[io]\b|\bdi\s+nuovo\s+apert[io]\b"
+    r"|\babbiamo\s+ricaricat\w*\s+le\s+energie\b"
+    r"|\bsiamo\s+pront[ioe]\b|\bti\s+aspettiamo\b",
     re.IGNORECASE,
 )
 
 MENU_NOTICE_PATTERN = re.compile(
     r"\bmen[uù]\b|\bmenu\b|\bprimi\b|\bsecondi\b|\bcontorni\b|\bantipasti\b|\bpiatti\b",
+    re.IGNORECASE,
+)
+
+REAL_MENU_PATTERN = re.compile(
+    r"\bmen[uù]\s+(?:del\s+giorno|di)\b"
+    r"|\bprimi\s+piatti\b|\bsecondi\s+piatti\b|\bcontorni\b|\bantipasti\b",
     re.IGNORECASE,
 )
 
@@ -1853,6 +1867,11 @@ def looks_like_closure_notice(text: str) -> bool:
 
 def looks_like_menu_notice(text: str) -> bool:
     return bool(MENU_NOTICE_PATTERN.search(text or ""))
+
+
+def looks_like_real_menu(text: str) -> bool:
+    """Distingue un menu effettivo da un annuncio che cita genericamente i menu."""
+    return bool(REAL_MENU_PATTERN.search(text or ""))
 
 
 def clean_facebook_alt_text(alt: str) -> str:
