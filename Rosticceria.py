@@ -3112,8 +3112,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const p = PANELS[order[currentIndex]];
 
         document.getElementById('main-title').innerText = p.name;
-        document.getElementById('main-updated').style.display = 'none';
-        document.getElementById('main-signature').style.display = 'none';
+        // Keep the refresh controls available while a menu is open.
+        document.getElementById('main-updated').style.display = '';
+        document.getElementById('main-signature').style.display = '';
         document.getElementById('nav-position').innerText = (currentIndex + 1) + '/' + n;
 
         const phoneLine = document.getElementById('phone-line');
