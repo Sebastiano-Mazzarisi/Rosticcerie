@@ -2358,11 +2358,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       margin: 4px 0 0;
       color: #fff;
       font-size: 16px;
+      cursor: pointer;
+      user-select: none;
     }}
     .signature {{
       margin: 2px 0 0;
       color: #fff;
       font-size: 14px;
+      cursor: pointer;
+      user-select: none;
     }}
     /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
     #phone-line {{
@@ -3180,8 +3184,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
     </div>
     <div id="phone-line"></div>
-    <p id="main-updated" class="updated">{html.escape(today_label)}</p>
-    <p id="main-signature" class="signature">by Mazzarisi</p>
+    <p id="main-updated" class="updated" onclick="forceFreshReload()">{html.escape(today_label)}</p>
+    <p id="main-signature" class="signature" onclick="forceFreshReload()">by Mazzarisi</p>
   </header>
 
   <main id="grid-view">
