@@ -1120,10 +1120,11 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
             pass
         photos_page.wait_for_timeout(4000)
 
-        anchors = photos_page.locator('a[href*="/photo"]').all()
-        for anchor in anchors[:30]:
+        # Nella versione anonima di Facebook il link e l'immagine possono
+        # essere fratelli nel DOM, non immagine discendente del link.
+        images = photos_page.locator("img").all()
+        for image in images[:80]:
             try:
-                image = anchor.locator("img").first
                 image_url = image.get_attribute("src") or ""
                 image_alt = (image.get_attribute("alt") or "").strip()
             except Exception:
@@ -1136,7 +1137,17 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
                 continue
 
             try:
-                anchor.click(timeout=5000)
+                photo_href = image.evaluate(
+                    "image => { const link = image.closest('a[href]'); return link ? link.href : ''; }"
+                )
+            except Exception:
+                photo_href = ""
+
+            try:
+                if photo_href:
+                    image.click(timeout=5000)
+                else:
+                    raise RuntimeError("link foto non trovato")
                 photos_page.wait_for_timeout(2000)
                 larger_image_url = photos_page.locator(
                     'meta[property="og:image"]'
@@ -1158,7 +1169,7 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
 
             return {
                 "image_url": image_url,
-                "photo_url": "",
+                "photo_url": photo_href,
                 "text": "",
                 "image_alt": image_alt,
                 "published_at": rome_now().strftime("%d/%m/%Y"),
