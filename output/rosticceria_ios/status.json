@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-08T17:00:17",
+  "updated_at": "2026-09-08T19:16:33",
   "pages": [
     {
       "name": "Fantasia",
@@ -51,11 +51,11 @@
     },
     {
       "name": "Bollenti piatti",
-      "image": null,
-      "text": "",
+      "image": "Bollenti_piatti.jpg",
+      "text": "PRIMI PIATTI\n●RISO A INSALATA\n●TIMBALLO DI SPINACI 5,0\n●TORTIGLIONI ALLA BOSCAIOLA ( FUNGHI, GUANCIALE E SCAGLIE DI SCAMORZA AFFUMICATA 5,0\n●RIGATONI CON TONNO, CAPPERI IN ROSSO 5,0\n●TROFIE ALLA CRUDAIOLA CON SALMONE, DATTERINO GIALLO E PISELLI 5,5\n●SPAGHETTI ALLA SAN GIOVANNINO 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●FUSI DI POLLO AL FORNO CON PATATE\n●ZAMPINA DI VITELLO ARROSTO\n●SALTIMBOCCA DI CARNE FARCITI CON FUNGHI\n●SPIEDINO DI INVOLTINI DI ZUCCHINE AL SALMONE E FORMAGGIO GRATINATI AL FORNO\n●NODINI DI CARNE AL SUGO DI PORCINI\n●TRIANGOLO DI MERLUZZO IMPANATO\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
       "published_at": "",
       "published_at_raw": "",
-      "error": "Non ho trovato nessun post testuale del menu nella pagina Facebook: https://www.facebook.com/BollentiPiatti"
+      "error": null
     }
   ]
 }

@@ -8,6 +8,8 @@ on:
     paths:
       - '.github/workflows/rosticceria-ios.yml'
       - 'Rosticceria.py'
+      - 'Rosticceria_legacy.py'
+      - 'rosticcerie_clean/**'
       - 'requirements.txt'
   schedule:
     # Nota: niente campo "timezone" qui. In pratica, su questo repository,
