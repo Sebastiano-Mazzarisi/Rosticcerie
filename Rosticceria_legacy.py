@@ -2821,10 +2821,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     .card-counter {{
       display: none;
       position: absolute;
-      bottom: 4px;
-      right: 8px;
-      font-size: 11px;
-      font-weight: normal;
+      bottom: 6px;
+      right: 10px;
+      font-size: 18px;
+      font-weight: bold;
       color: #555;
     }}
     /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
