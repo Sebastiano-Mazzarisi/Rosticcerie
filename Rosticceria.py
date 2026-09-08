@@ -331,6 +331,53 @@ def expand_facebook_see_more(post, page) -> None:
         except Exception:
             before_text = ""
 
+        # Nella pagina Facebook attuale "Altro..." spesso e' uno span di testo
+        # senza ruolo button: cerchiamolo direttamente nel post e facciamolo
+        # attivare con un click forzato.
+        more_pattern = re.compile(
+            r"^(?:…|\.\.\.)?\s*(?:Altro|Mostra altro|See more)\s*\.*$",
+            re.IGNORECASE,
+        )
+        for more_locator in (post.get_by_text(more_pattern), page.get_by_text(more_pattern)):
+            if clicked:
+                break
+            try:
+                candidates = more_locator.all()
+            except Exception:
+                candidates = []
+            for element in candidates:
+                try:
+                    if not element.is_visible(timeout=700):
+                        continue
+                    element.scroll_into_view_if_needed(timeout=1200)
+                    element.click(timeout=2500, force=True)
+                    page.wait_for_timeout(1200)
+                    try:
+                        after_text = post.inner_text(timeout=1500)
+                    except Exception:
+                        after_text = ""
+                    if after_text and not has_see_more_marker(after_text):
+                        clicked = True
+                        break
+                    # Alcune versioni di Facebook rispondono all'attivazione
+                    # da tastiera ma non al click sullo span visualizzato.
+                    element.press("Enter", timeout=1500)
+                    page.wait_for_timeout(1200)
+                    after_text = post.inner_text(timeout=1500)
+                    if after_text and not has_see_more_marker(after_text):
+                        clicked = True
+                        break
+                except Exception:
+                    continue
+
+        if clicked:
+            try:
+                after_text = post.inner_text(timeout=1500)
+            except Exception:
+                after_text = ""
+            if after_text and after_text != before_text and not has_see_more_marker(after_text):
+                return
+
         for selector in selectors:
             try:
                 for element in post.locator(selector).all():
@@ -770,7 +817,9 @@ def image_score(image) -> int:
     return width * height
 
 
-def find_first_post_image(page) -> Optional[Dict[str, str]]:
+def find_first_post_image(
+    page, skip_closure_notices: bool = False
+) -> Optional[Dict[str, str]]:
     post_selectors = [
         'div[role="article"]',
         "div[aria-posinset]",
@@ -804,6 +853,14 @@ def find_first_post_image(page) -> Optional[Dict[str, str]]:
                         full_post_text = clean_post_text(post.inner_text(timeout=3000))
                     except Exception:
                         full_post_text = post_text
+                    if skip_closure_notices and looks_like_closure_notice(
+                        f"{post_text} {full_post_text} {image_alt}"
+                    ):
+                        print(
+                            "Impastamò: salto l'immagine dell'annuncio di riapertura "
+                            "e cerco il post successivo con il menu."
+                        )
+                        continue
                     date_in_post_text = infer_date_from_text(post_text) or infer_date_from_text(full_post_text)
                     facebook_time = best_published_time_from_post(post)
                     normalized_facebook_time = normalize_facebook_time(facebook_time)
@@ -986,7 +1043,11 @@ def cookies_look_authenticated(cookies: List[Dict]) -> bool:
     return bool(names & FACEBOOK_LOGIN_COOKIE_NAMES)
 
 
-def extract_first_facebook_image(facebook_url: str, prefer_active_closure: bool = False) -> Dict[str, str]:
+def extract_first_facebook_image(
+    facebook_url: str,
+    prefer_active_closure: bool = False,
+    skip_closure_notices: bool = False,
+) -> Dict[str, str]:
     cookie_path = os.path.join(script_dir(), COOKIE_FILE)
 
     with sync_playwright() as playwright:
@@ -1030,7 +1091,7 @@ def extract_first_facebook_image(facebook_url: str, prefer_active_closure: bool 
 
             page.wait_for_timeout(5000)
             for _ in range(4):
-                post = find_first_post_image(page)
+                post = find_first_post_image(page, skip_closure_notices=skip_closure_notices)
                 if post:
                     photo_url = post.get("photo_url", "")
                     if photo_url:
@@ -2358,11 +2419,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       margin: 4px 0 0;
       color: #fff;
       font-size: 16px;
+      cursor: pointer;
+      user-select: none;
     }}
     .signature {{
       margin: 2px 0 0;
       color: #fff;
       font-size: 14px;
+      cursor: pointer;
+      user-select: none;
     }}
     /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
     #phone-line {{
@@ -3116,6 +3181,39 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         window.scrollTo(0, 0);
     }}
 
+    async function forceFreshReload() {{
+        // Svuota le cache gestite dalla pagina e apre un URL sempre nuovo.
+        try {{
+            if ('caches' in window) {{
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }}
+        }} catch (e) {{
+            console.warn('Cache non svuotabile', e);
+        }}
+
+        const freshUrl = new URL(window.location.href);
+        freshUrl.searchParams.set('refresh', Date.now().toString());
+        window.location.replace(freshUrl.toString());
+    }}
+
+    function attachRefreshHandlers() {{
+        ['main-updated', 'main-signature'].forEach(id => {{
+            const element = document.getElementById(id);
+            if (!element) return;
+            element.setAttribute('role', 'button');
+            element.setAttribute('tabindex', '0');
+            element.setAttribute('title', 'Aggiorna i dati');
+            element.addEventListener('click', forceFreshReload);
+            element.addEventListener('keydown', (event) => {{
+                if (event.key === 'Enter' || event.key === ' ') {{
+                    event.preventDefault();
+                    forceFreshReload();
+                }}
+            }});
+        }});
+    }}
+
     function handleTitleClick() {{
         const inDetail = document.getElementById('grid-view').style.display === 'none';
         if (inDetail) {{
@@ -3133,7 +3231,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     window.onload = loadCounter;
-    document.addEventListener('DOMContentLoaded', initReorder);
+    document.addEventListener('DOMContentLoaded', () => {{
+        initReorder();
+        attachRefreshHandlers();
+    }});
   </script>
 </head>
 <body>
@@ -3144,8 +3245,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
     </div>
     <div id="phone-line"></div>
-    <p id="main-updated" class="updated">{html.escape(today_label)}</p>
-    <p id="main-signature" class="signature">by Mazzarisi</p>
+    <p id="main-updated" class="updated" onclick="forceFreshReload()">{html.escape(today_label)}</p>
+    <p id="main-signature" class="signature" onclick="forceFreshReload()">by Mazzarisi</p>
   </header>
 
   <main id="grid-view">
@@ -3324,6 +3425,7 @@ def extract_pages() -> List[Dict]:
             post = extract_first_facebook_image(
                 facebook_page["url"],
                 prefer_active_closure=(name == "Le delizie di Michela"),
+                skip_closure_notices=(name == "Impastamò"),
             )
             image_bytes = download_image(post["image_url"])
             
