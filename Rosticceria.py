@@ -334,20 +334,41 @@ def expand_facebook_see_more(post, page) -> None:
         # Nella pagina Facebook attuale "Altro..." spesso e' uno span di testo
         # senza ruolo button: cerchiamolo direttamente nel post e facciamolo
         # attivare con un click forzato.
-        try:
-            more_pattern = re.compile(
-                r"^(?:…|\.\.\.)?\s*(?:Altro|Mostra altro|See more)\s*\.*$",
-                re.IGNORECASE,
-            )
-            for element in post.get_by_text(more_pattern).all():
-                if not element.is_visible(timeout=700):
-                    continue
-                element.click(timeout=2500, force=True)
-                page.wait_for_timeout(1200)
-                clicked = True
+        more_pattern = re.compile(
+            r"^(?:…|\.\.\.)?\s*(?:Altro|Mostra altro|See more)\s*\.*$",
+            re.IGNORECASE,
+        )
+        for more_locator in (post.get_by_text(more_pattern), page.get_by_text(more_pattern)):
+            if clicked:
                 break
-        except Exception:
-            pass
+            try:
+                candidates = more_locator.all()
+            except Exception:
+                candidates = []
+            for element in candidates:
+                try:
+                    if not element.is_visible(timeout=700):
+                        continue
+                    element.scroll_into_view_if_needed(timeout=1200)
+                    element.click(timeout=2500, force=True)
+                    page.wait_for_timeout(1200)
+                    try:
+                        after_text = post.inner_text(timeout=1500)
+                    except Exception:
+                        after_text = ""
+                    if after_text and not has_see_more_marker(after_text):
+                        clicked = True
+                        break
+                    # Alcune versioni di Facebook rispondono all'attivazione
+                    # da tastiera ma non al click sullo span visualizzato.
+                    element.press("Enter", timeout=1500)
+                    page.wait_for_timeout(1200)
+                    after_text = post.inner_text(timeout=1500)
+                    if after_text and not has_see_more_marker(after_text):
+                        clicked = True
+                        break
+                except Exception:
+                    continue
 
         if clicked:
             try:
