@@ -37,6 +37,7 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
         prefer_active_closure=config.prefer_active_closure,
         skip_closure_notices=config.skip_closure_notices,
         skip_first_today_post=config.skip_first_today_post,
+        photo_grid_first=config.photo_grid_first,
     )
     image_bytes = legacy.download_image(post["image_url"])
 

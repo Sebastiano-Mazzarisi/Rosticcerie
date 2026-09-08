@@ -16,6 +16,7 @@ class RosticceriaConfig:
     prefer_active_closure: bool = False
     skip_closure_notices: bool = False
     skip_first_today_post: bool = False
+    photo_grid_first: bool = False
     force_refresh_today: bool = False
 
     @property
@@ -29,12 +30,14 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         url="https://www.facebook.com/RosticceriaFantasia",
         kind="facebook_image",
         output_image="Rosticceria_Fantasia.jpg",
+        skip_closure_notices=True,
     ),
     RosticceriaConfig(
         name="Cibària",
         url="https://www.facebook.com/cibaria.asporto",
         kind="facebook_image",
         output_image="Rosticceria_Cibaria.jpg",
+        skip_closure_notices=True,
     ),
     RosticceriaConfig(
         name="Impastamò",
@@ -42,7 +45,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         kind="facebook_image",
         output_image="Rosticceria_Impastamo.jpg",
         skip_closure_notices=True,
-        skip_first_today_post=True,
+        photo_grid_first=True,
         force_refresh_today=True,
     ),
     RosticceriaConfig(
@@ -51,12 +54,14 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         kind="facebook_image",
         output_image="Rosticceria_LeDelizieDiMichela.jpg",
         prefer_active_closure=True,
+        skip_closure_notices=True,
     ),
     RosticceriaConfig(
         name="Santoro (Castellana)",
         url="https://www.facebook.com/santorogastronomia",
         kind="facebook_image",
         output_image="Rosticceria_Santoro.jpg",
+        skip_closure_notices=True,
     ),
     RosticceriaConfig(
         name="Pane & Co",
@@ -71,4 +76,3 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         required_terms=("secondi piatti",),
     ),
 ]
-
