@@ -2896,17 +2896,20 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
     }}
     #detail-content img {{
-      width: 100%;
+      width: auto;
+      max-width: 100%;
+      max-height: calc(100vh - 205px);
       height: auto;
       display: block;
       margin: 0 auto;
+      object-fit: contain;
     }}
 
     /* Su schermi da PC la foto occupa circa un terzo della larghezza
        (equivalente a 3 colonne), invece di riempire tutto lo schermo. */
     @media (min-width: 900px) {{
       #detail-content img {{
-        width: 33%;
+        max-width: min(100%, 720px);
       }}
     }}
 
