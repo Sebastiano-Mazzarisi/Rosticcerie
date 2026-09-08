@@ -331,6 +331,43 @@ def expand_facebook_see_more(post, page) -> None:
         except Exception:
             before_text = ""
 
+        # Facebook puo' rendere "Altro..." come semplice testo, senza ruolo
+        # button: in quel caso individuiamo direttamente l'elemento visibile
+        # e proviamo anche l'attivazione da tastiera.
+        more_pattern = re.compile(
+            r"^(?:…|\.\.\.)?\s*(?:Altro|Mostra altro|See more)\s*\.*$",
+            re.IGNORECASE,
+        )
+        for more_locator in (post.get_by_text(more_pattern), page.get_by_text(more_pattern)):
+            if clicked:
+                break
+            try:
+                candidates = more_locator.all()
+            except Exception:
+                candidates = []
+            for element in candidates:
+                try:
+                    if not element.is_visible(timeout=700):
+                        continue
+                    element.scroll_into_view_if_needed(timeout=1200)
+                    element.click(timeout=2500, force=True)
+                    page.wait_for_timeout(1200)
+                    after_text = post.inner_text(timeout=1500)
+                    if after_text and not has_see_more_marker(after_text):
+                        clicked = True
+                        break
+                    element.press("Enter", timeout=1500)
+                    page.wait_for_timeout(1200)
+                    after_text = post.inner_text(timeout=1500)
+                    if after_text and not has_see_more_marker(after_text):
+                        clicked = True
+                        break
+                except Exception:
+                    continue
+
+        if clicked:
+            return
+
         for selector in selectors:
             try:
                 for element in post.locator(selector).all():
