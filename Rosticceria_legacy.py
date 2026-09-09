@@ -2797,6 +2797,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Pane & Co": "080-405.49.00",
         "Bollenti piatti": "334-318.58.44",
     }
+    logo_files = {
+        "Fantasia": "Logo-Fantasia.jpg",
+        "Cibària": "Logo-Cibaria.jpg",
+        "Impastamò": "Logo-Impastamo.jpg",
+        "Le delizie di Michela": "Logo-Michela.jpg",
+        "Santoro (Castellana)": "Logo-Santoro.jpg",
+        "Pane & Co": "Logo-pane.jpg",
+        "Bollenti piatti": "Logo-Bollent.jpg",
+    }
     today = rome_now().date()
     panels_data = []
 
@@ -2824,6 +2833,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             "name": name,
             "card_label": name,
             "detail_title": name,
+            "logo": f"../../{html.escape(logo_files[name])}?v={int(time.time())}" if name in logo_files else "",
             "phone_display": phone_number,
             "phone_tel": phone_tel,
             "image": image_url,
@@ -2870,8 +2880,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if p.get("card_reference")
             else ""
         )
+        logo_html = (
+            f'<img class="card-logo" src="{p.get("logo", "")}" alt="" loading="lazy">'
+            if p.get("logo")
+            else ""
+        )
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
+            {logo_html}
             <span class="card-name" style="color:{name_color}">{title}</span>
             {reference_html}
             {counter_html}
@@ -2963,7 +2979,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 12px;
+      padding: 24px 58px 22px;
       border: 4px solid #555555; /* Giallo se aggiornata oggi, grigio scuro altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
@@ -2983,6 +2999,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       color: #111; /* Nomi neri */
       font-weight: bold;
     }}
+    .card-logo {{
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      border-radius: 6px;
+    }}
     .card-counter {{
       display: none;
       position: absolute;
@@ -2994,8 +3019,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     .card-reference {{
       position: absolute;
-      bottom: 6px;
-      left: 10px;
+      top: 8px;
+      right: 10px;
       font-size: 18px;
       font-weight: bold;
       color: #555;

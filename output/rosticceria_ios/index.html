@@ -79,7 +79,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 12px;
+      padding: 24px 58px 22px;
       border: 4px solid #555555; /* Giallo se aggiornata oggi, grigio scuro altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
@@ -99,10 +99,27 @@
       color: #111; /* Nomi neri */
       font-weight: bold;
     }
+    .card-logo {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
     .card-counter {
       display: none;
       position: absolute;
       bottom: 6px;
+      right: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #555;
+    }
+    .card-reference {
+      position: absolute;
+      top: 8px;
       right: 10px;
       font-size: 18px;
       font-weight: bold;
@@ -950,37 +967,51 @@
   <main id="grid-view">
     
         <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(0)">
+            <img class="card-logo" src="../../Logo-Fantasia.jpg?v=1788954272" alt="" loading="lazy">
             <span class="card-name" style="color:#111">Fantasia</span>
+            <span class="card-reference">09:24</span>
             <span class="card-counter" id="card-counter-0"></span>
         </button>
         
         <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(1)">
+            <img class="card-logo" src="../../Logo-Cibaria.jpg?v=1788954272" alt="" loading="lazy">
             <span class="card-name" style="color:#111">Cibària</span>
+            <span class="card-reference">11:44</span>
             <span class="card-counter" id="card-counter-1"></span>
         </button>
         
         <button type="button" class="card" data-pid="2" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(2)">
+            <img class="card-logo" src="../../Logo-Impastamo.jpg?v=1788954272" alt="" loading="lazy">
             <span class="card-name" style="color:#111">Impastamò</span>
+            <span class="card-reference">07:43</span>
             <span class="card-counter" id="card-counter-2"></span>
         </button>
         
         <button type="button" class="card" data-pid="3" style="border-color:#555555;background-color:#ffffff" onclick="cardClicked(3)">
+            <img class="card-logo" src="../../Logo-Michela.jpg?v=1788954272" alt="" loading="lazy">
             <span class="card-name" style="color:#777777">Le delizie di Michela</span>
+            <span class="card-reference">8 set</span>
             <span class="card-counter" id="card-counter-3"></span>
         </button>
         
         <button type="button" class="card" data-pid="4" style="border-color:#555555;background-color:#ffffff" onclick="cardClicked(4)">
+            <img class="card-logo" src="../../Logo-Santoro.jpg?v=1788954272" alt="" loading="lazy">
             <span class="card-name" style="color:#777777">Santoro (Castellana)</span>
+            <span class="card-reference">8 set</span>
             <span class="card-counter" id="card-counter-4"></span>
         </button>
         
         <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(5)">
+            <img class="card-logo" src="../../Logo-pane.jpg?v=1788954272" alt="" loading="lazy">
             <span class="card-name" style="color:#111">Pane &amp; Co</span>
+            <span class="card-reference">11:44</span>
             <span class="card-counter" id="card-counter-5"></span>
         </button>
         
         <button type="button" class="card" data-pid="6" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(6)">
+            <img class="card-logo" src="../../Logo-Bollent.jpg?v=1788954272" alt="" loading="lazy">
             <span class="card-name" style="color:#111">Bollenti piatti</span>
+            <span class="card-reference">10:44</span>
             <span class="card-counter" id="card-counter-6"></span>
         </button>
         
