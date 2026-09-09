@@ -2880,14 +2880,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if p.get("card_reference")
             else ""
         )
-        logo_html = (
-            f'<img class="card-logo" src="{p.get("logo", "")}" alt="" loading="lazy">'
-            if p.get("logo")
-            else ""
-        )
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
-            {logo_html}
             <span class="card-name" style="color:{name_color}">{title}</span>
             {reference_html}
             {counter_html}
@@ -2946,6 +2940,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 14px;
       cursor: pointer;
     }}
+
+    #identity-block {{ display: flex; align-items: center; justify-content: center; gap: 16px; width: fit-content; max-width: 100%; margin: 0 auto; }}
+    #identity-logo {{ display: none; width: 88px; height: 88px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }}
+    #identity-text {{ min-width: 0; }}
+    #identity-block.has-logo #identity-text {{ text-align: left; }}
+    #identity-block.has-logo #phone-line {{ text-align: left; padding: 8px 0 0; }}
+    @media (max-width: 480px) {{
+      #identity-block {{ gap: 12px; }}
+      #identity-logo {{ width: 72px; height: 72px; }}
+      #identity-block.has-logo #main-title {{ font-size: 25px; }}
+    }}
     /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
     #phone-line {{
       display: none;
@@ -2976,10 +2981,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       cursor: pointer;
       min-height: 110px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 24px 58px 22px;
+      padding: 14px 58px 30px;
       border: 4px solid #555555; /* Giallo se aggiornata oggi, grigio scuro altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
@@ -2998,15 +3004,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: clamp(16px, 5vw, 26px);
       color: #111; /* Nomi neri */
       font-weight: bold;
-    }}
-    .card-logo {{
-      position: absolute;
-      top: 8px;
-      left: 10px;
-      width: 44px;
-      height: 44px;
-      object-fit: contain;
-      border-radius: 6px;
+      line-height: 1.1;
     }}
     .card-counter {{
       display: none;
@@ -3019,8 +3017,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     .card-reference {{
       position: absolute;
-      top: 8px;
-      right: 10px;
+      bottom: 6px;
+      left: 10px;
       font-size: 18px;
       font-weight: bold;
       color: #555;
@@ -3736,6 +3734,16 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         currentIndex = ((i % n) + n) % n;
         const p = PANELS[order[currentIndex]];
 
+        const identityLogo = document.getElementById('identity-logo');
+        document.getElementById('identity-block').classList.toggle('has-logo', Boolean(p.logo));
+        identityLogo.style.display = p.logo ? 'block' : 'none';
+        if (p.logo) {{
+            identityLogo.src = p.logo;
+            identityLogo.alt = 'Logo ' + p.name;
+        }} else {{
+            identityLogo.removeAttribute('src');
+            identityLogo.alt = '';
+        }}
         document.getElementById('main-title').innerText = p.detail_title || p.name;
         document.getElementById('main-updated').innerText = p.updated_label || '{html.escape(today_label)}';
         document.getElementById('main-updated').style.display = 'none';
@@ -3796,6 +3804,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function showNext() {{ renderDetail(currentIndex + 1); }}
 
     function closeDetail() {{
+        document.getElementById('identity-block').classList.remove('has-logo');
+        document.getElementById('identity-logo').style.display = 'none';
+        document.getElementById('identity-logo').removeAttribute('src');
         document.getElementById('detail-view').style.display = 'none';
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
@@ -3854,12 +3865,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 </head>
 <body>
   <header id="main-header">
+    <div id="identity-block">
+      <img id="identity-logo" alt="">
+      <div id="identity-text">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
+        <div id="phone-line"></div>
+      </div>
+    </div>
     <div id="reorder-actions">
       <button type="button" id="reorder-reset-btn" onclick="resetOrderToDefault()">Reset</button>
       <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
     </div>
-    <div id="phone-line"></div>
     <p id="main-updated" class="updated" onclick="forceFreshReload()">{html.escape(today_label)}</p>
     <p id="main-signature" class="signature" onclick="forceFreshReload()">by Mazzarisi</p>
   </header>
