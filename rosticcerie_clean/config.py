@@ -18,6 +18,7 @@ class RosticceriaConfig:
     skip_first_today_post: bool = False
     photo_grid_first: bool = False
     force_refresh_today: bool = False
+    prefer_facebook_date: bool = False
 
     @property
     def label(self) -> str:
@@ -31,6 +32,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         kind="facebook_image",
         output_image="Rosticceria_Fantasia.jpg",
         skip_closure_notices=True,
+        prefer_facebook_date=True,
     ),
     RosticceriaConfig(
         name="Cibària",

@@ -814,6 +814,7 @@ def find_first_post_image(
     page,
     skip_closure_notices: bool = False,
     skip_first_today_post: bool = False,
+    prefer_facebook_date: bool = False,
 ) -> Optional[Dict[str, str]]:
     post_selectors = [
         'div[role="article"]',
@@ -887,11 +888,15 @@ def find_first_post_image(
                     date_in_post_text = infer_date_from_text(post_text) or infer_date_from_text(full_post_text)
                     facebook_time = best_published_time_from_post(post)
                     normalized_facebook_time = normalize_facebook_time(facebook_time)
-                    # Quando Facebook mostra una data esplicita nel post
-                    # (es. "29 agosto alle 13:22"), e' piu' affidabile del
-                    # primo indicatore temporale relativo trovato nel DOM.
-                    published_at_raw = date_in_post_text or facebook_time
-                    published_at = date_in_post_text or normalized_facebook_time or rome_now().strftime("%d/%m/%Y")
+                    if prefer_facebook_date and normalized_facebook_time:
+                        published_at_raw = facebook_time
+                        published_at = normalized_facebook_time
+                    else:
+                        # Quando Facebook mostra una data esplicita nel post
+                        # (es. "29 agosto alle 13:22"), e' piu' affidabile del
+                        # primo indicatore temporale relativo trovato nel DOM.
+                        published_at_raw = date_in_post_text or facebook_time
+                        published_at = date_in_post_text or normalized_facebook_time or rome_now().strftime("%d/%m/%Y")
                     if (
                         skip_first_today_post
                         and not skipped_first_today_post
@@ -1395,6 +1400,7 @@ def extract_first_facebook_image(
     skip_closure_notices: bool = False,
     skip_first_today_post: bool = False,
     photo_grid_first: bool = False,
+    prefer_facebook_date: bool = False,
 ) -> Dict[str, str]:
     cookie_path = os.path.join(script_dir(), COOKIE_FILE)
 
@@ -1456,6 +1462,7 @@ def extract_first_facebook_image(
                     page,
                     skip_closure_notices=skip_closure_notices,
                     skip_first_today_post=skip_first_today_post,
+                    prefer_facebook_date=prefer_facebook_date,
                 )
                 if post:
                     photo_url = post.get("photo_url", "")
@@ -2794,26 +2801,50 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
         panels_data.append({
             "name": name,
+            "card_label": name,
+            "detail_title": name,
             "phone_display": phone_number,
             "phone_tel": phone_tel,
             "image": image_url,
             "error": error or "",
             "updated": is_updated,
             "url": SOURCE_URLS.get(name, ""),
+            "counter_enabled": True,
         })
+
+    panels_data.append({
+        "name": "Come creare l'app Rosticcerie",
+        "card_label": "Come creare\nl'app Rosticcerie",
+        "detail_title": "Come creare l'app Rosticcerie",
+        "phone_display": "",
+        "phone_tel": "",
+        "image": f"Rosticcerie-Home.jpg?v={int(time.time())}",
+        "error": "",
+        "updated": True,
+        "url": "",
+        "counter_enabled": False,
+        "card_border": "#2f9fe8",
+        "card_bg": "#eaf7ff",
+        "card_name_color": "#111",
+    })
 
     panels_json = json.dumps(panels_data, ensure_ascii=False)
 
     cards = []
     for i, p in enumerate(panels_data):
-        title = html.escape(p["name"])
-        border_color = "#ffd641" if p["updated"] else "#555555"
-        bg_color = "#fff7de" if p["updated"] else "#e5e5e5"
-        name_color = "#111" if p["updated"] else "#555555"
+        title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
+        border_color = p.get("card_border") or ("#ffd641" if p["updated"] else "#555555")
+        bg_color = p.get("card_bg") or ("#fff7de" if p["updated"] else "#e5e5e5")
+        name_color = p.get("card_name_color") or ("#111" if p["updated"] else "#555555")
+        counter_html = (
+            f'<span class="card-counter" id="card-counter-{i}"></span>'
+            if p.get("counter_enabled", True)
+            else ""
+        )
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
             <span class="card-name" style="color:{name_color}">{title}</span>
-            <span class="card-counter" id="card-counter-{i}"></span>
+            {counter_html}
         </button>
         """)
 
@@ -3159,6 +3190,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         // limite di frequenza dell'API gratuita di Abacus.
         for (let i = 0; i < PANELS.length; i++) {{
             const p = PANELS[i];
+            if (p.counter_enabled === false) continue;
             try {{
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
                 const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
@@ -3177,6 +3209,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const mainTitle = document.getElementById('main-title');
         for (let i = 0; i < PANELS.length; i++) {{
             const p = PANELS[i];
+            if (p.counter_enabled === false) continue;
             mainTitle.innerText = 'Azzeramento in corso... (' + (i + 1) + '/' + PANELS.length + ')';
             try {{
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
@@ -3212,6 +3245,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function updateAdminTitle() {{
         let val = 0;
         for (let i = 0; i < PANELS.length; i++) {{
+            if (PANELS[i].counter_enabled === false) continue;
             val += Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
         }}
         document.getElementById('main-title').innerText = `Rosticcerie (${{val.toLocaleString('it-IT')}})`;
@@ -3222,6 +3256,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         for (let i = 0; i < PANELS.length; i++) {{
             const el = document.getElementById('card-counter-' + i);
             if (!el) continue;
+            if (PANELS[i].counter_enabled === false) {{
+                el.style.display = 'none';
+                continue;
+            }}
             const val = Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
             el.innerText = val.toLocaleString('it-IT');
             el.style.display = 'block';
@@ -3315,6 +3353,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     const DEFAULT_ORDER_NAMES = [
         'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
         'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
+        "Come creare l'app Rosticcerie",
     ];
 
     function resetOrderToDefault() {{
@@ -3561,9 +3600,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.querySelectorAll('.card[data-pid]').forEach(card => {{
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel) return;
-            card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
-            card.style.backgroundColor = panel.updated ? '#fff7de' : '#e5e5e5';
-            card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#555555';
+            card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#555555');
+            card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#e5e5e5');
+            card.querySelector('.card-name').style.color = panel.card_name_color || (panel.updated ? '#111' : '#555555');
         }});
         loadSavedOrder();
         applyOrderToGrid();
@@ -3576,7 +3615,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         currentIndex = ((i % n) + n) % n;
         const p = PANELS[order[currentIndex]];
 
-        document.getElementById('main-title').innerText = p.name;
+        document.getElementById('main-title').innerText = p.detail_title || p.name;
         // Keep the refresh controls available while a menu is open.
         document.getElementById('main-updated').style.display = '';
         document.getElementById('main-signature').style.display = '';
@@ -3622,7 +3661,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
         if (!isAdmin) {{
             const p = PANELS[order[currentIndex]];
-            fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {{}});
+            if (p.counter_enabled !== false) {{
+                fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {{}});
+            }}
         }}
     }}
 
@@ -3878,6 +3919,7 @@ def extract_pages() -> List[Dict]:
                 prefer_active_closure=(name == "Le delizie di Michela"),
                 skip_closure_notices=(name == "Impastamò"),
                 skip_first_today_post=(name == "Impastamò"),
+                prefer_facebook_date=(name == "Fantasia"),
             )
             image_bytes = download_image(post["image_url"])
             
