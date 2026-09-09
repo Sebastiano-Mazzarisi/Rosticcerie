@@ -2978,6 +2978,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         return new Promise(resolve => setTimeout(resolve, ms));
     }}
 
+    function currentItalianDateLabel() {{
+        const now = new Date();
+        const weekdays = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+        const months = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+        return weekdays[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()];
+    }}
+
+    function refreshReferenceDate() {{
+        const el = document.getElementById('main-updated');
+        if (el) el.innerText = currentItalianDateLabel();
+    }}
+
     function parseRetryAfterSeconds(text) {{
         const match = /try again in\s*([\d.]+)\s*s/i.exec(text || '');
         return match ? Math.ceil(parseFloat(match[1])) : 10;
@@ -3552,7 +3564,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     window.onload = loadCounter;
-    document.addEventListener('DOMContentLoaded', initReorder);
+    document.addEventListener('DOMContentLoaded', () => {{
+        refreshReferenceDate();
+        initReorder();
+    }});
   </script>
 </head>
 <body>
