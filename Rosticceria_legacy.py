@@ -1103,6 +1103,27 @@ def find_largest_visible_image_url(page) -> str:
     return best_url
 
 
+def facebook_original_image_url(image_url: str) -> str:
+    """Rimuove dai percorsi CDN Facebook le directory di crop/resize.
+
+    Facebook serve spesso miniature con segmenti come /p720x720/,
+    /s960x960/ o /c0.15.200.200/. Togliendoli si arriva, quando la CDN lo
+    consente, al file caricato senza tagli della griglia Foto.
+    """
+    if not image_url:
+        return ""
+
+    try:
+        parsed = urllib.parse.urlsplit(image_url)
+        path = re.sub(r"/[ps]\d+x\d+/", "/", parsed.path)
+        path = re.sub(r"/c\d+(?:\.\d+){3}/", "/", path)
+        return urllib.parse.urlunsplit(
+            (parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment)
+        )
+    except Exception:
+        return image_url
+
+
 def facebook_image_url_variants(image_url: str) -> List[str]:
     """Restituisce varianti CDN evitando, quando possibile, il crop quadrato
     usato dalle miniature Facebook."""
@@ -1115,6 +1136,8 @@ def facebook_image_url_variants(image_url: str) -> List[str]:
         if url and url.startswith("http") and url not in variants:
             variants.append(url)
 
+    add(facebook_original_image_url(image_url))
+
     try:
         parsed = urllib.parse.urlsplit(image_url)
         query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
@@ -1125,13 +1148,15 @@ def facebook_image_url_variants(image_url: str) -> List[str]:
             if key not in {"stp", "cstp", "ctp"}
         ]
         add(
-            urllib.parse.urlunsplit(
-                (
-                    parsed.scheme,
-                    parsed.netloc,
-                    parsed.path,
-                    urllib.parse.urlencode(no_crop_query),
-                    parsed.fragment,
+            facebook_original_image_url(
+                urllib.parse.urlunsplit(
+                    (
+                        parsed.scheme,
+                        parsed.netloc,
+                        parsed.path,
+                        urllib.parse.urlencode(no_crop_query),
+                        parsed.fragment,
+                    )
                 )
             )
         )
@@ -1142,20 +1167,22 @@ def facebook_image_url_variants(image_url: str) -> List[str]:
             if key not in {"stp", "cstp"}
         ]
         add(
-            urllib.parse.urlunsplit(
-                (
-                    parsed.scheme,
-                    parsed.netloc,
-                    parsed.path,
-                    urllib.parse.urlencode(no_stp_query),
-                    parsed.fragment,
+            facebook_original_image_url(
+                urllib.parse.urlunsplit(
+                    (
+                        parsed.scheme,
+                        parsed.netloc,
+                        parsed.path,
+                        urllib.parse.urlencode(no_stp_query),
+                        parsed.fragment,
+                    )
                 )
             )
         )
     except Exception:
         pass
 
-    add(re.sub(r"(?:ctp=|s)\d+x\d+", "s960x960", image_url))
+    add(facebook_original_image_url(re.sub(r"(?:ctp=|s)\d+x\d+", "s960x960", image_url)))
     add(image_url)
     return variants
 
@@ -1265,7 +1292,8 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
                     # la foto originale. Preferiamo la variante piu'
                     # verticale, poi quella con piu' pixel.
                     aspect_ratio = height / width if width else 0
-                    variant_score = (aspect_ratio, width * height)
+                    vertical_menu_score = min(aspect_ratio, 1.6)
+                    variant_score = (vertical_menu_score, width * height)
                     if variant_score > selected_variant_score:
                         selected_image_url = variant_url
                         selected_dimensions = (width, height)
@@ -1274,6 +1302,10 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
                     continue
             if not selected_image_url:
                 continue
+            print(
+                "Variante immagine menu scelta dalla griglia Foto: "
+                f"{selected_dimensions[0]}x{selected_dimensions[1]}"
+            )
 
             menu_candidates.append(
                 {
