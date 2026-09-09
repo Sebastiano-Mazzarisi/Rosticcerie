@@ -2986,7 +2986,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 14px 58px 30px;
+      padding: 32px 10px 12px;
       border: 4px solid #555555; /* Giallo se aggiornata oggi, grigio scuro altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
@@ -3006,23 +3006,25 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       color: #111; /* Nomi neri */
       font-weight: bold;
       line-height: 1.1;
+      width: 100%;
+      overflow-wrap: anywhere;
     }}
     .card-counter {{
       display: none;
       position: absolute;
-      bottom: 6px;
+      top: 6px;
       right: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #555;
+      font-size: 16px;
+      font-weight: normal;
+      color: #000;
     }}
     .card-reference {{
       position: absolute;
-      bottom: 6px;
+      top: 6px;
       left: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #555;
+      font-size: 16px;
+      font-weight: normal;
+      color: #000;
     }}
     /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
        tenendo premuta una casella, tutte "tremano" leggermente e quella
@@ -3813,6 +3815,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
+        fitCardNames();
         document.getElementById('main-updated').style.display = '';
         document.getElementById('main-updated').innerText = '{html.escape(today_label)}';
         document.getElementById('main-signature').style.display = '';
@@ -3857,6 +3860,19 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
     }}
 
+    function fitCardNames() {{
+        document.querySelectorAll('.card-name').forEach(name => {{
+            if (!name.clientWidth) return;
+            name.style.fontSize = '';
+            let size = parseFloat(getComputedStyle(name).fontSize);
+            while (size > 10 && (name.scrollHeight > size * 1.1 * 2 + 1 || name.scrollWidth > name.clientWidth + 1)) {{
+                size -= 0.5;
+                name.style.fontSize = size + 'px';
+            }}
+        }});
+    }}
+    window.addEventListener('resize', fitCardNames);
+    document.addEventListener('DOMContentLoaded', fitCardNames);
     window.onload = loadCounter;
     window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {{

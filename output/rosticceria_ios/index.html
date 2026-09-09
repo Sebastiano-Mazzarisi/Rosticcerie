@@ -114,19 +114,19 @@
     .card-counter {
       display: none;
       position: absolute;
-      bottom: 6px;
+      top: 6px;
       right: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #555;
+      font-size: 16px;
+      font-weight: normal;
+      color: #000;
     }
     .card-reference {
       position: absolute;
       top: 8px;
       right: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #555;
+      font-size: 16px;
+      font-weight: normal;
+      color: #000;
     }
     /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
        tenendo premuta una casella, tutte "tremano" leggermente e quella
@@ -917,6 +917,7 @@
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
+        fitCardNames();
         document.getElementById('main-updated').style.display = '';
         document.getElementById('main-updated').innerText = 'Mercoledì 9 settembre';
         document.getElementById('main-signature').style.display = '';
@@ -961,6 +962,19 @@
         }
     }
 
+    function fitCardNames() {
+        document.querySelectorAll('.card-name').forEach(name => {
+            if (!name.clientWidth) return;
+            name.style.fontSize = '';
+            let size = parseFloat(getComputedStyle(name).fontSize);
+            while (size > 10 && (name.scrollHeight > size * 1.1 * 2 + 1 || name.scrollWidth > name.clientWidth + 1)) {
+                size -= 0.5;
+                name.style.fontSize = size + 'px';
+            }
+        });
+    }
+    window.addEventListener('resize', fitCardNames);
+    document.addEventListener('DOMContentLoaded', fitCardNames);
     window.onload = loadCounter;
     window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {
