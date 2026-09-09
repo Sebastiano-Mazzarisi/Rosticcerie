@@ -2816,9 +2816,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         })
 
     panels_data.append({
-        "name": "+Home",
-        "card_label": "+Home",
-        "detail_title": "Come creare l'app Rosticcerie",
+        "name": "Suggerimenti",
+        "card_label": "Suggerimenti",
+        "detail_title": "Suggerimenti",
         "phone_display": "",
         "phone_tel": "",
         "image": f"Rosticcerie-Home.jpg?v={int(time.time())}",
@@ -2827,8 +2827,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "updated_label": today_label,
         "url": "",
         "counter_enabled": True,
-        "card_border": "#2f9fe8",
-        "card_bg": "#eaf7ff",
+        "card_border": "#49a95c",
+        "card_bg": "#eaf7ea",
         "card_name_color": "#111",
     })
 
@@ -3361,7 +3361,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     const DEFAULT_ORDER_NAMES = [
         'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
         'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
-        '+Home',
+        'Suggerimenti',
     ];
 
     function resetOrderToDefault() {{
