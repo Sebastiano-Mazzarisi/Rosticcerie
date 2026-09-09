@@ -2813,8 +2813,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         })
 
     panels_data.append({
-        "name": "Come creare l'app Rosticcerie",
-        "card_label": "Come creare\nl'app Rosticcerie",
+        "name": "+Home",
+        "card_label": "+Home",
         "detail_title": "Come creare l'app Rosticcerie",
         "phone_display": "",
         "phone_tel": "",
@@ -2822,7 +2822,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "error": "",
         "updated": True,
         "url": "",
-        "counter_enabled": False,
+        "counter_enabled": True,
         "card_border": "#2f9fe8",
         "card_bg": "#eaf7ff",
         "card_name_color": "#111",
@@ -2834,8 +2834,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     for i, p in enumerate(panels_data):
         title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
         border_color = p.get("card_border") or ("#ffd641" if p["updated"] else "#555555")
-        bg_color = p.get("card_bg") or ("#fff7de" if p["updated"] else "#e5e5e5")
-        name_color = p.get("card_name_color") or ("#111" if p["updated"] else "#555555")
+        bg_color = p.get("card_bg") or ("#fff7de" if p["updated"] else "#ffffff")
+        name_color = p.get("card_name_color") or ("#111" if p["updated"] else "#777777")
         counter_html = (
             f'<span class="card-counter" id="card-counter-{i}"></span>'
             if p.get("counter_enabled", True)
@@ -2923,7 +2923,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       appearance: none;
       -webkit-appearance: none;
       font: inherit;
-      background: #e5e5e5; /* Giallo tenue per i menu aggiornati, grigio per gli altri */
+      background: #ffffff; /* Giallo tenue per i menu aggiornati, bianco per gli altri */
       box-sizing: border-box;
       cursor: pointer;
       min-height: 110px;
@@ -3353,7 +3353,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     const DEFAULT_ORDER_NAMES = [
         'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
         'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
-        "Come creare l'app Rosticcerie",
+        '+Home',
     ];
 
     function resetOrderToDefault() {{
@@ -3601,8 +3601,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel) return;
             card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#555555');
-            card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#e5e5e5');
-            card.querySelector('.card-name').style.color = panel.card_name_color || (panel.updated ? '#111' : '#555555');
+            card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#ffffff');
+            card.querySelector('.card-name').style.color = panel.card_name_color || (panel.updated ? '#111' : '#777777');
         }});
         loadSavedOrder();
         applyOrderToGrid();
