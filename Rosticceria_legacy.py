@@ -2950,16 +2950,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       padding: 10px;
       box-sizing: border-box;
     }}
-    #home-note {{
-      margin: 0 10px 10px;
-      padding: 14px 16px;
-      background: #000;
-      color: #fff;
-      text-align: center;
-      font-size: 16px;
-      line-height: 1.35;
-      box-sizing: border-box;
-    }}
     .card {{
       position: relative;
       appearance: none;
@@ -3352,8 +3342,34 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // L'ordine e' salvato in localStorage: e' quindi personale per ogni
     // dispositivo/browser, non condiviso tra dispositivi diversi ne'
     // pubblicato sul sito.
-    const ORDER_STORAGE_KEY = 'rosticcerie-order-v1';
-    let order = PANELS.map((_, i) => i);
+    const ORDER_STORAGE_KEY = 'rosticcerie-order-v2';
+    const DEFAULT_ORDER_NAMES = [
+        'Fantasia', 'Le delizie di Michela',
+        'Impastamò', 'Cibària',
+        'Pane & Co', 'Bollenti piatti',
+        'Santoro (Castellana)', 'Suggerimenti',
+    ];
+
+    function buildDefaultOrder() {{
+        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+        const restored = [];
+        const seen = new Set();
+        DEFAULT_ORDER_NAMES.forEach(name => {{
+            if (nameToIndex.has(name) && !seen.has(name)) {{
+                restored.push(nameToIndex.get(name));
+                seen.add(name);
+            }}
+        }});
+        PANELS.forEach((p, i) => {{
+            if (!seen.has(p.name)) {{
+                restored.push(i);
+                seen.add(p.name);
+            }}
+        }});
+        return restored;
+    }}
+
+    let order = buildDefaultOrder();
     let reorderMode = false;
     let dragState = null;
     const LONG_PRESS_MS = 450;
@@ -3454,54 +3470,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
     }}
 
-    function fitHomeNote() {{
-        const note = document.getElementById('home-note');
-        if (!note) return;
-        if (window.innerWidth >= 900) {{
-            note.style.fontSize = '16px';
-            return;
-        }}
-
-        // Riduce progressivamente il carattere finche' la nota resta nei
-        // tre righi definiti dai ritorni a capo.
-        let size = 16;
-        note.style.fontSize = size + 'px';
-        while (size > 10) {{
-            const style = window.getComputedStyle(note);
-            const lineHeight = parseFloat(style.lineHeight);
-            const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-            if (note.scrollHeight - padding <= lineHeight * 3 + 1) break;
-            size -= 0.5;
-            note.style.fontSize = size + 'px';
-        }}
-    }}
-
-    const DEFAULT_ORDER_NAMES = [
-        'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
-        'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
-        'Suggerimenti',
-    ];
-
     function resetOrderToDefault() {{
-        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
-        const restored = [];
-        const seen = new Set();
-        DEFAULT_ORDER_NAMES.forEach(name => {{
-            if (nameToIndex.has(name) && !seen.has(name)) {{
-                restored.push(nameToIndex.get(name));
-                seen.add(name);
-            }}
-        }});
-        // Eventuali rosticcerie non presenti nell'elenco di default (es.
-        // aggiunte in futuro) vengono messe in coda, cosi' il pulsante
-        // Reset non le fa sparire.
-        PANELS.forEach((p, i) => {{
-            if (!seen.has(p.name)) {{
-                restored.push(i);
-                seen.add(p.name);
-            }}
-        }});
-        order = restored;
+        order = buildDefaultOrder();
         applyOrderToGrid();
         saveOrder();
     }}
@@ -3782,7 +3752,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     function openDetail(i) {{
         document.getElementById('grid-view').style.display = 'none';
-        document.getElementById('home-note').style.display = 'none';
 
         renderDetail(i);
         document.getElementById('detail-view').style.display = 'block';
@@ -3806,7 +3775,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
-        document.getElementById('home-note').style.display = '';
         document.getElementById('main-updated').style.display = '';
         document.getElementById('main-updated').innerText = '{html.escape(today_label)}';
         document.getElementById('main-signature').style.display = '';
@@ -3853,11 +3821,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     window.onload = loadCounter;
     window.addEventListener('resize', applyDetailImageFit);
-    window.addEventListener('resize', fitHomeNote);
     document.addEventListener('DOMContentLoaded', () => {{
         refreshReferenceDate();
         initReorder();
-        fitHomeNote();
     }});
   </script>
 </head>
@@ -3876,7 +3842,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   <main id="grid-view">
     {"".join(cards)}
   </main>
-  <div id="home-note"><em>Nota</em>: i riquadri con fondo giallo hanno il menu<br class="note-break"> aggiornato alla data odierna, mentre i riquadri<br class="note-break"> con il fondo bianco non lo hanno ancora aggiornato</div>
 
   <div id="detail-view">
     <div id="detail-content" onclick="closeDetail()"></div>

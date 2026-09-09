@@ -68,15 +68,6 @@
       padding: 10px;
       box-sizing: border-box;
     }
-    #home-note {
-      margin: 0 10px 10px;
-      padding: 14px 16px;
-      background: #000;
-      color: #fff;
-      text-align: center;
-      font-size: 16px;
-      line-height: 1.35;
-    }
     .card {
       position: relative;
       appearance: none;
@@ -469,8 +460,34 @@
     // L'ordine e' salvato in localStorage: e' quindi personale per ogni
     // dispositivo/browser, non condiviso tra dispositivi diversi ne'
     // pubblicato sul sito.
-    const ORDER_STORAGE_KEY = 'rosticcerie-order-v1';
-    let order = PANELS.map((_, i) => i);
+    const ORDER_STORAGE_KEY = 'rosticcerie-order-v2';
+    const DEFAULT_ORDER_NAMES = [
+        'Fantasia', 'Le delizie di Michela',
+        'Impastamò', 'Cibària',
+        'Pane & Co', 'Bollenti piatti',
+        'Santoro (Castellana)', 'Suggerimenti',
+    ];
+
+    function buildDefaultOrder() {
+        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+        const restored = [];
+        const seen = new Set();
+        DEFAULT_ORDER_NAMES.forEach(name => {
+            if (nameToIndex.has(name) && !seen.has(name)) {
+                restored.push(nameToIndex.get(name));
+                seen.add(name);
+            }
+        });
+        PANELS.forEach((p, i) => {
+            if (!seen.has(p.name)) {
+                restored.push(i);
+                seen.add(p.name);
+            }
+        });
+        return restored;
+    }
+
+    let order = buildDefaultOrder();
     let reorderMode = false;
     let dragState = null;
     const LONG_PRESS_MS = 450;
@@ -571,32 +588,8 @@
         }
     }
 
-    const DEFAULT_ORDER_NAMES = [
-        'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
-        'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
-        'Suggerimenti',
-    ];
-
     function resetOrderToDefault() {
-        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
-        const restored = [];
-        const seen = new Set();
-        DEFAULT_ORDER_NAMES.forEach(name => {
-            if (nameToIndex.has(name) && !seen.has(name)) {
-                restored.push(nameToIndex.get(name));
-                seen.add(name);
-            }
-        });
-        // Eventuali rosticcerie non presenti nell'elenco di default (es.
-        // aggiunte in futuro) vengono messe in coda, cosi' il pulsante
-        // Reset non le fa sparire.
-        PANELS.forEach((p, i) => {
-            if (!seen.has(p.name)) {
-                restored.push(i);
-                seen.add(p.name);
-            }
-        });
-        order = restored;
+        order = buildDefaultOrder();
         applyOrderToGrid();
         saveOrder();
     }
@@ -877,7 +870,6 @@
 
     function openDetail(i) {
         document.getElementById('grid-view').style.display = 'none';
-        document.getElementById('home-note').style.display = 'none';
 
         renderDetail(i);
         document.getElementById('detail-view').style.display = 'block';
@@ -901,7 +893,6 @@
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
-        document.getElementById('home-note').style.display = '';
         document.getElementById('main-updated').style.display = '';
         document.getElementById('main-updated').innerText = 'Mercoledì 9 settembre';
         document.getElementById('main-signature').style.display = '';
@@ -1016,7 +1007,6 @@
         </button>
         
   </main>
-  <div id="home-note"><em>Nota</em>: i riquadri con fondo giallo hanno il menu<br class="note-break"> aggiornato alla data odierna, mentre i riquadri<br class="note-break"> con il fondo bianco non lo hanno ancora aggiornato</div>
 
   <div id="detail-view">
     <div id="detail-content" onclick="closeDetail()"></div>
