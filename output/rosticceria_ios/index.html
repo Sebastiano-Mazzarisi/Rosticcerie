@@ -188,6 +188,33 @@
       border: 4px solid #ffd641;
       box-sizing: border-box;
     }
+    .share-panel {
+      width: min(100%, 520px);
+      margin: 0 auto 16px;
+      text-align: center;
+    }
+    .share-button {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 2px solid #49a95c;
+      border-radius: 8px;
+      background: #eaf7ea;
+      color: #111;
+      padding: 12px 22px;
+      font: inherit;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .share-button .share-symbol {
+      font-size: 24px;
+      margin-right: 8px;
+    }
+    .share-help {
+      margin: 10px 12px 0;
+      color: #111;
+      font-size: 16px;
+    }
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {
@@ -229,7 +256,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788944098", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788944098", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788944098", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788944098", "error": "", "updated": false, "updated_label": "Martedì 8 settembre", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788944098", "error": "", "updated": false, "updated_label": "Martedì 8 settembre", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788944098", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788944098", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1788944098", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788944817", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788944817", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788944817", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788944817", "error": "", "updated": false, "updated_label": "Martedì 8 settembre", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788944817", "error": "", "updated": false, "updated_label": "Martedì 8 settembre", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788944817", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788944817", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1788944817", "error": "", "updated": true, "updated_label": "Mercoledì 9 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     let currentIndex = -1;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -500,6 +527,29 @@
         });
         document.getElementById('reorder-actions').style.display = 'none';
         saveOrder();
+    }
+
+    const SHARE_URL = 'https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html';
+
+    async function shareSite(event) {
+        event.stopPropagation();
+        const shareData = {
+            title: 'Rosticcerie',
+            text: 'Guarda i menu delle rosticcerie',
+            url: SHARE_URL,
+        };
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+                return;
+            }
+            await navigator.clipboard.writeText(SHARE_URL);
+            alert('Link copiato negli appunti.');
+        } catch (err) {
+            if (err && err.name !== 'AbortError') {
+                alert('Impossibile avviare la condivisione.');
+            }
+        }
     }
 
     const DEFAULT_ORDER_NAMES = [
@@ -785,7 +835,10 @@
         const content = document.getElementById('detail-content');
         if (p.image) {
             const imageClass = p.name === 'Le delizie di Michela' ? ' class="michela-menu"' : '';
-            content.innerHTML = '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
+            const sharePanel = p.name === 'Suggerimenti'
+                ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
+                : '';
+            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
             applyDetailImageFit();
         } else {
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
