@@ -49,6 +49,7 @@
 
     #identity-block { display: flex; align-items: center; justify-content: center; gap: 16px; width: fit-content; max-width: 100%; margin: 0 auto; }
     #identity-logo { display: none; width: 88px; height: 88px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
+    #identity-block.has-logo #main-title { color: #fff; }
     #identity-text { min-width: 0; }
     #identity-block.has-logo #identity-text { text-align: left; }
     #identity-block.has-logo #phone-line { text-align: left; padding: 8px 0 0; }
@@ -441,6 +442,7 @@
     }
 
     function updateAdminTitle() {
+        if (document.getElementById('detail-view').style.display === 'block') return;
         let val = 0;
         for (let i = 0; i < PANELS.length; i++) {
             if (PANELS[i].counter_enabled === false) continue;
