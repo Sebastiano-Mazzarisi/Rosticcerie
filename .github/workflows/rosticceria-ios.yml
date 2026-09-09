@@ -12,15 +12,14 @@ on:
       - 'rosticcerie_clean/**'
       - 'requirements.txt'
   schedule:
-    # Nota: niente campo "timezone" qui. In pratica, su questo repository,
-    # gli schedule con "timezone" non sono mai partiti da soli (0 esecuzioni
-    # automatiche in oltre 24 ore, a fronte di decine di occasioni utili) -
-    # sembra un problema di affidabilita' di questa funzione recente di
-    # GitHub Actions. Usiamo quindi un intervallo UTC piu' ampio (copre sia
-    # l'ora legale che quella solare italiana) e lasciamo che sia lo script
-    # Python sottostante a decidere con precisione, in orario italiano vero,
-    # se e' davvero il momento di lavorare (vedi step successivo).
-    - cron: '*/5 5-11 * * *'
+    # GitHub Actions usa UTC. Scheduliamo una finestra UTC ampia che copre
+    # sia ora solare sia ora legale italiana, poi lo step Python sotto decide
+    # con Europe/Rome se e' davvero il momento di estrarre.
+    # 00:01 Italia: ricalcola subito la data di riferimento e rende grigi i
+    # menu ancora riferiti al giorno precedente.
+    - cron: '1 22,23 * * *'
+    # 06:00-12:00 Italia: rilettura ogni 15 minuti.
+    - cron: '*/15 4-11 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -41,11 +40,12 @@ jobs:
           from zoneinfo import ZoneInfo
 
           now = datetime.now(ZoneInfo("Europe/Rome"))
-          in_window = (7 <= now.hour < 12) or (now.hour == 12 and now.minute == 0)
+          midnight_refresh = now.hour == 0 and now.minute < 15
+          morning_refresh = (6 <= now.hour < 12) or (now.hour == 12 and now.minute < 15)
           manual = os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"run={str(in_window or manual).lower()}\n")
+              output.write(f"run={str(midnight_refresh or morning_refresh or manual).lower()}\n")
               output.write(f"rome_time={now:%Y-%m-%d %H:%M:%S %Z}\n")
 
       - name: Checkout

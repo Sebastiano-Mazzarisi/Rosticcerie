@@ -179,7 +179,7 @@
     #detail-content img {
       width: auto;
       max-width: 100%;
-      max-height: calc(100vh - 205px);
+      max-height: 55vh;
       height: auto;
       display: block;
       margin: 0 auto;
@@ -774,9 +774,24 @@
         const content = document.getElementById('detail-content');
         if (p.image) {
             content.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '">';
+            applyDetailImageFit();
         } else {
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
         }
+    }
+
+    function applyDetailImageFit() {
+        const img = document.querySelector('#detail-content img');
+        if (!img) return;
+        const header = document.getElementById('main-header');
+        const nav = document.getElementById('nav-bar');
+        const headerHeight = header ? header.getBoundingClientRect().height : 0;
+        const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+        const availableHeight = Math.max(260, window.innerHeight - headerHeight - navHeight - 32);
+        img.style.maxHeight = availableHeight + 'px';
+        img.style.width = 'auto';
+        img.style.maxWidth = '100%';
+        img.style.objectFit = 'contain';
     }
 
     function openDetail(i) {
@@ -785,6 +800,7 @@
         renderDetail(i);
         document.getElementById('detail-view').style.display = 'block';
         document.getElementById('nav-bar').style.display = 'flex';
+        applyDetailImageFit();
         window.scrollTo(0, 0);
 
         if (!isAdmin) {
@@ -845,6 +861,7 @@
     }
 
     window.onload = loadCounter;
+    window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {
         refreshReferenceDate();
         initReorder();

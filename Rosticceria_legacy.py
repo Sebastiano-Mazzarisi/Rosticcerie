@@ -76,9 +76,11 @@ SOURCE_URLS.update({page["name"]: page["url"] for page in TEXT_FACEBOOK_PAGES})
 SOURCE_URLS[PANECO_PAGE["name"]] = PANECO_PAGE["url"]
 COOKIE_FILE = "cookies.txt"
 PUBLISH_DIR = os.path.join("output", "rosticceria_ios")
-RUN_START = datetime.time(7, 0)
+MIDNIGHT_REFRESH = datetime.time(0, 1)
+MIDNIGHT_REFRESH_GRACE_MINUTES = 15
+RUN_START = datetime.time(6, 0)
 RUN_END = datetime.time(12, 0)
-RUN_INTERVAL_MINUTES = 1
+RUN_INTERVAL_MINUTES = 15
 ITALIAN_MONTHS = {
     "gennaio": 1,
     "gen": 1,
@@ -2898,7 +2900,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     #detail-content img {{
       width: auto;
       max-width: 100%;
-      max-height: calc(100vh - 205px);
+      max-height: 55vh;
       height: auto;
       display: block;
       margin: 0 auto;
@@ -3493,9 +3495,24 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const content = document.getElementById('detail-content');
         if (p.image) {{
             content.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '">';
+            applyDetailImageFit();
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
         }}
+    }}
+
+    function applyDetailImageFit() {{
+        const img = document.querySelector('#detail-content img');
+        if (!img) return;
+        const header = document.getElementById('main-header');
+        const nav = document.getElementById('nav-bar');
+        const headerHeight = header ? header.getBoundingClientRect().height : 0;
+        const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+        const availableHeight = Math.max(260, window.innerHeight - headerHeight - navHeight - 32);
+        img.style.maxHeight = availableHeight + 'px';
+        img.style.width = 'auto';
+        img.style.maxWidth = '100%';
+        img.style.objectFit = 'contain';
     }}
 
     function openDetail(i) {{
@@ -3504,6 +3521,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         renderDetail(i);
         document.getElementById('detail-view').style.display = 'block';
         document.getElementById('nav-bar').style.display = 'flex';
+        applyDetailImageFit();
         window.scrollTo(0, 0);
 
         if (!isAdmin) {{
@@ -3564,6 +3582,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     window.onload = loadCounter;
+    window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {{
         refreshReferenceDate();
         initReorder();
@@ -3866,18 +3885,23 @@ def run_once(show: bool = False, publish_to_git: bool = True) -> None:
 
 
 def inside_run_window(moment: datetime.datetime) -> bool:
-    return RUN_START <= moment.time() <= RUN_END
+    midnight_start = datetime.datetime.combine(moment.date(), MIDNIGHT_REFRESH)
+    midnight_end = midnight_start + datetime.timedelta(minutes=MIDNIGHT_REFRESH_GRACE_MINUTES)
+    return midnight_start <= moment <= midnight_end or RUN_START <= moment.time() <= RUN_END
 
 
 def next_run_time(now: datetime.datetime) -> datetime.datetime:
+    midnight_run = datetime.datetime.combine(now.date(), MIDNIGHT_REFRESH)
     today_start = datetime.datetime.combine(now.date(), RUN_START)
     today_end = datetime.datetime.combine(now.date(), RUN_END)
     interval = datetime.timedelta(minutes=RUN_INTERVAL_MINUTES)
 
+    if now <= midnight_run:
+        return midnight_run
     if now < today_start:
         return today_start
     if now > today_end:
-        return today_start + datetime.timedelta(days=1)
+        return midnight_run + datetime.timedelta(days=1)
 
     next_time = today_start
     while next_time < now:
@@ -3885,11 +3909,11 @@ def next_run_time(now: datetime.datetime) -> datetime.datetime:
 
     if next_time <= today_end:
         return next_time
-    return today_start + datetime.timedelta(days=1)
+    return midnight_run + datetime.timedelta(days=1)
 
 
 def monitor_loop(show: bool = False, publish_to_git: bool = True) -> None:
-    print("Monitor attivo: estrazione ogni minuto tra le 09:00 e le 12:00.")
+    print("Monitor attivo: estrazione alle 00:01 e ogni 15 minuti tra le 06:00 e le 12:00.")
 
     while True:
         now = datetime.datetime.now()
