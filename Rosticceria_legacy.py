@@ -1252,19 +1252,24 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
             image_urls_to_try.extend(facebook_image_url_variants(image_url))
 
             selected_image_url = ""
+            selected_dimensions = (0, 0)
+            selected_variant_score = (-1.0, 0)
             for variant_url in image_urls_to_try:
                 try:
                     image_bytes = download_image(variant_url)
                     width, height = Image.open(io.BytesIO(image_bytes)).size
                     if min(width, height) < 380:
                         continue
-                    selected_image_url = variant_url
-                    # Se la foto e' verticale, abbiamo evitato il crop
-                    # quadrato della miniatura Facebook.
-                    if height > width:
-                        break
-                    if not selected_image_url:
+                    # Non fermarti alla prima miniatura verticale: Facebook
+                    # puo' esporre prima una versione gia' ritagliata e poi
+                    # la foto originale. Preferiamo la variante piu'
+                    # verticale, poi quella con piu' pixel.
+                    aspect_ratio = height / width if width else 0
+                    variant_score = (aspect_ratio, width * height)
+                    if variant_score > selected_variant_score:
                         selected_image_url = variant_url
+                        selected_dimensions = (width, height)
+                        selected_variant_score = variant_score
                 except Exception:
                     continue
             if not selected_image_url:
