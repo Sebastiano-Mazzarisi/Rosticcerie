@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-09-09T07:34:43",
+  "updated_at": "2026-09-09T08:00:06",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 09/08/26",
-      "published_at": "09/08/2026",
-      "published_at_raw": "09/08/2026",
+      "published_at": "09/09/2026 09:24 circa",
+      "published_at_raw": "34m",
       "error": null
     },
     {
@@ -21,7 +21,7 @@
       "name": "Impastamò",
       "image": "Impastamo.jpg",
       "text": "2h\n·",
-      "published_at": "09/09/2026 07:33 circa",
+      "published_at": "09/09/2026 07:59 circa",
       "published_at_raw": "2h",
       "error": null
     },
@@ -29,7 +29,7 @@
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
       "text": "23h\n·",
-      "published_at": "08/09/2026 10:34 circa",
+      "published_at": "08/09/2026 10:59 circa",
       "published_at_raw": "23h",
       "error": null
     },
@@ -53,8 +53,8 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●TIMBALLO DI SPINACI 5,0\n●TORTIGLIONI ALLA BOSCAIOLA ( FUNGHI, GUANCIALE E SCAGLIE DI SCAMORZA AFFUMICATA 5,0\n●RIGATONI CON TONNO, CAPPERI IN ROSSO 5,0\n●TROFIE ALLA CRUDAIOLA CON SALMONE, DATTERINO GIALLO E PISELLI 5,5\n●SPAGHETTI ALLA SAN GIOVANNINO 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●FUSI DI POLLO AL FORNO CON PATATE\n●ZAMPINA DI VITELLO ARROSTO\n●SALTIMBOCCA DI CARNE FARCITI CON FUNGHI\n●SPIEDINO DI INVOLTINI DI ZUCCHINE AL SALMONE E FORMAGGIO GRATINATI AL FORNO\n●NODINI DI CARNE AL SUGO DI PORCINI\n●TRIANGOLO DI MERLUZZO IMPANATO\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
-      "published_at": "08/09/2026 10:34 circa",
-      "published_at_raw": "23h",
+      "published_at": "08/09/2026 circa",
+      "published_at_raw": "1d",
       "error": null
     }
   ]

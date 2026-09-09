@@ -225,7 +225,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788939283", "error": "", "updated": false, "url": "https://www.facebook.com/RosticceriaFantasia"}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788939283", "error": "", "updated": true, "url": "https://www.facebook.com/cibaria.asporto"}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788939283", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=61560452176728"}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788939283", "error": "", "updated": false, "url": "https://www.facebook.com/profile.php?id=100045208848338"}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788939283", "error": "", "updated": false, "url": "https://www.facebook.com/santorogastronomia"}, {"name": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788939283", "error": "", "updated": true, "url": "https://www.paneeco.it/menu"}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788939283", "error": "", "updated": false, "url": "https://www.facebook.com/BollentiPiatti"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788940806", "error": "", "updated": true, "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788940806", "error": "", "updated": true, "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788940806", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788940806", "error": "", "updated": false, "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788940806", "error": "", "updated": false, "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788940806", "error": "", "updated": true, "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788940806", "error": "", "updated": false, "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Come creare l'app Rosticcerie", "card_label": "Come creare\nl'app Rosticcerie", "detail_title": "Come creare l'app Rosticcerie", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1788940806", "error": "", "updated": true, "url": "", "counter_enabled": false, "card_border": "#2f9fe8", "card_bg": "#eaf7ff", "card_name_color": "#111"}];
     let currentIndex = -1;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -338,6 +338,7 @@
         // limite di frequenza dell'API gratuita di Abacus.
         for (let i = 0; i < PANELS.length; i++) {
             const p = PANELS[i];
+            if (p.counter_enabled === false) continue;
             try {
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
                 const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
@@ -356,6 +357,7 @@
         const mainTitle = document.getElementById('main-title');
         for (let i = 0; i < PANELS.length; i++) {
             const p = PANELS[i];
+            if (p.counter_enabled === false) continue;
             mainTitle.innerText = 'Azzeramento in corso... (' + (i + 1) + '/' + PANELS.length + ')';
             try {
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
@@ -391,6 +393,7 @@
     function updateAdminTitle() {
         let val = 0;
         for (let i = 0; i < PANELS.length; i++) {
+            if (PANELS[i].counter_enabled === false) continue;
             val += Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
         }
         document.getElementById('main-title').innerText = `Rosticcerie (${val.toLocaleString('it-IT')})`;
@@ -401,6 +404,10 @@
         for (let i = 0; i < PANELS.length; i++) {
             const el = document.getElementById('card-counter-' + i);
             if (!el) continue;
+            if (PANELS[i].counter_enabled === false) {
+                el.style.display = 'none';
+                continue;
+            }
             const val = Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
             el.innerText = val.toLocaleString('it-IT');
             el.style.display = 'block';
@@ -494,6 +501,7 @@
     const DEFAULT_ORDER_NAMES = [
         'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
         'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
+        "Come creare l'app Rosticcerie",
     ];
 
     function resetOrderToDefault() {
@@ -740,9 +748,9 @@
         document.querySelectorAll('.card[data-pid]').forEach(card => {
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel) return;
-            card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
-            card.style.backgroundColor = panel.updated ? '#fff7de' : '#e5e5e5';
-            card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#555555';
+            card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#555555');
+            card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#e5e5e5');
+            card.querySelector('.card-name').style.color = panel.card_name_color || (panel.updated ? '#111' : '#555555');
         });
         loadSavedOrder();
         applyOrderToGrid();
@@ -755,7 +763,7 @@
         currentIndex = ((i % n) + n) % n;
         const p = PANELS[order[currentIndex]];
 
-        document.getElementById('main-title').innerText = p.name;
+        document.getElementById('main-title').innerText = p.detail_title || p.name;
         // Keep the refresh controls available while a menu is open.
         document.getElementById('main-updated').style.display = '';
         document.getElementById('main-signature').style.display = '';
@@ -801,7 +809,9 @@
 
         if (!isAdmin) {
             const p = PANELS[order[currentIndex]];
-            fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {});
+            if (p.counter_enabled !== false) {
+                fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {});
+            }
         }
     }
 
@@ -878,8 +888,8 @@
 
   <main id="grid-view">
     
-        <button type="button" class="card" data-pid="0" style="border-color:#555555;background-color:#e5e5e5" onclick="cardClicked(0)">
-            <span class="card-name" style="color:#555555">Fantasia</span>
+        <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(0)">
+            <span class="card-name" style="color:#111">Fantasia</span>
             <span class="card-counter" id="card-counter-0"></span>
         </button>
         
@@ -911,6 +921,11 @@
         <button type="button" class="card" data-pid="6" style="border-color:#555555;background-color:#e5e5e5" onclick="cardClicked(6)">
             <span class="card-name" style="color:#555555">Bollenti piatti</span>
             <span class="card-counter" id="card-counter-6"></span>
+        </button>
+        
+        <button type="button" class="card" data-pid="7" style="border-color:#2f9fe8;background-color:#eaf7ff" onclick="cardClicked(7)">
+            <span class="card-name" style="color:#111">Come creare<br>l&#x27;app Rosticcerie</span>
+            
         </button>
         
   </main>
