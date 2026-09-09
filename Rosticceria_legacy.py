@@ -2956,6 +2956,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       text-align: center;
       font-size: 16px;
       line-height: 1.35;
+      box-sizing: border-box;
     }}
     .card {{
       position: relative;
@@ -3451,6 +3452,28 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
     }}
 
+    function fitHomeNote() {{
+        const note = document.getElementById('home-note');
+        if (!note) return;
+        if (window.innerWidth >= 900) {{
+            note.style.fontSize = '16px';
+            return;
+        }}
+
+        // Riduce progressivamente il carattere finche' la nota resta nei
+        // tre righi definiti dai ritorni a capo.
+        let size = 16;
+        note.style.fontSize = size + 'px';
+        while (size > 10) {{
+            const style = window.getComputedStyle(note);
+            const lineHeight = parseFloat(style.lineHeight);
+            const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+            if (note.scrollHeight - padding <= lineHeight * 3 + 1) break;
+            size -= 0.5;
+            note.style.fontSize = size + 'px';
+        }}
+    }}
+
     const DEFAULT_ORDER_NAMES = [
         'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
         'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
@@ -3828,9 +3851,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     window.onload = loadCounter;
     window.addEventListener('resize', applyDetailImageFit);
+    window.addEventListener('resize', fitHomeNote);
     document.addEventListener('DOMContentLoaded', () => {{
         refreshReferenceDate();
         initReorder();
+        fitHomeNote();
     }});
   </script>
 </head>
