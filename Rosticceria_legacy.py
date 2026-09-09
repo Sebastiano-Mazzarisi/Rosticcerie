@@ -2922,6 +2922,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       padding: 10px;
       box-sizing: border-box;
     }}
+    #home-note {{
+      margin: 0 10px 10px;
+      padding: 14px 16px;
+      background: #000;
+      color: #fff;
+      text-align: center;
+      font-size: 16px;
+      line-height: 1.35;
+    }}
     .card {{
       position: relative;
       appearance: none;
@@ -3714,6 +3723,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     function openDetail(i) {{
         document.getElementById('grid-view').style.display = 'none';
+        document.getElementById('home-note').style.display = 'none';
 
         renderDetail(i);
         document.getElementById('detail-view').style.display = 'block';
@@ -3737,6 +3747,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
+        document.getElementById('home-note').style.display = '';
         document.getElementById('main-updated').style.display = '';
         document.getElementById('main-updated').innerText = '{html.escape(today_label)}';
         document.getElementById('main-signature').style.display = '';
@@ -3804,6 +3815,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   <main id="grid-view">
     {"".join(cards)}
   </main>
+  <div id="home-note"><em>Nota</em>: i riquadri con fondo giallo hanno il menu<br class="note-break"> aggiornato alla data odierna, mentre i riquadri<br class="note-break"> con il fondo bianco non lo hanno ancora aggiornato</div>
 
   <div id="detail-view">
     <div id="detail-content" onclick="closeDetail()"></div>
