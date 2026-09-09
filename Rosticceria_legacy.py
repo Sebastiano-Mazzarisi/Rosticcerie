@@ -3029,7 +3029,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       padding-bottom: 85px; /* Spazio per la fascia con le frecce */
     }}
     #detail-content {{
-      padding: 12px;
+      padding: 0;
       cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
     }}
     #detail-content img {{
@@ -3039,6 +3039,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       height: auto;
       display: block;
       margin: 0 auto;
+    }}
+    #detail-content img.michela-menu {{
+      border: 4px solid #ffd641;
+      box-sizing: border-box;
     }}
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
@@ -3636,7 +3640,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
         const content = document.getElementById('detail-content');
         if (p.image) {{
-            content.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '">';
+            const imageClass = p.name === 'Le delizie di Michela' ? ' class="michela-menu"' : '';
+            content.innerHTML = '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
             applyDetailImageFit();
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';

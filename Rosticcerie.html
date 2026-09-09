@@ -177,7 +177,7 @@
       padding-bottom: 85px; /* Spazio per la fascia con le frecce */
     }
     #detail-content {
-      padding: 12px;
+      padding: 0;
       cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
     }
     #detail-content img {
@@ -185,6 +185,10 @@
       height: auto;
       display: block;
       margin: 0 auto;
+    }
+    #detail-content img.michela-menu {
+      border: 4px solid #ffd641;
+      box-sizing: border-box;
     }
 
     /* Su schermi da PC la foto occupa circa un terzo della larghezza
@@ -761,7 +765,8 @@
 
         const content = document.getElementById('detail-content');
         if (p.image) {
-            content.innerHTML = '<img src="' + p.image + '" alt="' + p.name + '">';
+            const imageClass = p.name === 'Le delizie di Michela' ? ' class="michela-menu"' : '';
+            content.innerHTML = '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
         } else {
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
         }
