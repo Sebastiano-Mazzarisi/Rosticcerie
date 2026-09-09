@@ -2790,6 +2790,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
         image_url = ""
         is_updated = False
+        updated_label = today_label
         if error:
             error = str(error)
         else:
@@ -2798,6 +2799,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 image_url = f"{html.escape(image_name)}?v={int(time.time())}"
             published_at = panel_published_at(panel)
             is_updated = parse_status_date(published_at) == today
+            updated_label = format_menu_date(published_at) or today_label
 
         panels_data.append({
             "name": name,
@@ -2808,6 +2810,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             "image": image_url,
             "error": error or "",
             "updated": is_updated,
+            "updated_label": updated_label,
             "url": SOURCE_URLS.get(name, ""),
             "counter_enabled": True,
         })
@@ -2821,6 +2824,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "image": f"Rosticcerie-Home.jpg?v={int(time.time())}",
         "error": "",
         "updated": True,
+        "updated_label": today_label,
         "url": "",
         "counter_enabled": True,
         "card_border": "#2f9fe8",
@@ -3616,6 +3620,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const p = PANELS[order[currentIndex]];
 
         document.getElementById('main-title').innerText = p.detail_title || p.name;
+        document.getElementById('main-updated').innerText = p.updated_label || '{html.escape(today_label)}';
         // Keep the refresh controls available while a menu is open.
         document.getElementById('main-updated').style.display = '';
         document.getElementById('main-signature').style.display = '';
@@ -3676,6 +3681,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
         document.getElementById('main-updated').style.display = '';
+        document.getElementById('main-updated').innerText = '{html.escape(today_label)}';
         document.getElementById('main-signature').style.display = '';
 
         const mainTitle = document.getElementById('main-title');
