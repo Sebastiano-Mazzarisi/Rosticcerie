@@ -1124,6 +1124,25 @@ def facebook_original_image_url(image_url: str) -> str:
         return image_url
 
 
+def facebook_photo_download_url(photo_href: str) -> str:
+    if not photo_href:
+        return ""
+    try:
+        parsed = urllib.parse.urlsplit(photo_href)
+        query = urllib.parse.parse_qs(parsed.query)
+        fbid_values = query.get("fbid") or query.get("photo_id")
+        if not fbid_values:
+            match = re.search(r"/photos/(?:[^/]+/)?(\d+)", parsed.path)
+            fbid_values = [match.group(1)] if match else []
+        if not fbid_values:
+            return ""
+        return "https://www.facebook.com/photo/download/?" + urllib.parse.urlencode(
+            {"fbid": fbid_values[0]}
+        )
+    except Exception:
+        return ""
+
+
 def facebook_image_url_variants(image_url: str) -> List[str]:
     """Restituisce varianti CDN evitando, quando possibile, il crop quadrato
     usato dalle miniature Facebook."""
@@ -1262,6 +1281,9 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
             photo_href = candidate.get("href", "")
 
             image_urls_to_try = []
+            download_url = facebook_photo_download_url(photo_href)
+            if download_url:
+                image_urls_to_try.append(download_url)
             if photo_href:
                 try:
                     photo_page = context.new_page()
@@ -1916,6 +1938,19 @@ def render_paneeco_image(date_label: str, categories: List[Dict]) -> bytes:
     return output.getvalue()
 
 
+def _requests_cookies_for_url(image_url: str) -> Dict[str, str]:
+    if "facebook.com" not in image_url:
+        return {}
+    cookie_path = os.path.join(script_dir(), "cookies.txt")
+    cookies = {}
+    for cookie in load_facebook_cookies(cookie_path):
+        name = cookie.get("name")
+        value = cookie.get("value")
+        if name and value:
+            cookies[name] = value
+    return cookies
+
+
 def download_image(image_url: str) -> bytes:
     headers = {
         "User-Agent": (
@@ -1923,7 +1958,12 @@ def download_image(image_url: str) -> bytes:
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         )
     }
-    response = requests.get(image_url, headers=headers, timeout=30)
+    response = requests.get(
+        image_url,
+        headers=headers,
+        cookies=_requests_cookies_for_url(image_url),
+        timeout=30,
+    )
     response.raise_for_status()
     return response.content
 
