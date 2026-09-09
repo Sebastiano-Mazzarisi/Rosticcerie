@@ -1206,6 +1206,35 @@ def facebook_image_url_variants(image_url: str) -> List[str]:
     return variants
 
 
+def select_best_facebook_image_variant(image_urls: List[str]) -> Tuple[str, Tuple[int, int]]:
+    selected_image_url = ""
+    selected_dimensions = (0, 0)
+    selected_variant_score = (-1.0, 0)
+    tried: List[str] = []
+
+    for image_url in image_urls:
+        for variant_url in facebook_image_url_variants(image_url):
+            if variant_url in tried:
+                continue
+            tried.append(variant_url)
+            try:
+                image_bytes = download_image(variant_url)
+                width, height = Image.open(io.BytesIO(image_bytes)).size
+                if min(width, height) < 380:
+                    continue
+                aspect_ratio = height / width if width else 0
+                vertical_menu_score = min(aspect_ratio, 1.6)
+                variant_score = (vertical_menu_score, width * height)
+                if variant_score > selected_variant_score:
+                    selected_image_url = variant_url
+                    selected_dimensions = (width, height)
+                    selected_variant_score = variant_score
+            except Exception:
+                continue
+
+    return selected_image_url, selected_dimensions
+
+
 def cookies_look_authenticated(cookies: List[Dict]) -> bool:
     names = {cookie.get("name", "") for cookie in cookies}
     return bool(names & FACEBOOK_LOGIN_COOKIE_NAMES)
@@ -1300,28 +1329,9 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
                         pass
             image_urls_to_try.extend(facebook_image_url_variants(image_url))
 
-            selected_image_url = ""
-            selected_dimensions = (0, 0)
-            selected_variant_score = (-1.0, 0)
-            for variant_url in image_urls_to_try:
-                try:
-                    image_bytes = download_image(variant_url)
-                    width, height = Image.open(io.BytesIO(image_bytes)).size
-                    if min(width, height) < 380:
-                        continue
-                    # Non fermarti alla prima miniatura verticale: Facebook
-                    # puo' esporre prima una versione gia' ritagliata e poi
-                    # la foto originale. Preferiamo la variante piu'
-                    # verticale, poi quella con piu' pixel.
-                    aspect_ratio = height / width if width else 0
-                    vertical_menu_score = min(aspect_ratio, 1.6)
-                    variant_score = (vertical_menu_score, width * height)
-                    if variant_score > selected_variant_score:
-                        selected_image_url = variant_url
-                        selected_dimensions = (width, height)
-                        selected_variant_score = variant_score
-                except Exception:
-                    continue
+            selected_image_url, selected_dimensions = select_best_facebook_image_variant(
+                image_urls_to_try
+            )
             if not selected_image_url:
                 continue
             print(
@@ -1449,6 +1459,10 @@ def extract_first_facebook_image(
                 )
                 if post:
                     photo_url = post.get("photo_url", "")
+                    image_urls_to_try = [post.get("image_url", "")]
+                    download_url = facebook_photo_download_url(photo_url)
+                    if download_url:
+                        image_urls_to_try.append(download_url)
                     if photo_url:
                         try:
                             photo_page = context.new_page()
@@ -1457,9 +1471,18 @@ def extract_first_facebook_image(
                             larger_image_url = find_largest_visible_image_url(photo_page)
                             photo_page.close()
                             if larger_image_url:
-                                post["image_url"] = larger_image_url
+                                image_urls_to_try.append(larger_image_url)
                         except Exception:
                             pass
+                    selected_image_url, selected_dimensions = select_best_facebook_image_variant(
+                        image_urls_to_try
+                    )
+                    if selected_image_url:
+                        post["image_url"] = selected_image_url
+                        print(
+                            "Variante immagine post scelta: "
+                            f"{selected_dimensions[0]}x{selected_dimensions[1]}"
+                        )
                     return post
                 page.mouse.wheel(0, 900)
                 page.wait_for_timeout(2000)

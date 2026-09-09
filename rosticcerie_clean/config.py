@@ -45,7 +45,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         kind="facebook_image",
         output_image="Rosticceria_Impastamo.jpg",
         skip_closure_notices=True,
-        photo_grid_first=True,
+        photo_grid_first=False,
         force_refresh_today=True,
     ),
     RosticceriaConfig(
