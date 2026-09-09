@@ -2922,11 +2922,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       margin: 4px 0 0;
       color: #fff;
       font-size: 16px;
+      cursor: pointer;
     }}
     .signature {{
       margin: 2px 0 0;
       color: #fff;
       font-size: 14px;
+      cursor: pointer;
     }}
     /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
     #phone-line {{
