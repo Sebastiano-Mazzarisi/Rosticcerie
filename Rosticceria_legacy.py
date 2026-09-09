@@ -629,6 +629,24 @@ def format_menu_date(value: str) -> str:
         return ""
 
 
+def format_card_reference(value: str, is_updated: bool) -> str:
+    """Formato breve: ora per i menu di oggi, data per quelli precedenti."""
+    if is_updated:
+        match = re.search(r"(?:^|\s)(\d{1,2}):(\d{2})(?:\s|$)", value or "")
+        return f"{int(match.group(1)):02d}:{match.group(2)}" if match else rome_now().strftime("%H:%M")
+
+    match = re.search(r"(\d{2})/(\d{2})/(\d{4})", value or "")
+    if not match:
+        return ""
+    try:
+        day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+        date_value = datetime.date(year, month, day)
+        months = ("gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic")
+        return f"{date_value.day} {months[date_value.month - 1]}"
+    except ValueError:
+        return ""
+
+
 def normalize_facebook_time(value: str) -> str:
     value = value.strip()
     if not value:
@@ -2791,6 +2809,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         image_url = ""
         is_updated = False
         updated_label = today_label
+        published_at = ""
         if error:
             error = str(error)
         else:
@@ -2811,6 +2830,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             "error": error or "",
             "updated": is_updated,
             "updated_label": updated_label,
+            "card_reference": format_card_reference(published_at, is_updated),
             "url": SOURCE_URLS.get(name, ""),
             "counter_enabled": True,
         })
@@ -2845,9 +2865,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if p.get("counter_enabled", True)
             else ""
         )
+        reference_html = (
+            f'<span class="card-reference">{html.escape(p.get("card_reference", ""))}</span>'
+            if p.get("card_reference")
+            else ""
+        )
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
             <span class="card-name" style="color:{name_color}">{title}</span>
+            {reference_html}
             {counter_html}
         </button>
         """)
@@ -2969,6 +2995,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       position: absolute;
       bottom: 6px;
       right: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #555;
+    }}
+    .card-reference {{
+      position: absolute;
+      bottom: 6px;
+      left: 10px;
       font-size: 18px;
       font-weight: bold;
       color: #555;
