@@ -3044,6 +3044,33 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       border: 4px solid #ffd641;
       box-sizing: border-box;
     }}
+    .share-panel {{
+      width: min(100%, 520px);
+      margin: 0 auto 16px;
+      text-align: center;
+    }}
+    .share-button {{
+      appearance: none;
+      -webkit-appearance: none;
+      border: 2px solid #49a95c;
+      border-radius: 8px;
+      background: #eaf7ea;
+      color: #111;
+      padding: 12px 22px;
+      font: inherit;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }}
+    .share-button .share-symbol {{
+      font-size: 24px;
+      margin-right: 8px;
+    }}
+    .share-help {{
+      margin: 10px 12px 0;
+      color: #111;
+      font-size: 16px;
+    }}
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {{
@@ -3358,6 +3385,29 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         saveOrder();
     }}
 
+    const SHARE_URL = 'https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html';
+
+    async function shareSite(event) {{
+        event.stopPropagation();
+        const shareData = {{
+            title: 'Rosticcerie',
+            text: 'Guarda i menu delle rosticcerie',
+            url: SHARE_URL,
+        }};
+        try {{
+            if (navigator.share) {{
+                await navigator.share(shareData);
+                return;
+            }}
+            await navigator.clipboard.writeText(SHARE_URL);
+            alert('Link copiato negli appunti.');
+        }} catch (err) {{
+            if (err && err.name !== 'AbortError') {{
+                alert('Impossibile avviare la condivisione.');
+            }}
+        }}
+    }}
+
     const DEFAULT_ORDER_NAMES = [
         'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
         'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
@@ -3641,7 +3691,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const content = document.getElementById('detail-content');
         if (p.image) {{
             const imageClass = p.name === 'Le delizie di Michela' ? ' class="michela-menu"' : '';
-            content.innerHTML = '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
+            const sharePanel = p.name === 'Suggerimenti'
+                ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
+                : '';
+            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
             applyDetailImageFit();
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
