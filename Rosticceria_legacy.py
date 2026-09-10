@@ -1889,6 +1889,11 @@ def extract_today_facebook_posts(
                 else:
                     stagnant_rounds = 0
                 try:
+                    before_y = page.evaluate("window.scrollY")
+                    before_h = page.evaluate("document.body.scrollHeight")
+                except Exception:
+                    before_y, before_h = None, None
+                try:
                     page.mouse.move(683, 1200)
                 except Exception:
                     pass
@@ -1897,7 +1902,26 @@ def extract_today_facebook_posts(
                     page.evaluate("window.scrollBy(0, 1200)")
                 except Exception:
                     pass
+                try:
+                    page.keyboard.press("End")
+                except Exception:
+                    pass
+                try:
+                    page.evaluate(
+                        "document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight"
+                    )
+                except Exception:
+                    pass
                 page.wait_for_timeout(3000)
+                try:
+                    after_y = page.evaluate("window.scrollY")
+                    after_h = page.evaluate("document.body.scrollHeight")
+                except Exception:
+                    after_y, after_h = None, None
+                print(
+                    f"{label}: [debug-scroll] scrollY {before_y}->{after_y} "
+                    f"bodyHeight {before_h}->{after_h}"
+                )
 
             posts = list(today_by_url.values())
             if not posts:
