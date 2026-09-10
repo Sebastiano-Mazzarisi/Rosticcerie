@@ -948,24 +948,6 @@ def find_first_post_image(
                         best_score = 1
                         break
 
-            # DEBUG TEMPORANEO: traccia ogni post-nodo scansionato (anche
-            # quelli che non diventano candidati), per capire perche' un
-            # post genuino (es. il menu del giorno) a volte non risulta mai
-            # tra i candidati in modalita' headless. Da rimuovere una volta
-            # diagnosticato il problema di Impastamò.
-            try:
-                _debug_alt = (best_image.get_attribute("alt") or "")[:70] if best_image else ""
-            except Exception:
-                _debug_alt = ""
-            try:
-                _debug_box = best_image.bounding_box(timeout=1000) if best_image else None
-            except Exception:
-                _debug_box = None
-            print(
-                f"{label}: [debug] post_index={current_post_index} selector={selector!r} "
-                f"n_img={len(images)} best_score={best_score} box={_debug_box} alt={_debug_alt!r}"
-            )
-
             if best_image and best_score:
                 image_url = best_image.get_attribute("src")
                 if image_url:
@@ -1901,8 +1883,14 @@ def extract_today_facebook_posts(
                 # (il piu' alto tra quelli con overflow scrollabile e
                 # contenuto oltre la propria altezza visibile) e scrolliamo
                 # direttamente quello.
+                # `document.body`/`window` non sono il vero contenitore che
+                # scorre in questa SPA (il loro scrollHeight resta bloccato
+                # all'altezza del viewport): troviamo il contenitore reale
+                # (il piu' alto tra quelli con overflow scrollabile e
+                # contenuto oltre la propria altezza visibile) e scrolliamo
+                # direttamente quello.
                 try:
-                    scroll_info_before = page.evaluate(
+                    page.evaluate(
                         """
                         () => {
                             const all = Array.from(document.querySelectorAll('*'));
@@ -1912,23 +1900,16 @@ def extract_today_facebook_posts(
                                 if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll')
                                     && el.scrollHeight > el.clientHeight + 50) {
                                     if (!best || el.scrollHeight > best.scrollHeight) {
-                                        best = {
-                                            tag: el.tagName, id: el.id,
-                                            cls: (el.className || '').toString().slice(0, 60),
-                                            scrollHeight: el.scrollHeight,
-                                            clientHeight: el.clientHeight,
-                                            scrollTop: el.scrollTop,
-                                        };
+                                        best = el;
                                         el.setAttribute('data-rosticceria-scrolltarget', '1');
                                     }
                                 }
                             }
-                            return best;
                         }
                         """
                     )
                 except Exception:
-                    scroll_info_before = None
+                    pass
                 try:
                     page.mouse.move(683, 500)
                 except Exception:
@@ -1939,36 +1920,19 @@ def extract_today_facebook_posts(
                 except Exception:
                     pass
                 try:
-                    scrolled_target = page.evaluate(
+                    page.evaluate(
                         """
                         () => {
                             const el = document.querySelector('[data-rosticceria-scrolltarget="1"]');
-                            if (!el) return false;
+                            if (!el) return;
                             el.scrollTop = el.scrollHeight;
                             el.dispatchEvent(new Event('scroll', {bubbles: true}));
-                            return true;
                         }
                         """
                     )
                 except Exception:
-                    scrolled_target = False
+                    pass
                 page.wait_for_timeout(3000)
-                try:
-                    scroll_info_after = page.evaluate(
-                        """
-                        () => {
-                            const el = document.querySelector('[data-rosticceria-scrolltarget="1"]');
-                            if (!el) return null;
-                            return {scrollHeight: el.scrollHeight, clientHeight: el.clientHeight, scrollTop: el.scrollTop};
-                        }
-                        """
-                    )
-                except Exception:
-                    scroll_info_after = None
-                print(
-                    f"{label}: [debug-scroll] target_found={scrolled_target} "
-                    f"before={scroll_info_before} after={scroll_info_after}"
-                )
 
             posts = list(today_by_url.values())
             if not posts:
