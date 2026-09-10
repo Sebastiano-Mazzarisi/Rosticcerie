@@ -599,6 +599,28 @@ def rome_now() -> datetime.datetime:
     return datetime.datetime.now(ZoneInfo("Europe/Rome"))
 
 
+def hours_since_published(published_at: str) -> Optional[float]:
+    """Quante ore sono passate da published_at (formato prodotto da
+    normalize_facebook_time/prefer_publication_time: "DD/MM/YYYY[ HH:MM][
+    circa]"), rispetto ad ora. Restituisce None se il testo non e'
+    interpretabile come data. Usata per capire se un post candidato e'
+    genuinamente recente, invece di scegliere semplicemente la foto piu'
+    grande tra quelle gia' caricate anche se vecchia di giorni."""
+    if not published_at:
+        return None
+    match = re.search(r"(\d{2})/(\d{2})/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?", published_at)
+    if not match:
+        return None
+    day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+    hour = int(match.group(4)) if match.group(4) else 12
+    minute = int(match.group(5)) if match.group(5) else 0
+    try:
+        published = datetime.datetime(year, month, day, hour, minute, tzinfo=ZoneInfo("Europe/Rome"))
+    except ValueError:
+        return None
+    return (rome_now() - published).total_seconds() / 3600
+
+
 ITALIAN_WEEKDAYS = [
     "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica",
 ]
@@ -878,6 +900,7 @@ def find_first_post_image(
     skip_closure_notices: bool = False,
     skip_first_today_post: bool = False,
     prefer_facebook_date: bool = False,
+    label: str = "Pagina",
 ) -> Optional[Dict[str, str]]:
     post_selectors = [
         'div[role="article"]',
@@ -944,7 +967,7 @@ def find_first_post_image(
                         if skip_first_today_post and not skipped_first_today_post:
                             skipped_first_today_post = True
                         print(
-                            "Impastamò: salto l'immagine dell'annuncio di riapertura "
+                            f"{label}: salto l'immagine dell'annuncio di riapertura "
                             "e cerco il post successivo con il menu."
                         )
                         continue
@@ -967,7 +990,7 @@ def find_first_post_image(
                     ):
                         skipped_first_today_post = True
                         print(
-                            "Impastamò: salto per prova il primo post di oggi "
+                            f"{label}: salto per prova il primo post di oggi "
                             "e cerco quello successivo."
                         )
                         continue
@@ -989,16 +1012,35 @@ def find_first_post_image(
                         return candidate
 
                     score = min(best_score / 10000, 100)
-                    if looks_like_real_menu(combined_text):
+                    is_real_menu = looks_like_real_menu(combined_text)
+                    if is_real_menu:
                         score += 1000
                     if looks_like_closure_notice(combined_text):
                         score -= 200
                     score -= current_post_index * 5
+                    # Preferiamo un post genuinamente recente (minuti/ore fa)
+                    # a uno vecchio di giorni, anche quando il suo testo non
+                    # contiene parole chiave riconosciute come "vero menu"
+                    # (es. una lavagna fotografata senza descrizione utile
+                    # generata da Facebook): prima, in assenza di questa
+                    # corrispondenza testuale, veniva scelto semplicemente il
+                    # post con l'immagine piu' grande tra quelli gia'
+                    # caricati nella pagina, anche se vecchio di giorni.
+                    elapsed_hours = hours_since_published(published_at)
+                    is_recent = elapsed_hours is not None and elapsed_hours < 20
+                    if elapsed_hours is not None:
+                        if elapsed_hours < 6:
+                            score += 600
+                        elif elapsed_hours < 20:
+                            score += 350
+                        elif elapsed_hours > 48:
+                            score -= 150
                     candidate["score"] = score
                     candidate["post_index"] = current_post_index
+                    candidate["confident"] = is_real_menu or is_recent
                     candidates.append(candidate)
                     print(
-                        "Impastamò: candidato post "
+                        f"{label}: candidato post "
                         f"{current_post_index} punteggio {score:.1f} "
                         f"testo: {clean_post_text(combined_text)[:80]}"
                     )
@@ -1007,7 +1049,7 @@ def find_first_post_image(
         candidates.sort(key=lambda item: item.get("score", 0), reverse=True)
         best_candidate = candidates[0]
         print(
-            "Impastamò: scelgo il post "
+            f"{label}: scelgo il post "
             f"{best_candidate.get('post_index')} con punteggio "
             f"{best_candidate.get('score', 0):.1f}."
         )
@@ -1464,6 +1506,7 @@ def extract_first_facebook_image(
     skip_first_today_post: bool = False,
     photo_grid_first: bool = False,
     prefer_facebook_date: bool = False,
+    label: str = "Pagina",
 ) -> Dict[str, str]:
     cookie_path = os.path.join(script_dir(), COOKIE_FILE)
 
@@ -1520,42 +1563,62 @@ def extract_first_facebook_image(
                 page.screenshot(path="debug_facebook_feed.png", full_page=True)
             except Exception:
                 pass
+            best_post = None
             for _ in range(4):
                 post = find_first_post_image(
                     page,
                     skip_closure_notices=skip_closure_notices,
                     skip_first_today_post=skip_first_today_post,
                     prefer_facebook_date=prefer_facebook_date,
+                    label=label,
                 )
                 if post:
-                    photo_url = post.get("photo_url", "")
-                    image_urls_to_try = [post.get("image_url", "")]
-                    download_url = facebook_photo_download_url(photo_url)
-                    if download_url:
-                        image_urls_to_try.append(download_url)
-                    if photo_url:
-                        try:
-                            photo_page = context.new_page()
-                            photo_page.goto(photo_url, wait_until="domcontentloaded", timeout=60000)
-                            photo_page.wait_for_timeout(4000)
-                            larger_image_url = find_largest_visible_image_url(photo_page)
-                            photo_page.close()
-                            if larger_image_url:
-                                image_urls_to_try.append(larger_image_url)
-                        except Exception:
-                            pass
-                    selected_image_url, selected_dimensions = select_best_facebook_image_variant(
-                        image_urls_to_try
-                    )
-                    if selected_image_url:
-                        post["image_url"] = selected_image_url
-                        print(
-                            "Variante immagine post scelta: "
-                            f"{selected_dimensions[0]}x{selected_dimensions[1]}"
-                        )
-                    return post
+                    confident = post.pop("confident", False)
+                    # Teniamo il primo candidato trovato come rete di
+                    # sicurezza (comportamento precedente), ma se non e'
+                    # "affidabile" - ne' un vero menu riconosciuto dal testo,
+                    # ne' un post pubblicato di recente - continuiamo a
+                    # scorrere qualche secondo in piu' in cerca di un post
+                    # piu' recente invece di fermarci subito al primo che
+                    # capita: prima questo causava la scelta di una foto
+                    # vecchia di giorni quando, al primo caricamento della
+                    # pagina, erano visibili solo post non recenti.
+                    if best_post is None:
+                        best_post = post
+                    if confident:
+                        best_post = post
+                        break
                 page.mouse.wheel(0, 900)
                 page.wait_for_timeout(2000)
+
+            if best_post:
+                post = best_post
+                photo_url = post.get("photo_url", "")
+                image_urls_to_try = [post.get("image_url", "")]
+                download_url = facebook_photo_download_url(photo_url)
+                if download_url:
+                    image_urls_to_try.append(download_url)
+                if photo_url:
+                    try:
+                        photo_page = context.new_page()
+                        photo_page.goto(photo_url, wait_until="domcontentloaded", timeout=60000)
+                        photo_page.wait_for_timeout(4000)
+                        larger_image_url = find_largest_visible_image_url(photo_page)
+                        photo_page.close()
+                        if larger_image_url:
+                            image_urls_to_try.append(larger_image_url)
+                    except Exception:
+                        pass
+                selected_image_url, selected_dimensions = select_best_facebook_image_variant(
+                    image_urls_to_try
+                )
+                if selected_image_url:
+                    post["image_url"] = selected_image_url
+                    print(
+                        "Variante immagine post scelta: "
+                        f"{selected_dimensions[0]}x{selected_dimensions[1]}"
+                    )
+                return post
 
             raise RuntimeError(f"Non ho trovato nessuna immagine grande nella pagina Facebook: {facebook_url}")
         finally:
