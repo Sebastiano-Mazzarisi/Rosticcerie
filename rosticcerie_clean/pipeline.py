@@ -12,6 +12,15 @@ def _existing(config: RosticceriaConfig, require_today: bool = True) -> Dict | N
     return legacy.existing_publish_panel_if_today(config.name, require_today=require_today)
 
 
+def _looks_like_menu_panel(panel: Dict | None) -> bool:
+    """Vero se il pannello (nuovo o gia' salvato) sembra un vero menu in
+    base al testo/alt-text, non un post pubblicitario o altro."""
+    if not panel:
+        return False
+    combined = f"{panel.get('text', '')} {panel.get('image_alt', '')}"
+    return legacy.looks_like_real_menu(combined)
+
+
 def _normalize_bollenti_panel(config: RosticceriaConfig, panel: Dict) -> Dict:
     """Considera aggiornato Bollenti quando il menu e' valido ma manca la data DOM."""
     if config.name != "Bollenti piatti":
@@ -48,6 +57,26 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
         label=config.name,
         story_url=config.story_url,
     )
+
+    if config.name != "Le delizie di Michela" and not _looks_like_menu_panel(post):
+        # Il post trovato non sembra un vero menu (es. un post pubblicitario
+        # pubblicato dopo il menu del giorno, come talvolta capita a
+        # Impastamò): non sostituiamo mai un menu genuino gia' pubblicato
+        # con qualcosa che menu non e', anche se piu' recente. Se oggi non
+        # c'e' nessun post-menu, teniamo l'ultimo menu disponibile (quello
+        # di oggi se c'e' gia', altrimenti l'ultimo salvato di un giorno
+        # precedente) invece della pubblicita'. Michela e' esclusa: gestita
+        # a parte (menu locale/storie), le sue foto spesso non hanno
+        # descrizione testuale e quindi non corrispondono mai a "vero
+        # menu", pur essendo corrette.
+        fallback = existing if _looks_like_menu_panel(existing) else _existing(config, require_today=False)
+        if _looks_like_menu_panel(fallback):
+            print(
+                f"{config.name}: il post piu' recente non sembra un menu "
+                "(es. pubblicitario), tengo l'ultimo menu disponibile."
+            )
+            return fallback
+
     image_bytes = legacy.download_image(post["image_url"])
 
     if config.name == "Fantasia":
