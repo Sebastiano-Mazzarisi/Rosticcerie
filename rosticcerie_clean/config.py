@@ -19,6 +19,7 @@ class RosticceriaConfig:
     photo_grid_first: bool = False
     force_refresh_today: bool = False
     prefer_facebook_date: bool = False
+    story_url: str = ""
 
     @property
     def label(self) -> str:
@@ -55,6 +56,8 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         url="https://www.facebook.com/profile.php?id=100045208848338",
         kind="facebook_image",
         output_image="Rosticceria_LeDelizieDiMichela.jpg",
+        story_url="https://www.facebook.com/stories/186699229513704/",
+        force_refresh_today=True,
         prefer_active_closure=True,
         skip_closure_notices=True,
     ),

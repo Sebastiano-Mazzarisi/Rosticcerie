@@ -1499,6 +1499,47 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
     return None
 
 
+def extract_facebook_story(context, story_url: str) -> Optional[Dict[str, str]]:
+    """Read the selected story only; never use thumbnails from the sidebar."""
+    page = context.new_page()
+    try:
+        page.goto(story_url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(5000)
+        if not page.url.startswith(story_url):
+            print("Storia Facebook non accessibile: controllo i post.")
+            return None
+        candidate = page.evaluate(r"""() => {
+            for (const img of document.querySelectorAll('img')) {
+                const box = img.getBoundingClientRect();
+                if (box.width < 250 || box.height < 350 || box.x < 360 ||
+                    box.top < 0 || box.bottom > innerHeight ||
+                    !img.src.startsWith('https://') || !img.complete) continue;
+                let node = img.parentElement;
+                for (let depth = 0; node && depth < 8; depth++, node = node.parentElement) {
+                    if (node === document.body || node === document.documentElement) break;
+                    const text = node.innerText || '';
+                    if (text.length > 800) break;
+                    if (/Le Delizie di Michela/i.test(text)) {
+                        const time = text.match(/\b\d+\s*(?:minuti?|min|ore?|ora|h|hours?)\b/i);
+                        if (time) return {image_url: img.src, image_alt: img.alt || '',
+                                          published_at_raw: time[0]};
+                    }
+                }
+            }
+            return null;
+        }""")
+        if not candidate:
+            return None
+        candidate.update(text="", photo_url=page.url, source_type="story",
+                         published_at=normalize_facebook_time(candidate["published_at_raw"]))
+        return candidate
+    except Exception as exc:
+        print(f"Storia Facebook non leggibile ({type(exc).__name__}); cerco nei post.")
+        return None
+    finally:
+        page.close()
+
+
 def extract_first_facebook_image(
     facebook_url: str,
     prefer_active_closure: bool = False,
@@ -1507,6 +1548,7 @@ def extract_first_facebook_image(
     photo_grid_first: bool = False,
     prefer_facebook_date: bool = False,
     label: str = "Pagina",
+    story_url: str = "",
 ) -> Dict[str, str]:
     cookie_path = os.path.join(script_dir(), COOKIE_FILE)
 
@@ -1530,6 +1572,12 @@ def extract_first_facebook_image(
                     f"ATTENZIONE: {cookie_path} non contiene un login Facebook valido "
                     "(mancano i cookie 'c_user'/'xs'). Verrà usata una sessione anonima."
                 )
+
+            if story_url:
+                story = extract_facebook_story(context, story_url)
+                if story:
+                    print(f"{label}: immagine recuperata dalla storia Facebook.")
+                    return story
 
             page = context.new_page()
             page.goto(facebook_url, wait_until="domcontentloaded", timeout=60000)
