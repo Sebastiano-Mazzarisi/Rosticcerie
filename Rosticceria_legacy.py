@@ -2881,8 +2881,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if p.get("card_reference")
             else ""
         )
+        suggestion_image = '<img class="suggestions-image" src="../../Magica.jpg" alt="" aria-hidden="true">' if p["name"] == "Suggerimenti" else ""
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
+            {suggestion_image}
             <span class="card-name" style="color:{name_color}">{title}</span>
             {reference_html}
             {counter_html}
@@ -3034,6 +3036,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       padding: 2px 8px;
       line-height: 18px;
     }}
+    .suggestions-image {{ width: 100px; height: auto; max-width: 100%; display: block; margin: 0 auto 8px; }}
     .card.is-suggestions {{
       padding: 12px 10px;
       justify-content: center;
@@ -3993,6 +3996,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             while (size > 10 && (name.scrollHeight > size * 1.1 * 2 + 1 || name.scrollWidth > name.clientWidth + 1)) {{
                 size -= 0.5;
                 name.style.fontSize = size + 'px';
+            }}
+            const picture = name.parentElement.querySelector('.suggestions-image');
+            if (picture) {{
+                const range = document.createRange();
+                range.selectNodeContents(name);
+                picture.style.width = range.getBoundingClientRect().width + 'px';
             }}
         }});
     }}

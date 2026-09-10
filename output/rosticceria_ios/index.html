@@ -141,6 +141,7 @@
       padding: 2px 8px;
       line-height: 18px;
     }
+    .suggestions-image { width: 100px; height: auto; max-width: 100%; display: block; margin: 0 auto 8px; }
     .card.is-suggestions {
       padding: 12px 10px;
       justify-content: center;
@@ -1101,6 +1102,12 @@
                 size -= 0.5;
                 name.style.fontSize = size + 'px';
             }
+            const picture = name.parentElement.querySelector('.suggestions-image');
+            if (picture) {
+                const range = document.createRange();
+                range.selectNodeContents(name);
+                picture.style.width = range.getBoundingClientRect().width + 'px';
+            }
         });
     }
     window.addEventListener('resize', fitCardNames);
@@ -1176,6 +1183,7 @@
         </button>
         
         <button type="button" class="card" data-pid="7" style="border-color:#49a95c;background-color:#eaf7ea" onclick="cardClicked(7)">
+            <img class="suggestions-image" src="../../Magica.jpg" alt="" aria-hidden="true">
             <span class="card-name" style="color:#111">Suggerimenti</span>
             
             <span class="card-counter" id="card-counter-7"></span>
