@@ -1037,7 +1037,16 @@ def find_first_post_image(
                             score -= 150
                     candidate["score"] = score
                     candidate["post_index"] = current_post_index
-                    candidate["confident"] = is_real_menu or is_recent
+                    # "confident" richiede un vero menu riconosciuto dal
+                    # testo, non basta che il post sia recente: un post
+                    # pubblicitario pubblicato DOPO il menu del giorno (es.
+                    # Impastamò) e' spesso il piu' recente in assoluto, ma
+                    # non va mai preferito al menu solo perche' e' fresco.
+                    # La recente e' comunque usata nel punteggio sopra, cosi'
+                    # se non troviamo mai un vero menu (es. Michela, le cui
+                    # foto non hanno mai una descrizione testuale) scegliamo
+                    # comunque il candidato piu' recente tra quelli trovati.
+                    candidate["confident"] = is_real_menu
                     candidates.append(candidate)
                     print(
                         f"{label}: candidato post "
@@ -1056,7 +1065,7 @@ def find_first_post_image(
         return {
             key: value
             for key, value in best_candidate.items()
-            if key not in {"score", "post_index"}
+            if key != "post_index"
         }
 
     return None
@@ -1612,6 +1621,7 @@ def extract_first_facebook_image(
             except Exception:
                 pass
             best_post = None
+            best_score = float("-inf")
             for _ in range(4):
                 post = find_first_post_image(
                     page,
@@ -1622,19 +1632,23 @@ def extract_first_facebook_image(
                 )
                 if post:
                     confident = post.pop("confident", False)
-                    # Teniamo il primo candidato trovato come rete di
-                    # sicurezza (comportamento precedente), ma se non e'
-                    # "affidabile" - ne' un vero menu riconosciuto dal testo,
-                    # ne' un post pubblicato di recente - continuiamo a
-                    # scorrere qualche secondo in piu' in cerca di un post
-                    # piu' recente invece di fermarci subito al primo che
-                    # capita: prima questo causava la scelta di una foto
-                    # vecchia di giorni quando, al primo caricamento della
-                    # pagina, erano visibili solo post non recenti.
-                    if best_post is None:
+                    score = post.pop("score", 0)
+                    # Teniamo il candidato con il punteggio migliore visto
+                    # finora tra tutti i tentativi (rete di sicurezza), ma se
+                    # non e' "affidabile" - cioe' non e' un vero menu
+                    # riconosciuto dal testo - continuiamo a scorrere qualche
+                    # secondo in piu' invece di fermarci subito: un post
+                    # pubblicitario pubblicato dopo il menu del giorno (es.
+                    # Impastamò) e' spesso il piu' recente e quindi il primo
+                    # trovato, ma non va mai preferito al menu vero e proprio
+                    # solo perche' e' fresco. Se non troviamo mai un vero
+                    # menu (es. Michela, le cui foto non hanno descrizione
+                    # testuale) restiamo comunque con il candidato dal
+                    # punteggio migliore invece di rinunciare del tutto.
+                    if best_post is None or score > best_score:
                         best_post = post
+                        best_score = score
                     if confident:
-                        best_post = post
                         break
                 page.mouse.wheel(0, 900)
                 page.wait_for_timeout(2000)
