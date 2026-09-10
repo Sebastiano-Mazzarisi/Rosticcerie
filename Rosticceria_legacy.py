@@ -3998,7 +3998,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 const date = /([0-9]{{2}})\/([0-9]{{2}})\/([0-9]{{4}})/.exec(source.published_at || '');
                 panel.menu_date = date ? date[3] + '-' + date[2] + '-' + date[1] : '';
                 const time = /([0-9]{{1,2}}:[0-9]{{2}})/.exec(source.published_at || '');
-                panel.card_reference = time ? time[1] : '';
+                // Come in refreshMenuDates: se manca un orario preciso (es.
+                // Pane & Co, che riporta solo la data) mostriamo comunque la
+                // data invece di svuotare il confetto verde, altrimenti
+                // questo aggiornamento automatico (che gira gia' al primo
+                // caricamento della pagina) lo faceva sparire subito dopo.
+                if (time) {{
+                    panel.card_reference = time[1];
+                }} else if (panel.menu_date) {{
+                    panel.card_reference = new Intl.DateTimeFormat('it-IT', {{timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+                }} else {{
+                    panel.card_reference = '';
+                }}
                 panel.updated_label = source.published_at || '';
                 panel.error = source.error || '';
                 if (source.image) {{
