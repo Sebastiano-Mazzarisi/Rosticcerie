@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-10T07:47:22",
+  "updated_at": "2026-09-10T07:53:53",
   "pages": [
     {
       "name": "Fantasia",
@@ -13,7 +13,7 @@
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "10 Settembre 2026.\nMenù del giorno.",
-      "published_at": "10/09/2026",
+      "published_at": "10/09/2026 09:23 circa",
       "published_at_raw": "10/09/2026",
       "error": null
     },
@@ -21,7 +21,7 @@
       "name": "Impastamò",
       "image": "Impastamo.jpg",
       "text": "1h\n·",
-      "published_at": "10/09/2026 08:46 circa",
+      "published_at": "10/09/2026 08:52 circa",
       "published_at_raw": "1h",
       "error": null
     },
@@ -37,7 +37,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 10 Settembre",
-      "published_at": "10/09/2026",
+      "published_at": "10/09/2026 08:53 circa",
       "published_at_raw": "10/09/2026",
       "error": null
     },
@@ -54,7 +54,7 @@
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FUSILLI ALLA CRUDAIOLA CON PESTO, CILIEGINO E FIORDILATTE 5,0\n●TRIVELLE ALLA CRUDAIOLA CON PESTO DI PEPERONI SPECK E NOCI 5,5\n●NIDI ALLA CARNE 5,5\n●LINGUINE AGLI SCAMPI 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●FETTINA DI VITELLO AL VINO BIANCO E PINOLI TOSTATI\n●HAMBURGER DI VITELLO CON POMODORO E FIORDILATTE\n●PANZEROTTO DI CARNE DI FARCITO CON PISELLI E CAROTE\n●TORRETTE DI MELANZANE VEGETARIANE AL FORNO\n●FILETTO DI ORATA ALLA MEDITERRANEA\n●CUORE DI CERNIA GRATINATA AL PROFUMO DI LIMONE E ERBA CIPOLLINA\n●INSALATA DI POLLO CON CAROTE, INSALATA VERDE, RADICCHIO\n●INSALATA DI PATATE CETRIOLO CAROTE E TONNO",
       "published_at": "10/09/2026 09:46 circa",
-      "published_at_raw": "1m",
+      "published_at_raw": "7m",
       "error": null
     }
   ]
