@@ -948,6 +948,24 @@ def find_first_post_image(
                         best_score = 1
                         break
 
+            # DEBUG TEMPORANEO: traccia ogni post-nodo scansionato (anche
+            # quelli che non diventano candidati), per capire perche' un
+            # post genuino (es. il menu del giorno) a volte non risulta mai
+            # tra i candidati in modalita' headless. Da rimuovere una volta
+            # diagnosticato il problema di Impastamò.
+            try:
+                _debug_alt = (best_image.get_attribute("alt") or "")[:70] if best_image else ""
+            except Exception:
+                _debug_alt = ""
+            try:
+                _debug_box = best_image.bounding_box(timeout=1000) if best_image else None
+            except Exception:
+                _debug_box = None
+            print(
+                f"{label}: [debug] post_index={current_post_index} selector={selector!r} "
+                f"n_img={len(images)} best_score={best_score} box={_debug_box} alt={_debug_alt!r}"
+            )
+
             if best_image and best_score:
                 image_url = best_image.get_attribute("src")
                 if image_url:
