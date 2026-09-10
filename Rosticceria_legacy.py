@@ -1655,7 +1655,24 @@ def extract_first_facebook_image(
                         best_score = score
                     if confident:
                         break
-                page.mouse.wheel(0, 900)
+                # Uno scroll con page.mouse.wheel da solo puo' non avere
+                # alcun effetto in modalita' headless se il puntatore non e'
+                # sopra il contenitore scorrevole del feed: prima ci
+                # spostiamo al centro della pagina e poi rinforziamo lo
+                # scroll con window.scrollBy diretto, cosi' il feed avanza
+                # davvero anche quando l'evento "wheel" non viene intercettato
+                # dal punto giusto (causa osservata: gli stessi 2 post
+                # restavano identici ad ogni tentativo, segno che il feed non
+                # avanzava affatto).
+                try:
+                    page.mouse.move(683, 1200)
+                except Exception:
+                    pass
+                page.mouse.wheel(0, 1200)
+                try:
+                    page.evaluate("window.scrollBy(0, 1200)")
+                except Exception:
+                    pass
                 # Piu' tempo per far caricare le immagini pigre dopo ogni
                 # scroll: con 2s capitava che il post autentico del menu
                 # (es. Impastamò) non risultasse ancora renderizzato e venisse
