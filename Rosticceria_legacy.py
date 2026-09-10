@@ -642,10 +642,43 @@ def prefer_publication_time(menu_date: str, publication: str) -> str:
 
 
 def format_card_reference(value: str, is_updated: bool) -> str:
-    """Formato breve: ora per i menu di oggi, data per quelli precedenti."""
+    """Formato breve: ora per i menu di oggi, data per quelli precedenti.
+
+    NOTA: oltre che per il testo mostrato, questa funzione viene usata
+    altrove (pipeline.py) come "c'e' gia' un riferimento orario valido per
+    oggi?" per decidere se saltare un nuovo controllo della fonte: per
+    questo, quando is_updated=True, resta intenzionalmente vuota se non
+    troviamo un orario preciso (es. Pane & Co, che sul sito riporta solo la
+    data, senza ora) invece di ripiegare sulla data. Per il "confetto"
+    visivo in home, che invece deve comunque comparire anche senza un
+    orario preciso, vedi format_card_badge qui sotto."""
     if is_updated:
         match = re.search(r"(?:^|\s)(\d{1,2}):(\d{2})(?:\s|$)", value or "")
         return f"{int(match.group(1)):02d}:{match.group(2)}" if match else ""
+
+    match = re.search(r"(\d{2})/(\d{2})/(\d{4})", value or "")
+    if not match:
+        return ""
+    try:
+        day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+        date_value = datetime.date(year, month, day)
+        months = ("gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic")
+        return f"{date_value.day} {months[date_value.month - 1]}"
+    except ValueError:
+        return ""
+
+
+def format_card_badge(value: str, is_updated: bool) -> str:
+    """Testo del "confetto" verde mostrato sulla casella in home.
+
+    Come format_card_reference, ma quando il menu e' di oggi (is_updated)
+    senza pero' un orario preciso disponibile (es. Pane & Co, che sul sito
+    riporta solo la data "10 Settembre", mai un'ora), mostriamo comunque la
+    data invece di nascondere del tutto il confetto: prima restava vuoto e
+    il confetto verde non compariva mai per queste rosticcerie."""
+    reference = format_card_reference(value, is_updated)
+    if reference or not is_updated:
+        return reference
 
     match = re.search(r"(\d{2})/(\d{2})/(\d{4})", value or "")
     if not match:
@@ -2855,7 +2888,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             "error": error or "",
             "updated": is_updated,
             "updated_label": updated_label,
-            "card_reference": format_card_reference(published_at, is_updated),
+            "card_reference": format_card_badge(published_at, is_updated),
             "menu_date": parse_status_date(published_at).isoformat() if parse_status_date(published_at) else "",
             "url": SOURCE_URLS.get(name, ""),
             "counter_enabled": True,
@@ -3219,7 +3252,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     }}
     function counterKeyFor(name) {{ return 'menu-views-' + slugify(name); }}
-    function offsetKeyFor(name) {{ return 'menu-views-offset-' + slugify(name); }}
+    // La chiave di azzeramento (offset) di "Pane & Co" e' rimasta quasi
+    // allineata al totale (offset molto vicino al totale reale) per via di
+    // prove fatte in passato direttamente sulla chiave in produzione: dato
+    // che l'API del contatore permette solo di FAR CRESCERE l'offset (mai
+    // di farlo scendere), non e' possibile "correggerlo" con un nuovo
+    // azzeramento. Usiamo quindi per questa sola rosticceria una chiave di
+    // azzeramento diversa e mai usata prima (che l'API legge come 0), cosi'
+    // il numero mostrato torna a riflettere il totale reale delle
+    // aperture invece di restare bloccato vicino a zero.
+    const OFFSET_KEY_OVERRIDES = {{ 'Pane & Co': 'pane-co-r2' }};
+    function offsetKeyFor(name) {{ return 'menu-views-offset-' + (OFFSET_KEY_OVERRIDES[name] || slugify(name)); }}
     function counterGetUrlFor(name) {{ return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }}
     function counterHitUrlFor(name) {{ return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }}
     function offsetGetUrlFor(name) {{ return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + offsetKeyFor(name); }}
@@ -3253,13 +3296,23 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel || panel.card_border) return;
             panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
-            card.classList.toggle('is-updated', panel.updated && /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test((panel.card_reference || '').trim()));
+            card.classList.toggle('is-updated', panel.updated && Boolean((panel.card_reference || '').trim()));
             card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
             card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
             card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#777777';
             const reference = card.querySelector('.card-reference');
             if (reference && panel.menu_date) {{
-                reference.innerText = panel.updated ? (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(panel.card_reference || '') ? panel.card_reference : '') : new Intl.DateTimeFormat('it-IT', {{timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+                // Se il menu e' di oggi ma non abbiamo un orario preciso (es.
+                // Pane & Co, che sul sito riporta solo la data), mostriamo
+                // comunque la data invece di svuotare il confetto verde:
+                // prima questo ricalcolo lato client (che gira ogni secondo
+                // per tenere la pagina aggiornata senza ricaricarla)
+                // sovrascriveva con '' il testo gia' corretto generato dal
+                // programma, facendo sparire il confetto poco dopo il
+                // caricamento della pagina.
+                const dateLabel = new Intl.DateTimeFormat('it-IT', {{timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+                const hasTime = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(panel.card_reference || '');
+                reference.innerText = (panel.updated && hasTime) ? panel.card_reference : dateLabel;
             }}
         }});
     }}
