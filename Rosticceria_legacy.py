@@ -1895,13 +1895,42 @@ def extract_today_facebook_posts(
                         break
                 else:
                     stagnant_rounds = 0
+                # `document.body`/`window` non sono il vero contenitore che
+                # scorre in questa SPA (il loro scrollHeight resta bloccato
+                # all'altezza del viewport): troviamo il contenitore reale
+                # (il piu' alto tra quelli con overflow scrollabile e
+                # contenuto oltre la propria altezza visibile) e scrolliamo
+                # direttamente quello.
                 try:
-                    before_y = page.evaluate("window.scrollY")
-                    before_h = page.evaluate("document.body.scrollHeight")
+                    scroll_info_before = page.evaluate(
+                        """
+                        () => {
+                            const all = Array.from(document.querySelectorAll('*'));
+                            let best = null;
+                            for (const el of all) {
+                                const cs = getComputedStyle(el);
+                                if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll')
+                                    && el.scrollHeight > el.clientHeight + 50) {
+                                    if (!best || el.scrollHeight > best.scrollHeight) {
+                                        best = {
+                                            tag: el.tagName, id: el.id,
+                                            cls: (el.className || '').toString().slice(0, 60),
+                                            scrollHeight: el.scrollHeight,
+                                            clientHeight: el.clientHeight,
+                                            scrollTop: el.scrollTop,
+                                        };
+                                        el.setAttribute('data-rosticceria-scrolltarget', '1');
+                                    }
+                                }
+                            }
+                            return best;
+                        }
+                        """
+                    )
                 except Exception:
-                    before_y, before_h = None, None
+                    scroll_info_before = None
                 try:
-                    page.mouse.move(683, 1200)
+                    page.mouse.move(683, 500)
                 except Exception:
                     pass
                 page.mouse.wheel(0, 1200)
@@ -1910,24 +1939,35 @@ def extract_today_facebook_posts(
                 except Exception:
                     pass
                 try:
-                    page.keyboard.press("End")
-                except Exception:
-                    pass
-                try:
-                    page.evaluate(
-                        "document.scrollingElement.scrollTop = document.scrollingElement.scrollHeight"
+                    scrolled_target = page.evaluate(
+                        """
+                        () => {
+                            const el = document.querySelector('[data-rosticceria-scrolltarget="1"]');
+                            if (!el) return false;
+                            el.scrollTop = el.scrollHeight;
+                            el.dispatchEvent(new Event('scroll', {bubbles: true}));
+                            return true;
+                        }
+                        """
                     )
                 except Exception:
-                    pass
+                    scrolled_target = False
                 page.wait_for_timeout(3000)
                 try:
-                    after_y = page.evaluate("window.scrollY")
-                    after_h = page.evaluate("document.body.scrollHeight")
+                    scroll_info_after = page.evaluate(
+                        """
+                        () => {
+                            const el = document.querySelector('[data-rosticceria-scrolltarget="1"]');
+                            if (!el) return null;
+                            return {scrollHeight: el.scrollHeight, clientHeight: el.clientHeight, scrollTop: el.scrollTop};
+                        }
+                        """
+                    )
                 except Exception:
-                    after_y, after_h = None, None
+                    scroll_info_after = None
                 print(
-                    f"{label}: [debug-scroll] scrollY {before_y}->{after_y} "
-                    f"bodyHeight {before_h}->{after_h}"
+                    f"{label}: [debug-scroll] target_found={scrolled_target} "
+                    f"before={scroll_info_before} after={scroll_info_after}"
                 )
 
             posts = list(today_by_url.values())
