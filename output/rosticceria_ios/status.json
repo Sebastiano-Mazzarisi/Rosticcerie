@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-09-10T07:24:00",
+  "updated_at": "2026-09-10T07:26:29",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 09/08/26",
-      "published_at": "09/09/2026 10:15 circa",
-      "published_at_raw": "23h",
+      "published_at": "09/09/2026 circa",
+      "published_at_raw": "1d",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "L’arte di cucinare come una volta!\n… See more",
-      "published_at": "09/09/2026 12:22 circa",
-      "published_at_raw": "21h",
+      "text": "10 Settembre 2026.\nMenù del giorno.",
+      "published_at": "10/09/2026",
+      "published_at_raw": "10/09/2026",
       "error": null
     },
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "50m\n·",
-      "published_at": "10/09/2026 08:26 circa",
-      "published_at_raw": "50m",
+      "text": "1h\n·",
+      "published_at": "10/09/2026 08:25 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
