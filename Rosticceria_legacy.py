@@ -1763,6 +1763,49 @@ def combine_images_vertically(image_bytes_list: List[bytes]) -> bytes:
     return buffer.getvalue()
 
 
+def find_today_photos(context, facebook_url: str) -> List[Dict[str, str]]:
+    """Integra il feed con foto la cui data e' esplicita nel testo dell'immagine."""
+    page = context.new_page()
+    try:
+        page.goto(build_photos_tab_url(facebook_url), wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(6000)
+        page.keyboard.press("Escape")
+        photos = page.locator("img").evaluate_all("""images => images.map(image => ({
+            image_url: image.currentSrc || image.src || '',
+            image_alt: image.alt || '',
+            photo_url: image.closest('a[href]')?.href || ''
+        })).filter(photo => photo.photo_url.includes('/photo'))""")
+        result = []
+        seen = set()
+        for photo in photos:
+            alt = photo["image_alt"]
+            # Mai assegnare la data odierna soltanto perche' la foto e' nella griglia.
+            if not re.search(r"\b\d{1,2}[/.-]\d{1,2}(?:[/.-]\d{2,4})?\b", alt):
+                continue
+            date_text = infer_date_from_text(alt)
+            if not date_text:
+                match = re.search(r"\b(\d{1,2})/(\d{1,2})(?:/(\d{4}|\d{2}))?\b", alt)
+                if match:
+                    try:
+                        year = int(match.group(3)) if match.group(3) else rome_now().year
+                        if year < 100:
+                            year += 2000
+                        date_text = datetime.date(year, int(match.group(2)), int(match.group(1))).strftime("%d/%m/%Y")
+                    except ValueError:
+                        continue
+            if parse_status_date(date_text) != rome_now().date():
+                continue
+            if photo["photo_url"] in seen:
+                continue
+            seen.add(photo["photo_url"])
+            photo.update(text=clean_facebook_alt_text(alt), published_at=date_text,
+                         published_at_raw="Data esplicita sulla foto: " + date_text)
+            result.append(photo)
+        return result
+    finally:
+        page.close()
+
+
 def extract_today_facebook_posts(
     facebook_url: str,
     prefer_active_closure: bool = False,
@@ -1936,6 +1979,13 @@ def extract_today_facebook_posts(
                     pass
                 page.wait_for_timeout(8000)
 
+            if label == "Impastamò":
+                try:
+                    for photo in find_today_photos(context, facebook_url):
+                        today_by_url.setdefault(photo["image_url"], photo)
+                    print(f"{label}: integrata la ricerca nella sezione Foto.")
+                except Exception as exc:
+                    print(f"{label}: sezione Foto non leggibile ({type(exc).__name__}).")
             posts = list(today_by_url.values())
             if not posts:
                 print(f"{label}: nessun post di oggi trovato.")
