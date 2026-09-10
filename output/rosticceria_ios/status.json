@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-10T08:24:35",
+  "updated_at": "2026-09-10T08:36:01",
   "pages": [
     {
       "name": "Fantasia",
@@ -20,9 +20,9 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "1h\n·",
-      "published_at": "10/09/2026 09:23 circa",
-      "published_at_raw": "1h",
+      "text": "2h\n·",
+      "published_at": "10/09/2026 08:35 circa",
+      "published_at_raw": "2h",
       "error": null
     },
     {
@@ -44,7 +44,7 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 10 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Risotto con asparagi e zafferano - €7.50\n- Cavatelli al grano arso con cozze, rughetta e pomodorini - €8.50\n- Zuppa del casale - €6.00\n  Lenticchie, ceci, orzo e piselli (con o senza pasta)\n\nSECONDI PIATTI DEL GIORNO\n- Straccetti di vitello con funghi misti - €7.50\n- Filetto di platessa con zucchina - €8.50",
+      "text": "Menu 10 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Rigatoni all’amatriciana - €6.50\n- Fusilli con ragù di salsiccia al primitivo - €8.50\n- Risotto con platessa, pomodorini e olive - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Bombette di capocollo con zucchina - €7.50\n  5 pezzi\n- Straccetti di vitello alla boscaiola - €7.50\n- Trancio di cernia gratinato con zucchina - €8.50",
       "published_at": "10/09/2026",
       "published_at_raw": "10 Settembre",
       "error": null
@@ -54,7 +54,7 @@
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FUSILLI ALLA CRUDAIOLA CON PESTO, CILIEGINO E FIORDILATTE 5,0\n●TRIVELLE ALLA CRUDAIOLA CON PESTO DI PEPERONI SPECK E NOCI 5,5\n●NIDI ALLA CARNE 5,5\n●LINGUINE AGLI SCAMPI 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●FETTINA DI VITELLO AL VINO BIANCO E PINOLI TOSTATI\n●HAMBURGER DI VITELLO CON POMODORO E FIORDILATTE\n●PANZEROTTO DI CARNE DI FARCITO CON PISELLI E CAROTE\n●TORRETTE DI MELANZANE VEGETARIANE AL FORNO\n●FILETTO DI ORATA ALLA MEDITERRANEA\n●CUORE DI CERNIA GRATINATA AL PROFUMO DI LIMONE E ERBA CIPOLLINA\n●INSALATA DI POLLO CON CAROTE, INSALATA VERDE, RADICCHIO\n●INSALATA DI PATATE CETRIOLO CAROTE E TONNO",
       "published_at": "10/09/2026 09:46 circa",
-      "published_at_raw": "38m",
+      "published_at_raw": "49m",
       "error": null
     }
   ]
