@@ -580,6 +580,9 @@ def best_published_time_from_post(post) -> str:
     except Exception:
         pass
 
+    def time_priority(value):
+        return 0 if re.search(r"\d{1,2}:\d{2}", value) else 1
+    candidates.sort(key=time_priority)
     seen = set()
     for value in candidates:
         compact = re.sub(r"\s+", " ", value).strip()
@@ -629,11 +632,20 @@ def format_menu_date(value: str) -> str:
         return ""
 
 
+def prefer_publication_time(menu_date: str, publication: str) -> str:
+    """Keep a source time only when its date matches the menu date."""
+    if not menu_date:
+        return publication
+    if parse_status_date(menu_date) == parse_status_date(publication) and re.search(r"\b\d{1,2}:\d{2}\b", publication or ""):
+        return publication
+    return menu_date
+
+
 def format_card_reference(value: str, is_updated: bool) -> str:
     """Formato breve: ora per i menu di oggi, data per quelli precedenti."""
     if is_updated:
         match = re.search(r"(?:^|\s)(\d{1,2}):(\d{2})(?:\s|$)", value or "")
-        return f"{int(match.group(1)):02d}:{match.group(2)}" if match else rome_now().strftime("%H:%M")
+        return f"{int(match.group(1)):02d}:{match.group(2)}" if match else ""
 
     match = re.search(r"(\d{2})/(\d{2})/(\d{4})", value or "")
     if not match:
@@ -914,7 +926,7 @@ def find_first_post_image(
                         # (es. "29 agosto alle 13:22"), e' piu' affidabile del
                         # primo indicatore temporale relativo trovato nel DOM.
                         published_at_raw = date_in_post_text or facebook_time
-                        published_at = date_in_post_text or normalized_facebook_time or rome_now().strftime("%d/%m/%Y")
+                        published_at = prefer_publication_time(date_in_post_text, normalized_facebook_time) or rome_now().strftime("%d/%m/%Y")
                     if (
                         skip_first_today_post
                         and not skipped_first_today_post
@@ -1047,9 +1059,9 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
                 continue
 
             published_at = infer_date_from_text(post_text) or infer_date_from_text(raw_text)
-            published_at_raw = published_at or best_published_time_from_post(post) or raw_text
+            published_at_raw = best_published_time_from_post(post) or published_at or raw_text
             normalized_published_at = (
-                published_at
+                prefer_publication_time(published_at, normalize_facebook_time(published_at_raw))
                 or normalize_facebook_time(published_at_raw)
                 or normalize_facebook_time(raw_text)
                 # I "menu del giorno" (es. Bollenti piatti) non riportano mai
@@ -1713,7 +1725,10 @@ def extract_paneeco_menu() -> Dict:
                         })).filter((item) => item.name);
                         return { title, description, items };
                     }).filter((category) => category.title);
-                    return { date, categories };
+                    const published = document.querySelector('meta[property="article:published_time"]')?.content
+                        || document.querySelector('[itemprop="datePublished"]')?.getAttribute('datetime')
+                        || document.querySelector('.menu-header time[datetime]')?.getAttribute('datetime') || '';
+                    return { date, categories, published };
                 }"""
             )
         finally:
@@ -1732,7 +1747,7 @@ def extract_paneeco_menu() -> Dict:
     if not categories:
         raise RuntimeError("Non ho trovato Primi del giorno e Secondi del giorno su Pane&Co.")
 
-    published_at = normalize_paneeco_date(data.get("date", ""))
+    published_at = prefer_publication_time(normalize_paneeco_date(data.get("date", "")), normalize_facebook_time(data.get("published", "")))
     menu_text = paneeco_text(data.get("date", ""), categories)
     image_bytes = render_paneeco_image(format_menu_date(published_at), categories)
     # Aggiunge sotto l'immagine la stessa fascia bianca con la data usata per
@@ -3244,7 +3259,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#777777';
             const reference = card.querySelector('.card-reference');
             if (reference && panel.menu_date) {{
-                reference.innerText = panel.updated ? (panel.card_reference || '') : new Intl.DateTimeFormat('it-IT', {{timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+                reference.innerText = panel.updated ? (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(panel.card_reference || '') ? panel.card_reference : '') : new Intl.DateTimeFormat('it-IT', {{timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}}).format(new Date(panel.menu_date + 'T12:00:00Z'));
             }}
         }});
     }}
@@ -3930,7 +3945,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 const date = /([0-9]{{2}})\/([0-9]{{2}})\/([0-9]{{4}})/.exec(source.published_at || '');
                 panel.menu_date = date ? date[3] + '-' + date[2] + '-' + date[1] : '';
                 const time = /([0-9]{{1,2}}:[0-9]{{2}})/.exec(source.published_at || '');
-                panel.card_reference = time ? time[1] : (date ? date[1] + '/' + date[2] : '');
+                panel.card_reference = time ? time[1] : '';
                 panel.updated_label = source.published_at || '';
                 panel.error = source.error || '';
                 if (source.image) {{

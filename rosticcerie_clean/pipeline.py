@@ -27,7 +27,7 @@ def _normalize_bollenti_panel(config: RosticceriaConfig, panel: Dict) -> Dict:
 
 def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
     existing = _existing(config)
-    if existing and not config.force_refresh_today:
+    if existing and legacy.format_card_reference(existing.get("published_at", ""), True) and not config.force_refresh_today:
         print(f"{config.name}: foto di oggi gia' presente, salto la verifica.")
         return existing
 
@@ -71,7 +71,7 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
 
 def _extract_paneeco(config: RosticceriaConfig) -> Dict:
     existing = _existing(config)
-    if existing:
+    if existing and legacy.format_card_reference(existing.get("published_at", ""), True):
         print("Pane&Co: menu di oggi gia' presente, salto la verifica.")
         return existing
 
