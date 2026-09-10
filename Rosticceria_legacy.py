@@ -906,6 +906,7 @@ def find_first_post_image(
     skip_first_today_post: bool = False,
     prefer_facebook_date: bool = False,
     label: str = "Pagina",
+    return_all_candidates: bool = False,
 ) -> Optional[Dict[str, str]]:
     post_selectors = [
         'div[role="article"]',
@@ -1061,6 +1062,11 @@ def find_first_post_image(
 
     if candidates:
         candidates.sort(key=lambda item: item.get("score", 0), reverse=True)
+        if return_all_candidates:
+            # Il chiamante vuole vedere tutti i post trovati (es. per unire
+            # tutti quelli di oggi), non solo il migliore: lasciamo a lui la
+            # scelta di cosa tenere.
+            return candidates
         best_candidate = candidates[0]
         print(
             f"{label}: scelgo il post "
@@ -1073,7 +1079,7 @@ def find_first_post_image(
             if key != "post_index"
         }
 
-    return None
+    return [] if return_all_candidates else None
 
 
 WEEKDAY_INDEX_BY_NAME = {
@@ -1710,6 +1716,209 @@ def extract_first_facebook_image(
                 return post
 
             raise RuntimeError(f"Non ho trovato nessuna immagine grande nella pagina Facebook: {facebook_url}")
+        finally:
+            browser.close()
+
+
+def stack_images_vertically(
+    images: List["Image.Image"], gap: int = 12, gap_color=(255, 255, 255)
+) -> "Image.Image":
+    """Impila piu' immagini una sotto l'altra, allineate alla stessa
+    larghezza (quella dell'immagine piu' stretta, per non deformare le
+    altre) e separate da uno spazio bianco. Serve per unire piu' post dello
+    stesso giorno (es. il menu del giorno e, pubblicato dopo, un post
+    pubblicitario come talvolta capita a Impastamò) in un unico pannello,
+    invece di dover indovinare quale dei due sia "il" post giusto."""
+    if not images:
+        raise ValueError("Nessuna immagine da impilare.")
+    if len(images) == 1:
+        return images[0]
+
+    target_width = min(img.width for img in images)
+    resized = []
+    for img in images:
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        if img.width != target_width:
+            new_height = max(1, int(img.height * (target_width / img.width)))
+            img = img.resize((target_width, new_height), Image.LANCZOS)
+        resized.append(img)
+
+    total_height = sum(img.height for img in resized) + gap * (len(resized) - 1)
+    combined = Image.new("RGB", (target_width, total_height), gap_color)
+    y = 0
+    for img in resized:
+        combined.paste(img, (0, y))
+        y += img.height + gap
+    return combined
+
+
+def combine_images_vertically(image_bytes_list: List[bytes]) -> bytes:
+    """Versione a bytes di stack_images_vertically, per non far uscire PIL
+    dai confini di questo modulo verso pipeline.py."""
+    images = [Image.open(io.BytesIO(data)) for data in image_bytes_list]
+    combined = stack_images_vertically(images)
+    buffer = io.BytesIO()
+    combined.save(buffer, format="JPEG", quality=90)
+    return buffer.getvalue()
+
+
+def extract_today_facebook_posts(
+    facebook_url: str,
+    prefer_active_closure: bool = False,
+    skip_closure_notices: bool = False,
+    skip_first_today_post: bool = False,
+    photo_grid_first: bool = False,
+    prefer_facebook_date: bool = False,
+    label: str = "Pagina",
+    story_url: str = "",
+) -> List[Dict[str, str]]:
+    """Restituisce TUTTI i post pubblicati oggi trovati sulla pagina
+    Facebook (non solo il migliore), in ordine dal piu' vecchio al piu'
+    recente: cosi' quando una rosticceria pubblica sia il menu del giorno
+    sia, dopo, un post pubblicitario nello stesso giorno (es. Impastamò), li
+    mostriamo entrambi impilati invece di dover indovinare quale dei due sia
+    "il" post giusto. Il chiamante decide cosa fare se la lista e' vuota
+    (nessun post di oggi trovato)."""
+    cookie_path = os.path.join(script_dir(), COOKIE_FILE)
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            context = browser.new_context(
+                viewport={"width": 1366, "height": 2400},
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36"
+                ),
+            )
+
+            cookies = load_facebook_cookies(cookie_path)
+            if cookies:
+                context.add_cookies(cookies)
+            if not cookies_look_authenticated(cookies):
+                print(
+                    f"ATTENZIONE: {cookie_path} non contiene un login Facebook valido "
+                    "(mancano i cookie 'c_user'/'xs'). Verrà usata una sessione anonima."
+                )
+
+            if story_url:
+                story = extract_facebook_story(context, story_url)
+                if story:
+                    print(f"{label}: immagine recuperata dalla storia Facebook.")
+                    return [story]
+
+            page = context.new_page()
+            page.goto(facebook_url, wait_until="domcontentloaded", timeout=60000)
+
+            try:
+                page.get_by_role("button", name="Consenti tutti i cookie").click(timeout=3000)
+            except PlaywrightTimeoutError:
+                pass
+            except Exception:
+                pass
+
+            if prefer_active_closure:
+                try:
+                    closure_post = find_active_closure_post_via_photos(context, facebook_url)
+                except Exception:
+                    closure_post = None
+                if closure_post:
+                    return [closure_post]
+
+            if photo_grid_first:
+                menu_photo = find_first_menu_photo_via_photos(context, facebook_url)
+                if menu_photo:
+                    print("Menu trovato nella griglia Foto di Facebook.")
+                    return [menu_photo]
+                raise RuntimeError(
+                    "Menu non trovato nella griglia Foto: trovati solo avvisi o foto non riconosciute."
+                )
+
+            page.wait_for_timeout(5000)
+            try:
+                page.screenshot(path="debug_facebook_feed.png", full_page=True)
+            except Exception:
+                pass
+
+            today_by_url: Dict[str, Dict] = {}
+            stagnant_rounds = 0
+            for _ in range(6):
+                candidates = find_first_post_image(
+                    page,
+                    skip_closure_notices=skip_closure_notices,
+                    skip_first_today_post=skip_first_today_post,
+                    prefer_facebook_date=prefer_facebook_date,
+                    label=label,
+                    return_all_candidates=True,
+                ) or []
+                added = False
+                for candidate in candidates:
+                    if parse_status_date(candidate.get("published_at", "")) == rome_now().date():
+                        url = candidate.get("image_url", "")
+                        if url and url not in today_by_url:
+                            today_by_url[url] = {
+                                key: value
+                                for key, value in candidate.items()
+                                if key not in {"score", "post_index", "confident"}
+                            }
+                            added = True
+                if today_by_url and not added:
+                    stagnant_rounds += 1
+                    if stagnant_rounds >= 2:
+                        break
+                else:
+                    stagnant_rounds = 0
+                try:
+                    page.mouse.move(683, 1200)
+                except Exception:
+                    pass
+                page.mouse.wheel(0, 1200)
+                try:
+                    page.evaluate("window.scrollBy(0, 1200)")
+                except Exception:
+                    pass
+                page.wait_for_timeout(3000)
+
+            posts = list(today_by_url.values())
+            if not posts:
+                print(f"{label}: nessun post di oggi trovato.")
+                return []
+
+            print(f"{label}: trovati {len(posts)} post di oggi.")
+
+            enriched = []
+            for post in posts:
+                photo_url = post.get("photo_url", "")
+                image_urls_to_try = [post.get("image_url", "")]
+                download_url = facebook_photo_download_url(photo_url)
+                if download_url:
+                    image_urls_to_try.append(download_url)
+                if photo_url:
+                    try:
+                        photo_page = context.new_page()
+                        photo_page.goto(photo_url, wait_until="domcontentloaded", timeout=60000)
+                        photo_page.wait_for_timeout(4000)
+                        larger_image_url = find_largest_visible_image_url(photo_page)
+                        photo_page.close()
+                        if larger_image_url:
+                            image_urls_to_try.append(larger_image_url)
+                    except Exception:
+                        pass
+                selected_image_url, selected_dimensions = select_best_facebook_image_variant(
+                    image_urls_to_try
+                )
+                if selected_image_url:
+                    post = dict(post)
+                    post["image_url"] = selected_image_url
+                    print(
+                        "Variante immagine post scelta: "
+                        f"{selected_dimensions[0]}x{selected_dimensions[1]}"
+                    )
+                enriched.append(post)
+
+            return enriched
         finally:
             browser.close()
 
