@@ -1803,8 +1803,15 @@ def extract_today_facebook_posts(
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         try:
+            # Un viewport artificialmente altissimo (era 2400px) fa credere
+            # a Facebook che l'intero contenuto stia gia' in una sola
+            # schermata: il caricamento automatico dei post successivi
+            # (che scatta avvicinandosi al fondo della pagina) non si
+            # attiva mai, perche' non c'e' mai un "fondo pagina" da
+            # avvicinare. Con un'altezza realistica lo scroll simulato
+            # sotto funziona come su un vero dispositivo.
             context = browser.new_context(
-                viewport={"width": 1366, "height": 2400},
+                viewport={"width": 1366, "height": 1000},
                 user_agent=(
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) "
