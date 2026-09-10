@@ -3023,9 +3023,21 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       position: absolute;
       top: 6px;
       left: 10px;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: normal;
       color: #000;
+    }}
+    .card.is-updated .card-reference {{
+      color: #fff;
+      background: #00863b;
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 18px;
+    }}
+    .card.is-suggestions {{
+      padding: 12px 10px;
+      justify-content: center;
+      align-items: center;
     }}
     /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
        tenendo premuta una casella, tutte "tremano" leggermente e quella
@@ -3223,6 +3235,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel || panel.card_border) return;
             panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
+            card.classList.toggle('is-updated', panel.updated);
             card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
             card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
             card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#777777';
@@ -3747,6 +3760,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.querySelectorAll('.card[data-pid]').forEach(card => {{
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel) return;
+            card.classList.toggle('is-suggestions', panel.name === 'Suggerimenti');
             card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#555555');
             card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#ffffff');
             card.querySelector('.card-name').style.color = panel.card_name_color || (panel.updated ? '#111' : '#777777');
