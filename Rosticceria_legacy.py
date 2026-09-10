@@ -1014,7 +1014,7 @@ def find_first_post_image(
                         "published_at": published_at,
                         "published_at_raw": published_at_raw,
                     }
-                    if not skip_closure_notices:
+                    if not skip_closure_notices and not return_all_candidates:
                         return candidate
 
                     score = min(best_score / 10000, 100)
@@ -1851,11 +1851,11 @@ def extract_today_facebook_posts(
 
             today_by_url: Dict[str, Dict] = {}
             stagnant_rounds = 0
-            for _ in range(6):
+            for _ in range(10):
                 candidates = find_first_post_image(
                     page,
-                    skip_closure_notices=skip_closure_notices,
-                    skip_first_today_post=skip_first_today_post,
+                    skip_closure_notices=False,
+                    skip_first_today_post=False,
                     prefer_facebook_date=prefer_facebook_date,
                     label=label,
                     return_all_candidates=True,
@@ -1873,7 +1873,7 @@ def extract_today_facebook_posts(
                             added = True
                 if today_by_url and not added:
                     stagnant_rounds += 1
-                    if stagnant_rounds >= 2:
+                    if stagnant_rounds >= 5:
                         break
                 else:
                     stagnant_rounds = 0
@@ -1893,6 +1893,7 @@ def extract_today_facebook_posts(
                     page.evaluate(
                         """
                         () => {
+                            document.querySelectorAll('[data-rosticceria-scrolltarget]').forEach(el => el.removeAttribute('data-rosticceria-scrolltarget'));
                             const all = Array.from(document.querySelectorAll('*'));
                             let best = null;
                             for (const el of all) {
@@ -1901,10 +1902,11 @@ def extract_today_facebook_posts(
                                     && el.scrollHeight > el.clientHeight + 50) {
                                     if (!best || el.scrollHeight > best.scrollHeight) {
                                         best = el;
-                                        el.setAttribute('data-rosticceria-scrolltarget', '1');
+
                                     }
                                 }
                             }
+                            if (best) best.setAttribute('data-rosticceria-scrolltarget', '1');
                         }
                         """
                     )
@@ -1932,7 +1934,7 @@ def extract_today_facebook_posts(
                     )
                 except Exception:
                     pass
-                page.wait_for_timeout(3000)
+                page.wait_for_timeout(8000)
 
             posts = list(today_by_url.values())
             if not posts:

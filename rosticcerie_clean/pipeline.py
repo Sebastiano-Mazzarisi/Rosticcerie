@@ -5,6 +5,7 @@ from typing import Dict, List
 import Rosticceria_legacy as legacy
 
 from .config import ROSTICCERIE, RosticceriaConfig
+from .daily_posts import merge_today
 from .local_menu import NAME as MICHELA_NAME, local_panel
 
 
@@ -67,6 +68,9 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
         posts = []
         print(f"{config.name}: errore cercando i post di oggi ({exc}).")
 
+    if config.name == "Impastamò":
+        posts = merge_today(config.name, posts)
+
     if not posts:
         # Nessun post di oggi: non c'e' niente di fresco, teniamo l'ultimo
         # menu valido gia' salvato. Il riquadro in home restera' grigio solo
@@ -87,7 +91,7 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
     # stato pubblicato oggi.
     image_bytes_list = []
     for post in posts_oldest_first:
-        img_bytes = legacy.download_image(post["image_url"])
+        img_bytes = post.get("image_bytes") or legacy.download_image(post["image_url"])
 
         if config.name == "Fantasia":
             img_bytes = legacy.crop_fantasia_chalkboard(img_bytes)
