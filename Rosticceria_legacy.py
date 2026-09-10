@@ -3271,11 +3271,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // azzerava il contatore solo sullo schermo, senza aver davvero
     // azzerato nulla sul server: al ricaricamento della pagina il valore
     // precedente ricompariva.
-    async function fetchJsonWithRetry(url, attempts) {{
+    async function fetchJsonWithRetry(url, attempts, missingIsZero = false) {{
         for (let attempt = 1; attempt <= attempts; attempt++) {{
             let response;
             try {{
-                response = await fetch(url);
+                response = await fetch(url, {{cache:'no-store'}});
             }} catch (err) {{
                 if (attempt === attempts) {{
                     throw err;
@@ -3284,6 +3284,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 continue;
             }}
 
+            if (response.status === 404 && missingIsZero) return {{value:0}};
             if (response.status === 429) {{
                 const body = await response.text();
                 if (attempt === attempts) {{
@@ -3317,8 +3318,39 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     let totalClicksByPanel = [];
     let offsetClicksByPanel = [];
 
+    function visibleCounter(i) {{
+        const total = totalClicksByPanel[i];
+        const offset = offsetClicksByPanel[i];
+        if (!Number.isFinite(total) || !Number.isFinite(offset)) return null;
+        // An impossible reset baseline must not hide real recorded openings.
+        return offset > total ? total : total - offset;
+    }}
+    let counterLoadRunning = false;
+    let counterHitQueue = Promise.resolve();
+    function recordCurrentView() {{
+        if (isAdmin) return;
+        const panel = PANELS[order[currentIndex]];
+        if (!panel || panel.counter_enabled === false) return;
+        counterHitQueue = counterHitQueue.then(async () => {{
+            for (let attempt = 0; attempt < 4; attempt++) {{
+                // Do not repeat an ambiguous network failure: it may have counted.
+                const response = await fetch(counterHitUrlFor(panel.name), {{cache:'no-store', keepalive:true}});
+                if (response.status === 429 && attempt < 3) {{
+                    await sleep((parseRetryAfterSeconds(await response.text()) + 1) * 1000);
+                    continue;
+                }}
+                if (!response.ok) throw new Error('Registrazione HTTP ' + response.status);
+                const data = await response.json();
+                if (!Number.isFinite(data.value)) throw new Error('Registrazione non confermata');
+                return;
+            }}
+        }}).catch(error => console.error('Apertura non confermata: ' + panel.name, error));
+    }}
+
     async function loadCounter() {{
-        if (!isAdmin) return;
+        if (!isAdmin || counterLoadRunning) return;
+        counterLoadRunning = true;
+        updateCardCounters();
         // Leggiamo i contatori uno alla volta (non tutti insieme) e con una
         // piccola pausa tra una richiesta e l'altra, per restare sotto il
         // limite di frequenza dell'API gratuita di Abacus.
@@ -3327,14 +3359,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (p.counter_enabled === false) continue;
             try {{
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
-                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
                 totalClicksByPanel[i] = totalData.value;
                 offsetClicksByPanel[i] = offsetData.value;
             }} catch (e) {{
+                totalClicksByPanel[i] = undefined;
+                offsetClicksByPanel[i] = undefined;
                 console.error('Impossibile leggere il contatore di ' + p.name, e);
             }}
+            updateCardCounters();
             await sleep(150);
         }}
+        counterLoadRunning = false;
         updateAdminTitle();
         updateCardCounters();
     }}
@@ -3348,8 +3384,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             try {{
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
                 const target = totalData.value;
-                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
                 let current = offsetData.value;
+                if (current > target) throw new Error('Azzeramento incoerente: impossibile ridurre il valore remoto');
                 while (current < target) {{
                     // L'unico modo per "azzerare" un contatore di sola
                     // lettura/incremento come quello di Abacus e' portare
@@ -3381,7 +3418,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         let val = 0;
         for (let i = 0; i < PANELS.length; i++) {{
             if (PANELS[i].counter_enabled === false) continue;
-            val += Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
+            val += visibleCounter(i) ?? 0;
         }}
         document.getElementById('main-title').innerText = `Rosticcerie (${{val.toLocaleString('it-IT')}})`;
     }}
@@ -3395,8 +3432,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 el.style.display = 'none';
                 continue;
             }}
-            const val = Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
-            el.innerText = val.toLocaleString('it-IT');
+            const val = visibleCounter(i);
+            el.innerText = val === null ? '…' : val.toLocaleString('it-IT');
+            el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate');
             el.style.display = 'block';
         }}
     }}
@@ -3834,16 +3872,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         applyDetailImageFit();
         window.scrollTo(0, 0);
 
-        if (!isAdmin) {{
-            const p = PANELS[order[currentIndex]];
-            if (p.counter_enabled !== false) {{
-                fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {{}});
-            }}
-        }}
+        recordCurrentView();
     }}
 
-    function showPrev() {{ renderDetail(currentIndex - 1); }}
-    function showNext() {{ renderDetail(currentIndex + 1); }}
+    function showPrev() {{ renderDetail(currentIndex - 1); recordCurrentView(); }}
+    function showNext() {{ renderDetail(currentIndex + 1); recordCurrentView(); }}
 
     function closeDetail() {{
         document.getElementById('identity-block').classList.remove('has-logo');
@@ -3915,6 +3948,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             refreshReferenceDate();
             if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
             lastMenuRefreshDay = italianDay();
+            if (isAdmin) loadCounter();
             if (showFeedback) signature.innerText = 'Aggiornato • by Mazzarisi';
         }} catch (error) {{
             refreshMenuDates();
