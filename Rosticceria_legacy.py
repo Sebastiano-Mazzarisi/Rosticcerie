@@ -2841,6 +2841,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             "updated": is_updated,
             "updated_label": updated_label,
             "card_reference": format_card_reference(published_at, is_updated),
+            "menu_date": parse_status_date(published_at).isoformat() if parse_status_date(published_at) else "",
             "url": SOURCE_URLS.get(name, ""),
             "counter_enabled": True,
         })
@@ -3213,6 +3214,29 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const months = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
         return weekdays[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()];
     }}
+
+    function refreshMenuDates(now = new Date()) {{
+        const parts = new Intl.DateTimeFormat('en-GB', {{timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'}}).formatToParts(now);
+        const datePart = type => parts.find(p => p.type === type).value;
+        const today = datePart('year') + '-' + datePart('month') + '-' + datePart('day');
+        document.querySelectorAll('.card[data-pid]').forEach(card => {{
+            const panel = PANELS[Number(card.dataset.pid)];
+            if (!panel || panel.card_border) return;
+            panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
+            card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
+            card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
+            card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#777777';
+            const reference = card.querySelector('.card-reference');
+            if (reference && panel.menu_date) {{
+                reference.innerText = panel.updated ? (panel.card_reference || '') : new Intl.DateTimeFormat('it-IT', {{timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+            }}
+        }});
+    }}
+    document.addEventListener('DOMContentLoaded', refreshMenuDatesOnEvent);
+    function refreshMenuDatesOnEvent() {{ refreshMenuDates(); }}
+    window.addEventListener('focus', refreshMenuDatesOnEvent);
+    document.addEventListener('visibilitychange', refreshMenuDatesOnEvent);
+    setInterval(refreshMenuDatesOnEvent, 1000);
 
     function refreshReferenceDate() {{
         const el = document.getElementById('main-updated');
@@ -3878,6 +3902,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     document.addEventListener('DOMContentLoaded', () => {{
         refreshReferenceDate();
         initReorder();
+        refreshMenuDates();
     }});
   </script>
 </head>
