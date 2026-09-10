@@ -948,7 +948,7 @@
         document.getElementById('grid-view').style.display = 'grid';
         fitCardNames();
         document.getElementById('main-updated').style.display = '';
-        document.getElementById('main-updated').innerText = 'Giovedì 10 settembre';
+        document.getElementById('main-updated').innerText = currentItalianDateLabel();
         document.getElementById('main-signature').style.display = '';
 
         const mainTitle = document.getElementById('main-title');
@@ -961,19 +961,72 @@
         window.scrollTo(0, 0);
     }
 
-    async function forceFreshReload() {
-        try {
-            if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
-            }
-        } catch (e) {
-            console.warn('Cache non svuotabile', e);
-        }
-        const freshUrl = new URL(window.location.href);
-        freshUrl.searchParams.set('refresh', Date.now().toString());
-        window.location.replace(freshUrl.toString());
+    let menuRefreshRunning = false;
+    function italianDay() {
+        return new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Rome', year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
     }
+    let lastMenuRefreshDay = '';
+    async function forceFreshReload(showFeedback = true) {
+        if (menuRefreshRunning) return;
+        menuRefreshRunning = true;
+        const signature = document.getElementById('main-signature');
+        if (showFeedback) signature.innerText = 'Aggiornamento in corso…';
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+            const base = window.location.protocol === 'file:'
+                ? new URL('https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/')
+                : new URL('.', window.location.href);
+            const statusUrl = new URL('status.json', base);
+            statusUrl.searchParams.set('refresh', Date.now().toString());
+            const response = await fetch(statusUrl.href, {cache:'no-store', signal:controller.signal});
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const status = await response.json();
+            if (!Array.isArray(status.pages) || !status.pages.length) throw new Error('Dati non validi');
+            status.pages.forEach(source => {
+                const panel = PANELS.find(p => p.name === source.name);
+                if (!panel || panel.card_border) return;
+                const date = /([0-9]{2})\/([0-9]{2})\/([0-9]{4})/.exec(source.published_at || '');
+                panel.menu_date = date ? date[3] + '-' + date[2] + '-' + date[1] : '';
+                const time = /([0-9]{1,2}:[0-9]{2})/.exec(source.published_at || '');
+                panel.card_reference = time ? time[1] : (date ? date[1] + '/' + date[2] : '');
+                panel.updated_label = source.published_at || '';
+                panel.error = source.error || '';
+                if (source.image) {
+                    const imageUrl = new URL(source.image, base);
+                    imageUrl.searchParams.set('refresh', Date.now().toString());
+                    panel.image = imageUrl.href;
+                } else { panel.image = ''; }
+                const card = document.querySelector('.card[data-pid="' + PANELS.indexOf(panel) + '"]');
+                if (card && !card.querySelector('.card-reference')) {
+                    const ref = document.createElement('span');
+                    ref.className = 'card-reference'; card.appendChild(ref);
+                }
+                if (card) card.querySelector('.card-reference').innerText = panel.card_reference;
+            });
+            refreshMenuDates();
+            refreshReferenceDate();
+            if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
+            lastMenuRefreshDay = italianDay();
+            if (showFeedback) signature.innerText = 'Aggiornato • by Mazzarisi';
+        } catch (error) {
+            refreshMenuDates();
+            refreshReferenceDate();
+            if (showFeedback) signature.innerText = 'Aggiornamento non riuscito • Tocca per riprovare';
+            console.warn('Aggiornamento menu non riuscito', error);
+        } finally {
+            clearTimeout(timeout);
+            menuRefreshRunning = false;
+        }
+    }
+    function refreshWhenNeeded() {
+        if (!document.hidden && lastMenuRefreshDay !== italianDay()) forceFreshReload(false);
+    }
+    document.addEventListener('DOMContentLoaded', refreshWhenNeeded);
+    document.addEventListener('visibilitychange', refreshWhenNeeded);
+    window.addEventListener('focus', refreshWhenNeeded);
+    window.addEventListener('online', refreshWhenNeeded);
+    setInterval(refreshWhenNeeded, 60000);
 
     function handleTitleClick() {
         const inDetail = document.getElementById('grid-view').style.display === 'none';
