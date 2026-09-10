@@ -5,6 +5,7 @@ from typing import Dict, List
 import Rosticceria_legacy as legacy
 
 from .config import ROSTICCERIE, RosticceriaConfig
+from .local_menu import NAME as MICHELA_NAME, local_panel
 
 
 def _existing(config: RosticceriaConfig, require_today: bool = True) -> Dict | None:
@@ -26,6 +27,11 @@ def _normalize_bollenti_panel(config: RosticceriaConfig, panel: Dict) -> Dict:
 
 
 def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
+    if config.name == MICHELA_NAME:
+        supplied = local_panel()
+        if supplied:
+            print(f"{config.name}: uso il menu locale di oggi.")
+            return supplied
     existing = _existing(config)
     if existing and legacy.format_card_reference(existing.get("published_at", ""), True) and not config.force_refresh_today:
         print(f"{config.name}: foto di oggi gia' presente, salto la verifica.")
