@@ -70,8 +70,7 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
     if not posts:
         # Nessun post di oggi: non c'e' niente di fresco, teniamo l'ultimo
         # menu valido gia' salvato. Il riquadro in home restera' grigio solo
-        # in questo caso - nessun post odierno - non quando ne troviamo uno
-        # che semplicemente non sembra un vero menu (vedi sotto).
+        # in questo caso - nessun post odierno.
         fallback = existing if _looks_like_menu_panel(existing) else _existing(config, require_today=False)
         if fallback:
             print(f"{config.name}: nessun post di oggi trovato, tengo l'ultimo menu disponibile.")
@@ -81,31 +80,11 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
     posts_oldest_first = sorted(posts, key=_elapsed_hours, reverse=True)
     most_recent_post = min(posts, key=_elapsed_hours)
 
-    has_real_menu_today = config.name == MICHELA_NAME or any(
-        _looks_like_menu_panel(post) for post in posts
-    )
-
-    if not has_real_menu_today:
-        # C'e' stata attivita' oggi (es. solo un post pubblicitario, come
-        # talvolta capita a Impastamò) ma nessun post sembra il vero menu:
-        # mostriamo comunque l'ultimo menu valido che conosciamo, MA
-        # aggiorniamo l'orario a quello dell'ultimo post di oggi, cosi' il
-        # riquadro in home non resta grigio - abbiamo comunque controllato
-        # la fonte oggi, non manca solo il "vero" menu tra i post trovati.
-        fallback = existing if _looks_like_menu_panel(existing) else _existing(config, require_today=False)
-        if fallback:
-            print(
-                f"{config.name}: i post di oggi non sembrano un vero menu "
-                "(es. solo pubblicita'), tengo l'ultimo menu disponibile "
-                "ma aggiorno l'orario a oggi."
-            )
-            fallback = dict(fallback)
-            fallback["published_at"] = most_recent_post.get("published_at", "")
-            fallback["published_at_raw"] = most_recent_post.get("published_at_raw", "")
-            return fallback
-        # Nessun fallback disponibile: mostriamo comunque quello che abbiamo
-        # trovato oggi, meglio di niente.
-
+    # Mostriamo SEMPRE l'unione di tutti i post trovati oggi, cosi' come
+    # richiesto - anche se nessuno di essi sembra "il vero menu" (es. solo un
+    # post pubblicitario, come talvolta capita a Impastamò): niente viene
+    # nascosto o sostituito con un menu vecchio, si vede tutto quello che e'
+    # stato pubblicato oggi.
     image_bytes_list = []
     for post in posts_oldest_first:
         img_bytes = legacy.download_image(post["image_url"])
