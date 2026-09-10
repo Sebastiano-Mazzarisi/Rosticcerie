@@ -874,7 +874,12 @@ def looks_like_facebook_time(value: str) -> bool:
 
 def image_score(image) -> int:
     try:
-        box = image.bounding_box(timeout=1000)
+        # Le immagini caricate pigramente da Facebook (specie in modalita'
+        # headless) possono impiegare piu' di un secondo a ottenere una
+        # bounding box valida: un timeout troppo corto scarta silenziosamente
+        # post autentici (es. il menu del giorno) che risultano ancora vuoti
+        # al momento della scansione.
+        box = image.bounding_box(timeout=3000)
     except Exception:
         box = None
 
@@ -1622,7 +1627,7 @@ def extract_first_facebook_image(
                 pass
             best_post = None
             best_score = float("-inf")
-            for _ in range(4):
+            for _ in range(6):
                 post = find_first_post_image(
                     page,
                     skip_closure_notices=skip_closure_notices,
@@ -1651,7 +1656,12 @@ def extract_first_facebook_image(
                     if confident:
                         break
                 page.mouse.wheel(0, 900)
-                page.wait_for_timeout(2000)
+                # Piu' tempo per far caricare le immagini pigre dopo ogni
+                # scroll: con 2s capitava che il post autentico del menu
+                # (es. Impastamò) non risultasse ancora renderizzato e venisse
+                # scartato da find_first_post_image, lasciando come unico
+                # candidato valido un post pubblicitario gia' caricato.
+                page.wait_for_timeout(3000)
 
             if best_post:
                 post = best_post
