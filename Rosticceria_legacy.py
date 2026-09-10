@@ -3238,7 +3238,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel || panel.card_border) return;
             panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
-            card.classList.toggle('is-updated', panel.updated);
+            card.classList.toggle('is-updated', panel.updated && /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test((panel.card_reference || '').trim()));
             card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
             card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
             card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#777777';
@@ -3449,10 +3449,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // pubblicato sul sito.
     const ORDER_STORAGE_KEY = 'rosticcerie-order-v2';
     const DEFAULT_ORDER_NAMES = [
-        'Fantasia', 'Le delizie di Michela',
-        'Impastamò', 'Cibària',
-        'Pane & Co', 'Bollenti piatti',
-        'Santoro (Castellana)', 'Suggerimenti',
+        'Fantasia', 'Bollenti piatti', 'Pane & Co', 'Cibària',
+        'Le delizie di Michela', 'Impastamò', 'Santoro (Castellana)', 'Suggerimenti',
     ];
 
     function buildDefaultOrder() {{
