@@ -35,6 +35,11 @@ def _normalize_bollenti_panel(config: RosticceriaConfig, panel: Dict) -> Dict:
     return panel
 
 
+def _elapsed_hours(post: Dict) -> float:
+    hours = legacy.hours_since_published(post.get("published_at", ""))
+    return hours if hours is not None else float("inf")
+
+
 def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
     if config.name == MICHELA_NAME:
         supplied = local_panel()
@@ -46,63 +51,111 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
         print(f"{config.name}: foto di oggi gia' presente, salto la verifica.")
         return existing
 
-    print(f"{config.name}: cerco immagine Facebook...")
-    post = legacy.extract_first_facebook_image(
-        config.url,
-        prefer_active_closure=config.prefer_active_closure,
-        skip_closure_notices=config.skip_closure_notices,
-        skip_first_today_post=config.skip_first_today_post,
-        photo_grid_first=config.photo_grid_first,
-        prefer_facebook_date=config.prefer_facebook_date,
-        label=config.name,
-        story_url=config.story_url,
+    print(f"{config.name}: cerco i post di oggi su Facebook...")
+    try:
+        posts = legacy.extract_today_facebook_posts(
+            config.url,
+            prefer_active_closure=config.prefer_active_closure,
+            skip_closure_notices=config.skip_closure_notices,
+            skip_first_today_post=config.skip_first_today_post,
+            photo_grid_first=config.photo_grid_first,
+            prefer_facebook_date=config.prefer_facebook_date,
+            label=config.name,
+            story_url=config.story_url,
+        )
+    except Exception as exc:
+        posts = []
+        print(f"{config.name}: errore cercando i post di oggi ({exc}).")
+
+    if not posts:
+        # Nessun post di oggi: non c'e' niente di fresco, teniamo l'ultimo
+        # menu valido gia' salvato. Il riquadro in home restera' grigio solo
+        # in questo caso - nessun post odierno - non quando ne troviamo uno
+        # che semplicemente non sembra un vero menu (vedi sotto).
+        fallback = existing if _looks_like_menu_panel(existing) else _existing(config, require_today=False)
+        if fallback:
+            print(f"{config.name}: nessun post di oggi trovato, tengo l'ultimo menu disponibile.")
+            return fallback
+        raise RuntimeError(f"Nessun post trovato per {config.name}.")
+
+    posts_oldest_first = sorted(posts, key=_elapsed_hours, reverse=True)
+    most_recent_post = min(posts, key=_elapsed_hours)
+
+    has_real_menu_today = config.name == MICHELA_NAME or any(
+        _looks_like_menu_panel(post) for post in posts
     )
 
-    if config.name != "Le delizie di Michela" and not _looks_like_menu_panel(post):
-        # Il post trovato non sembra un vero menu (es. un post pubblicitario
-        # pubblicato dopo il menu del giorno, come talvolta capita a
-        # Impastamò): non sostituiamo mai un menu genuino gia' pubblicato
-        # con qualcosa che menu non e', anche se piu' recente. Se oggi non
-        # c'e' nessun post-menu, teniamo l'ultimo menu disponibile (quello
-        # di oggi se c'e' gia', altrimenti l'ultimo salvato di un giorno
-        # precedente) invece della pubblicita'. Michela e' esclusa: gestita
-        # a parte (menu locale/storie), le sue foto spesso non hanno
-        # descrizione testuale e quindi non corrispondono mai a "vero
-        # menu", pur essendo corrette.
+    if not has_real_menu_today:
+        # C'e' stata attivita' oggi (es. solo un post pubblicitario, come
+        # talvolta capita a Impastamò) ma nessun post sembra il vero menu:
+        # mostriamo comunque l'ultimo menu valido che conosciamo, MA
+        # aggiorniamo l'orario a quello dell'ultimo post di oggi, cosi' il
+        # riquadro in home non resta grigio - abbiamo comunque controllato
+        # la fonte oggi, non manca solo il "vero" menu tra i post trovati.
         fallback = existing if _looks_like_menu_panel(existing) else _existing(config, require_today=False)
-        if _looks_like_menu_panel(fallback):
+        if fallback:
             print(
-                f"{config.name}: il post piu' recente non sembra un menu "
-                "(es. pubblicitario), tengo l'ultimo menu disponibile."
+                f"{config.name}: i post di oggi non sembrano un vero menu "
+                "(es. solo pubblicita'), tengo l'ultimo menu disponibile "
+                "ma aggiorno l'orario a oggi."
             )
+            fallback = dict(fallback)
+            fallback["published_at"] = most_recent_post.get("published_at", "")
+            fallback["published_at_raw"] = most_recent_post.get("published_at_raw", "")
             return fallback
+        # Nessun fallback disponibile: mostriamo comunque quello che abbiamo
+        # trovato oggi, meglio di niente.
 
-    image_bytes = legacy.download_image(post["image_url"])
+    image_bytes_list = []
+    for post in posts_oldest_first:
+        img_bytes = legacy.download_image(post["image_url"])
 
-    if config.name == "Fantasia":
-        image_bytes = legacy.crop_fantasia_chalkboard(image_bytes)
-    elif config.name == "Le delizie di Michela":
-        closure_signal = f"{post.get('text', '')} {post.get('image_alt', '')}"
-        if legacy.looks_like_closure_notice(closure_signal):
-            print(f"{config.name}: avviso chiusura rilevato, tengo immagine intera.")
-            if not legacy.clean_post_text(post.get("text", "")):
-                alt_text = legacy.clean_facebook_alt_text(post.get("image_alt", ""))
-                if alt_text:
-                    post["text"] = alt_text
-        else:
-            image_bytes = legacy.crop_michela_chalkboard(image_bytes)
-    elif config.name == "Santoro (Castellana)":
-        image_bytes = legacy.add_white_border(image_bytes, border=10)
+        if config.name == "Fantasia":
+            img_bytes = legacy.crop_fantasia_chalkboard(img_bytes)
+        elif config.name == "Le delizie di Michela":
+            closure_signal = f"{post.get('text', '')} {post.get('image_alt', '')}"
+            if legacy.looks_like_closure_notice(closure_signal):
+                print(f"{config.name}: avviso chiusura rilevato, tengo immagine intera.")
+                if not legacy.clean_post_text(post.get("text", "")):
+                    alt_text = legacy.clean_facebook_alt_text(post.get("image_alt", ""))
+                    if alt_text:
+                        post["text"] = alt_text
+            else:
+                img_bytes = legacy.crop_michela_chalkboard(img_bytes)
+        elif config.name == "Santoro (Castellana)":
+            img_bytes = legacy.add_white_border(img_bytes, border=10)
 
-    image_bytes = legacy.add_date_footer(image_bytes, post.get("published_at", ""))
+        image_bytes_list.append(img_bytes)
+
+    if len(image_bytes_list) > 1:
+        print(f"{config.name}: {len(image_bytes_list)} post di oggi, li unisco in un unico pannello.")
+        combined_bytes = legacy.combine_images_vertically(image_bytes_list)
+    else:
+        combined_bytes = image_bytes_list[0]
+
+    combined_text = "\n\n".join(
+        text
+        for text in (legacy.clean_post_text(post.get("text", "")) for post in posts_oldest_first)
+        if text
+    )
+    if not combined_text:
+        # Se nessun post ha del testo (es. Michela), usiamo l'alt-text
+        # ripulito del primo che ne ha uno.
+        for post in posts_oldest_first:
+            alt_text = legacy.clean_facebook_alt_text(post.get("image_alt", ""))
+            if alt_text:
+                combined_text = alt_text
+                break
+
+    image_bytes = legacy.add_date_footer(combined_bytes, most_recent_post.get("published_at", ""))
     legacy.save_image(image_bytes, config.output_image)
 
     return {
         "name": config.name,
         "image_bytes": image_bytes,
-        "text": post.get("text", ""),
-        "published_at": post.get("published_at", ""),
-        "published_at_raw": post.get("published_at_raw", ""),
+        "text": combined_text,
+        "published_at": most_recent_post.get("published_at", ""),
+        "published_at_raw": most_recent_post.get("published_at_raw", ""),
     }
 
 
