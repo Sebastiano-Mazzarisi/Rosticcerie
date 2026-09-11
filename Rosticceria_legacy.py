@@ -3459,7 +3459,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     #identity-block {{ display: flex; align-items: center; justify-content: center; gap: 16px; width: fit-content; max-width: 100%; margin: 0 auto; }}
-    #identity-logo {{ display: none; width: 88px; height: 88px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }}
+    #identity-logo {{ cursor: pointer; display: none; width: 88px; height: 88px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }}
     #identity-block.has-logo #main-title {{ color: #fff; }}
     #identity-text {{ min-width: 0; }}
     #identity-block.has-logo #identity-text {{ text-align: left; }}
@@ -3702,6 +3702,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 18px;
       font-weight: bold;
     }}
+    #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fff; max-width: calc(100vw - 40px); }}
+    #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
+    #waiting-update-dialog p {{ margin: 0 0 24px; font-size: 24px; line-height: 1.35; text-align: center; }}
+    #waiting-update-dialog button {{ font-size: 18px; padding: 8px 30px; border: 1px solid #aaa; border-radius: 7px; cursor: pointer; }}
   </style>
   <script>
     const PANELS = {panels_json};
@@ -4059,10 +4063,25 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }});
     }}
 
+    function isWaitingForUpdate(panel, now = new Date()) {{
+        if (!panel || panel.card_border || panel.updated) return false;
+        const parts = new Intl.DateTimeFormat('en-GB', {{
+            timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        }}).formatToParts(now);
+        const value = type => Number(parts.find(part => part.type === type).value);
+        const minutes = value('hour') * 60 + value('minute');
+        return minutes >= 1 && minutes < 600;
+    }}
+
     function cardClicked(pid) {{
         // Mentre si sta riordinando (casella tenuta premuta/trascinata)
         // il tocco non deve aprire il dettaglio del menu.
         if (reorderMode) return;
+        refreshMenuDates();
+        if (isWaitingForUpdate(PANELS[pid])) {{
+            document.getElementById('waiting-update-dialog').showModal();
+            return;
+        }}
         openDetail(order.indexOf(pid));
     }}
 
@@ -4562,7 +4581,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 <body>
   <header id="main-header">
     <div id="identity-block">
-      <img id="identity-logo" alt="">
+      <img id="identity-logo" alt="" role="link" tabindex="0" onclick="handleTitleClick()" onkeydown="if(event.key === 'Enter' || event.key === ' ') {{ event.preventDefault(); handleTitleClick(); }}">
       <div id="identity-text">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
         <div id="phone-line"></div>
@@ -4589,6 +4608,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     <span id="nav-position"></span>
     <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
   </div>
+<dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text">
+    <p id="waiting-update-text">In attesa di<br>aggiornamento</p>
+    <form method="dialog"><button autofocus>OK</button></form>
+  </dialog>
 </body>
 </html>
 """
