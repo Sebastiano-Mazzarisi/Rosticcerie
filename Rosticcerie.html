@@ -498,32 +498,81 @@
         }).catch(error => console.error('Apertura non confermata: ' + panel.name, error));
     }
 
+    const COUNTER_CACHE_KEY = 'rosticcerie-counter-cache-v1';
+    let counterCacheRestored = false;
+    let counterFreshByPanel = [];
+
+    function restoreCounterCache() {
+        if (counterCacheRestored) return;
+        counterCacheRestored = true;
+        try {
+            const cached = JSON.parse(localStorage.getItem(COUNTER_CACHE_KEY) || '{}');
+            PANELS.forEach((panel, i) => {
+                const entry = cached[panel.name];
+                if (!entry || !Number.isSafeInteger(entry.total) || entry.total < 0 ||
+                    !Number.isSafeInteger(entry.offset) || entry.offset < 0) return;
+                totalClicksByPanel[i] = entry.total;
+                offsetClicksByPanel[i] = entry.offset;
+            });
+        } catch (error) {
+            console.warn('Cache contatori non disponibile', error);
+        }
+    }
+
+    function saveCounterCache() {
+        try {
+            const cached = {};
+            PANELS.forEach((panel, i) => {
+                if (visibleCounter(i) !== null) cached[panel.name] = {
+                    total: totalClicksByPanel[i], offset: offsetClicksByPanel[i]
+                };
+            });
+            localStorage.setItem(COUNTER_CACHE_KEY, JSON.stringify(cached));
+        } catch (error) {
+            console.warn('Cache contatori non salvata', error);
+        }
+    }
+
     async function loadCounter() {
         if (!isAdmin || counterLoadRunning) return;
         counterLoadRunning = true;
+        restoreCounterCache();
+        counterFreshByPanel = PANELS.map(() => false);
         updateCardCounters();
-        // Leggiamo i contatori uno alla volta (non tutti insieme) e con una
-        // piccola pausa tra una richiesta e l'altra, per restare sotto il
-        // limite di frequenza dell'API gratuita di Abacus.
-        for (let i = 0; i < PANELS.length; i++) {
-            const p = PANELS[i];
-            if (p.counter_enabled === false) continue;
-            try {
-                const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
-                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
-                totalClicksByPanel[i] = totalData.value;
-                offsetClicksByPanel[i] = offsetData.value;
-            } catch (e) {
-                totalClicksByPanel[i] = undefined;
-                offsetClicksByPanel[i] = undefined;
-                console.error('Impossibile leggere il contatore di ' + p.name, e);
-            }
-            updateCardCounters();
-            await sleep(150);
-        }
-        counterLoadRunning = false;
         updateAdminTitle();
-        updateCardCounters();
+        let nextIndex = 0;
+        async function readNextCounters() {
+            while (nextIndex < PANELS.length) {
+                const i = nextIndex++;
+                const p = PANELS[i];
+                if (p.counter_enabled === false) continue;
+                try {
+                    const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
+                    await sleep(150);
+                    const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
+                    // Aggiorna insieme totale e offset, solo se entrambi sono disponibili.
+                    totalClicksByPanel[i] = totalData.value;
+                    offsetClicksByPanel[i] = offsetData.value;
+                    counterFreshByPanel[i] = true;
+                    saveCounterCache();
+                } catch (error) {
+                    // Conserva l'ultimo valore noto se il servizio non risponde.
+                    console.error('Impossibile leggere il contatore di ' + p.name, error);
+                }
+                updateCardCounters();
+                updateAdminTitle();
+                await sleep(150);
+            }
+        }
+        try {
+            // Due richieste al massimo contemporaneamente, con le pause e
+            // i tentativi previsti in caso di limitazione del servizio.
+            await Promise.all([readNextCounters(), readNextCounters()]);
+        } finally {
+            counterLoadRunning = false;
+            updateAdminTitle();
+            updateCardCounters();
+        }
     }
 
     async function resetCounterGlobally() {
@@ -552,6 +601,8 @@
                 }
                 totalClicksByPanel[i] = target;
                 offsetClicksByPanel[i] = current;
+                counterFreshByPanel[i] = true;
+                saveCounterCache();
             } catch (e) {
                 // Un errore su una rosticceria non deve bloccare
                 // l'azzeramento delle altre: proseguiamo con la prossima
@@ -590,7 +641,7 @@
             }
             const val = visibleCounter(i);
             el.innerText = val === null ? '…' : formatCounter(val);
-            el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate');
+            el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (!counterFreshByPanel[i] ? (counterLoadRunning ? 'Ultimo valore disponibile: aggiornamento in corso' : 'Ultimo valore disponibile: aggiornamento non riuscito') : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate'));
             el.style.display = 'block';
         }
     }
