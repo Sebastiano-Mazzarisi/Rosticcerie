@@ -3694,6 +3694,23 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     #michela-notice h2 {{ margin: 0 0 16px; color: #00c853; font-size: 22px; }}
     #michela-notice-text {{ white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }}
     #michela-notice-ok {{ display: block; margin: 20px auto 0; padding: 10px 32px; border: 0; border-radius: 8px; background: #00c853; color: #111; font-size: 18px; cursor: pointer; }}
+    #identity-block {{ position: relative; }}
+    .sound-waves {{ display: none; position: absolute; right: 100%; top: 50%; width: clamp(28px, 10vw, 44px); height: 88px; transform: translateY(-50%); pointer-events: none; color: #00c853; overflow: visible; }}
+    .home-identity.audio-playing .sound-waves {{ display: block; }}
+    .sound-waves path {{ fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }}
+    .sound-waves path:nth-child(2) {{ animation-delay: -0.6s; }}
+    .sound-waves path:nth-child(3) {{ animation-delay: -1.2s; }}
+    @keyframes sound-wave-out {{
+      0% {{ transform: translateX(0) scaleY(0.65); opacity: 0; }}
+      15% {{ opacity: 0.9; }}
+      75% {{ opacity: 0.55; }}
+      100% {{ transform: translateX(-30px) scaleY(2); opacity: 0; }}
+    }}
+    @media (prefers-reduced-motion: reduce) {{
+      .sound-waves path {{ animation: none; opacity: 0.7; }}
+      .sound-waves path:nth-child(2) {{ transform: translateX(-12px) scaleY(1.4); }}
+      .sound-waves path:nth-child(3) {{ transform: translateX(-24px) scaleY(1.8); }}
+    }}
   </style>
   <script>
     const PANELS = {panels_json};
@@ -4681,7 +4698,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     let homeAudio;
     function toggleHomeAudio() {{
         if (!document.getElementById('identity-block').classList.contains('home-identity')) {{ handleTitleClick(); return; }}
-        if (!homeAudio) homeAudio = new Audio('Rosticcerie.mp3');
+        if (!homeAudio) {{
+            homeAudio = new Audio('Rosticcerie.mp3');
+            homeAudio.addEventListener('playing', () => {{
+                document.getElementById('identity-block').classList.add('audio-playing');
+            }});
+            ['pause', 'ended', 'waiting', 'error', 'emptied'].forEach(event => {{
+                homeAudio.addEventListener(event, () => {{
+                    document.getElementById('identity-block').classList.remove('audio-playing');
+                }});
+            }});
+        }}
         if (homeAudio.paused) homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
         else homeAudio.pause();
     }}
@@ -4741,6 +4768,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <header id="main-header">
     <div id="identity-block" class="has-logo home-identity">
+      <svg class="sound-waves" viewBox="0 0 44 88" aria-hidden="true" focusable="false">
+        <path d="M 40 30 Q 26 44 40 58"></path>
+        <path d="M 40 30 Q 26 44 40 58"></path>
+        <path d="M 40 30 Q 26 44 40 58"></path>
+      </svg>
       <img id="identity-logo" src="apple-touch-icon.png" alt="Logo Rosticcerie" style="display:block" role="button" tabindex="0" onclick="toggleHomeAudio()" onkeydown="if(event.key === 'Enter' || event.key === ' ') {{ event.preventDefault(); toggleHomeAudio(); }}">
       <div id="identity-text">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>

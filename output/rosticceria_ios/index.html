@@ -304,9 +304,26 @@
     #michela-notice h2 { margin: 0 0 16px; color: #00c853; font-size: 22px; }
     #michela-notice-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
     #michela-notice-ok { display: block; margin: 20px auto 0; padding: 10px 32px; border: 0; border-radius: 8px; background: #00c853; color: #111; font-size: 18px; cursor: pointer; }
+    #identity-block { position: relative; }
+    .sound-waves { display: none; position: absolute; right: 100%; top: 50%; width: clamp(28px, 10vw, 44px); height: 88px; transform: translateY(-50%); pointer-events: none; color: #00c853; overflow: visible; }
+    .home-identity.audio-playing .sound-waves { display: block; }
+    .sound-waves path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }
+    .sound-waves path:nth-child(2) { animation-delay: -0.6s; }
+    .sound-waves path:nth-child(3) { animation-delay: -1.2s; }
+    @keyframes sound-wave-out {
+      0% { transform: translateX(0) scaleY(0.65); opacity: 0; }
+      15% { opacity: 0.9; }
+      75% { opacity: 0.55; }
+      100% { transform: translateX(-30px) scaleY(2); opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sound-waves path { animation: none; opacity: 0.7; }
+      .sound-waves path:nth-child(2) { transform: translateX(-12px) scaleY(1.4); }
+      .sound-waves path:nth-child(3) { transform: translateX(-24px) scaleY(1.8); }
+    }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789133398", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789133398", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:23", "menu_date": "2026-09-11", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789133398", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789133398", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:24", "menu_date": "2026-09-11", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789133398", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789133398", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "07:36", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1789133398", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1789133398", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789133398", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789133398", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:28", "menu_date": "2026-09-11", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789133398", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789133398", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789133398", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789133398", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "10:29", "menu_date": "2026-09-11", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789133398", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789133628", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789133628", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:23", "menu_date": "2026-09-11", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789133628", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789133628", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:24", "menu_date": "2026-09-11", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789133628", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789133628", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "07:36", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1789133628", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1789133628", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789133628", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789133628", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:28", "menu_date": "2026-09-11", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789133628", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789133628", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789133628", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789133628", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "10:29", "menu_date": "2026-09-11", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789133628", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -497,32 +514,81 @@
         }).catch(error => console.error('Apertura non confermata: ' + panel.name, error));
     }
 
+    const COUNTER_CACHE_KEY = 'rosticcerie-counter-cache-v1';
+    let counterCacheRestored = false;
+    let counterFreshByPanel = [];
+
+    function restoreCounterCache() {
+        if (counterCacheRestored) return;
+        counterCacheRestored = true;
+        try {
+            const cached = JSON.parse(localStorage.getItem(COUNTER_CACHE_KEY) || '{}');
+            PANELS.forEach((panel, i) => {
+                const entry = cached[panel.name];
+                if (!entry || !Number.isSafeInteger(entry.total) || entry.total < 0 ||
+                    !Number.isSafeInteger(entry.offset) || entry.offset < 0) return;
+                totalClicksByPanel[i] = entry.total;
+                offsetClicksByPanel[i] = entry.offset;
+            });
+        } catch (error) {
+            console.warn('Cache contatori non disponibile', error);
+        }
+    }
+
+    function saveCounterCache() {
+        try {
+            const cached = {};
+            PANELS.forEach((panel, i) => {
+                if (visibleCounter(i) !== null) cached[panel.name] = {
+                    total: totalClicksByPanel[i], offset: offsetClicksByPanel[i]
+                };
+            });
+            localStorage.setItem(COUNTER_CACHE_KEY, JSON.stringify(cached));
+        } catch (error) {
+            console.warn('Cache contatori non salvata', error);
+        }
+    }
+
     async function loadCounter() {
         if (!isAdmin || counterLoadRunning) return;
         counterLoadRunning = true;
+        restoreCounterCache();
+        counterFreshByPanel = PANELS.map(() => false);
         updateCardCounters();
-        // Leggiamo i contatori uno alla volta (non tutti insieme) e con una
-        // piccola pausa tra una richiesta e l'altra, per restare sotto il
-        // limite di frequenza dell'API gratuita di Abacus.
-        for (let i = 0; i < PANELS.length; i++) {
-            const p = PANELS[i];
-            if (p.counter_enabled === false) continue;
-            try {
-                const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
-                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
-                totalClicksByPanel[i] = totalData.value;
-                offsetClicksByPanel[i] = offsetData.value;
-            } catch (e) {
-                totalClicksByPanel[i] = undefined;
-                offsetClicksByPanel[i] = undefined;
-                console.error('Impossibile leggere il contatore di ' + p.name, e);
-            }
-            updateCardCounters();
-            await sleep(150);
-        }
-        counterLoadRunning = false;
         updateAdminTitle();
-        updateCardCounters();
+        let nextIndex = 0;
+        async function readNextCounters() {
+            while (nextIndex < PANELS.length) {
+                const i = nextIndex++;
+                const p = PANELS[i];
+                if (p.counter_enabled === false) continue;
+                try {
+                    const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
+                    await sleep(150);
+                    const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
+                    // Aggiorna insieme totale e offset, solo se entrambi sono disponibili.
+                    totalClicksByPanel[i] = totalData.value;
+                    offsetClicksByPanel[i] = offsetData.value;
+                    counterFreshByPanel[i] = true;
+                    saveCounterCache();
+                } catch (error) {
+                    // Conserva l'ultimo valore noto se il servizio non risponde.
+                    console.error('Impossibile leggere il contatore di ' + p.name, error);
+                }
+                updateCardCounters();
+                updateAdminTitle();
+                await sleep(150);
+            }
+        }
+        try {
+            // Due richieste al massimo contemporaneamente, con le pause e
+            // i tentativi previsti in caso di limitazione del servizio.
+            await Promise.all([readNextCounters(), readNextCounters()]);
+        } finally {
+            counterLoadRunning = false;
+            updateAdminTitle();
+            updateCardCounters();
+        }
     }
 
     async function resetCounterGlobally() {
@@ -551,6 +617,8 @@
                 }
                 totalClicksByPanel[i] = target;
                 offsetClicksByPanel[i] = current;
+                counterFreshByPanel[i] = true;
+                saveCounterCache();
             } catch (e) {
                 // Un errore su una rosticceria non deve bloccare
                 // l'azzeramento delle altre: proseguiamo con la prossima
@@ -589,7 +657,7 @@
             }
             const val = visibleCounter(i);
             el.innerText = val === null ? '…' : formatCounter(val);
-            el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate');
+            el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (!counterFreshByPanel[i] ? (counterLoadRunning ? 'Ultimo valore disponibile: aggiornamento in corso' : 'Ultimo valore disponibile: aggiornamento non riuscito') : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate'));
             el.style.display = 'block';
         }
     }
@@ -1146,7 +1214,7 @@
     }
     let lastMenuRefreshDay = '';
     let lastMenuRefreshAt = 0;
-    const MENU_REFRESH_INTERVAL_MS = 300000;
+    const MENU_REFRESH_INTERVAL_MS = 600000;
     function hardRefreshPage() {
         // Mantieni vivo il lettore durante gli aggiornamenti richiesti dalla pagina.
         if (homeAudio && !homeAudio.paused) return forceFreshReload();
@@ -1240,7 +1308,17 @@
     let homeAudio;
     function toggleHomeAudio() {
         if (!document.getElementById('identity-block').classList.contains('home-identity')) { handleTitleClick(); return; }
-        if (!homeAudio) homeAudio = new Audio('Rosticcerie.mp3');
+        if (!homeAudio) {
+            homeAudio = new Audio('Rosticcerie.mp3');
+            homeAudio.addEventListener('playing', () => {
+                document.getElementById('identity-block').classList.add('audio-playing');
+            });
+            ['pause', 'ended', 'waiting', 'error', 'emptied'].forEach(event => {
+                homeAudio.addEventListener(event, () => {
+                    document.getElementById('identity-block').classList.remove('audio-playing');
+                });
+            });
+        }
         if (homeAudio.paused) homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
         else homeAudio.pause();
     }
@@ -1300,6 +1378,11 @@
 
   <header id="main-header">
     <div id="identity-block" class="has-logo home-identity">
+      <svg class="sound-waves" viewBox="0 0 44 88" aria-hidden="true" focusable="false">
+        <path d="M 40 30 Q 26 44 40 58"></path>
+        <path d="M 40 30 Q 26 44 40 58"></path>
+        <path d="M 40 30 Q 26 44 40 58"></path>
+      </svg>
       <img id="identity-logo" src="apple-touch-icon.png" alt="Logo Rosticcerie" style="display:block" role="button" tabindex="0" onclick="toggleHomeAudio()" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleHomeAudio(); }">
       <div id="identity-text">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
@@ -1316,63 +1399,63 @@
   </header>
 
   <main id="grid-view">
-    
+
         <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(0)">
-            
+
             <span class="card-name" style="color:#111">Fantasia</span>
             <span class="card-reference">09:23</span>
             <span class="card-counter" id="card-counter-0"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(1)">
-            
+
             <span class="card-name" style="color:#111">Cibària</span>
             <span class="card-reference">09:24</span>
             <span class="card-counter" id="card-counter-1"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="2" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(2)">
-            
+
             <span class="card-name" style="color:#111">Impastamò</span>
             <span class="card-reference">07:36</span>
             <span class="card-counter" id="card-counter-2"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="3" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(3)">
-            
+
             <span class="card-name" style="color:#111">Le delizie di Michela</span>
             <span class="card-reference">11 set</span>
             <span class="card-counter" id="card-counter-3"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="4" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(4)">
-            
+
             <span class="card-name" style="color:#111">Santoro (Castellana)</span>
             <span class="card-reference">09:28</span>
             <span class="card-counter" id="card-counter-4"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(5)">
-            
+
             <span class="card-name" style="color:#111">Pane &amp; Co</span>
             <span class="card-reference">11 set</span>
             <span class="card-counter" id="card-counter-5"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="6" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(6)">
-            
+
             <span class="card-name" style="color:#111">Bollenti piatti</span>
             <span class="card-reference">10:29</span>
             <span class="card-counter" id="card-counter-6"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="7" style="border-color:#49a95c;background-color:#eaf7ea" onclick="cardClicked(7)">
             <img class="suggestions-image" src="../../Magica.jpg" alt="" aria-hidden="true">
             <span class="card-name" style="color:#111">Suggerimenti</span>
-            
+
             <span class="card-counter" id="card-counter-7"></span>
         </button>
-        
+
   </main>
 
   <div id="detail-view">
