@@ -78,9 +78,9 @@ COOKIE_FILE = "cookies.txt"
 PUBLISH_DIR = os.path.join("output", "rosticceria_ios")
 MIDNIGHT_REFRESH = datetime.time(0, 1)
 MIDNIGHT_REFRESH_GRACE_MINUTES = 15
-RUN_START = datetime.time(6, 0)
-RUN_END = datetime.time(12, 0)
-RUN_INTERVAL_MINUTES = 15
+RUN_START = datetime.time(5, 0)
+RUN_END = datetime.time(20, 0)
+RUN_INTERVAL_MINUTES = 10
 ITALIAN_MONTHS = {
     "gennaio": 1,
     "gen": 1,
@@ -3702,7 +3702,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 18px;
       font-weight: bold;
     }}
-    #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fff; max-width: calc(100vw - 40px); }}
+    #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }}
     #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
     #waiting-update-dialog p {{ margin: 0 0 24px; font-size: 24px; line-height: 1.35; text-align: center; }}
     #waiting-update-dialog button {{ font-size: 18px; padding: 8px 30px; border: 1px solid #aaa; border-radius: 7px; cursor: pointer; }}
@@ -4073,13 +4073,28 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         return minutes >= 1 && minutes < 600;
     }}
 
+    let waitingUpdateTimer = null;
+    let waitingUpdatePid = null;
+    function continueAfterWaiting() {{
+        clearTimeout(waitingUpdateTimer);
+        waitingUpdateTimer = null;
+        const pid = waitingUpdatePid;
+        waitingUpdatePid = null;
+        const dialog = document.getElementById('waiting-update-dialog');
+        if (dialog.open) dialog.close();
+        if (pid !== null) openDetail(order.indexOf(pid));
+    }}
+
     function cardClicked(pid) {{
         // Mentre si sta riordinando (casella tenuta premuta/trascinata)
         // il tocco non deve aprire il dettaglio del menu.
         if (reorderMode) return;
         refreshMenuDates();
         if (isWaitingForUpdate(PANELS[pid])) {{
+            waitingUpdatePid = pid;
             document.getElementById('waiting-update-dialog').showModal();
+            clearTimeout(waitingUpdateTimer);
+            waitingUpdateTimer = setTimeout(continueAfterWaiting, 5000);
             return;
         }}
         openDetail(order.indexOf(pid));
@@ -4608,9 +4623,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     <span id="nav-position"></span>
     <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
   </div>
-<dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text">
+<dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
     <p id="waiting-update-text">In attesa di<br>aggiornamento</p>
-    <form method="dialog"><button autofocus>OK</button></form>
+    <button type="button" autofocus onclick="continueAfterWaiting()">OK</button>
   </dialog>
 </body>
 </html>
@@ -4884,15 +4899,15 @@ def run_once(show: bool = False, publish_to_git: bool = True) -> None:
 
 
 def inside_run_window(moment: datetime.datetime) -> bool:
-    midnight_start = datetime.datetime.combine(moment.date(), MIDNIGHT_REFRESH)
+    midnight_start = datetime.datetime.combine(moment.date(), MIDNIGHT_REFRESH, tzinfo=moment.tzinfo)
     midnight_end = midnight_start + datetime.timedelta(minutes=MIDNIGHT_REFRESH_GRACE_MINUTES)
     return midnight_start <= moment <= midnight_end or RUN_START <= moment.time() <= RUN_END
 
 
 def next_run_time(now: datetime.datetime) -> datetime.datetime:
-    midnight_run = datetime.datetime.combine(now.date(), MIDNIGHT_REFRESH)
-    today_start = datetime.datetime.combine(now.date(), RUN_START)
-    today_end = datetime.datetime.combine(now.date(), RUN_END)
+    midnight_run = datetime.datetime.combine(now.date(), MIDNIGHT_REFRESH, tzinfo=now.tzinfo)
+    today_start = datetime.datetime.combine(now.date(), RUN_START, tzinfo=now.tzinfo)
+    today_end = datetime.datetime.combine(now.date(), RUN_END, tzinfo=now.tzinfo)
     interval = datetime.timedelta(minutes=RUN_INTERVAL_MINUTES)
 
     if now <= midnight_run:
@@ -4912,7 +4927,7 @@ def next_run_time(now: datetime.datetime) -> datetime.datetime:
 
 
 def monitor_loop(show: bool = False, publish_to_git: bool = True) -> None:
-    print("Monitor attivo: estrazione alle 00:01 e ogni 15 minuti tra le 06:00 e le 12:00.")
+    print("Monitor attivo: estrazione alle 00:01 e ogni 10 minuti tra le 05:00 e le 20:00.")
 
     while True:
         now = datetime.datetime.now()
