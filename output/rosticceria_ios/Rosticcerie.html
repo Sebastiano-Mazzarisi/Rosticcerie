@@ -7,7 +7,15 @@
   <meta name="apple-mobile-web-app-title" content="Rosticcerie">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="manifest" href="manifest.webmanifest">
+  <script>
+    (() => {
+      const manifest = document.createElement('link');
+      manifest.rel = 'manifest';
+      manifest.href = new URLSearchParams(window.location.search).get('v') === '57'
+        ? 'manifest-admin.webmanifest' : 'manifest.webmanifest';
+      document.head.appendChild(manifest);
+    })();
+  </script>
   <meta name="theme-color" content="#111111">
   <meta property="og:title" content="Rosticcerie">
   <meta property="og:type" content="website">
