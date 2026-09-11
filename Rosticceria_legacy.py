@@ -258,7 +258,7 @@ def clean_text_menu_post(text: str) -> str:
             continue
         if re.fullmatch(r"\d+", line):
             continue
-        if re.fullmatch(r"facebook", line, re.IGNORECASE):
+        if re.fullmatch(r"(?:facebook|Me gusta|Comentar|Compartir|Ver menos|Like|Comment|Share|Mi piace|Commenta|Condividi)", line, re.IGNORECASE):
             continue
         if re.match(r"^(?:Commenta come|Comment as)\b", line, re.IGNORECASE):
             continue
@@ -303,7 +303,7 @@ def clean_text_menu_post(text: str) -> str:
 
 
 def has_see_more_marker(text: str) -> bool:
-    return bool(re.search(r"(?:…|\.\.\.)\s*Altro|Mostra altro|See more", text or "", re.IGNORECASE))
+    return bool(re.search(r"(?:…|\.\.\.)\s*Altro|Mostra altro|See more|Ver m[aá]s|Voir plus|Mehr anzeigen", text or "", re.IGNORECASE))
 
 
 def expand_facebook_see_more(post, page) -> None:
@@ -322,6 +322,7 @@ def expand_facebook_see_more(post, page) -> None:
         'a:has-text("See more")',
     ]
 
+    selectors.extend(f'{tag}:has-text("{label}")' for tag in ("button", 'div[role="button"]', "span", "a") for label in ("Ver más", "Voir plus", "Mehr anzeigen"))
     for _ in range(4):
         clicked = False
         try:
@@ -338,7 +339,7 @@ def expand_facebook_see_more(post, page) -> None:
         # button: in quel caso individuiamo direttamente l'elemento visibile
         # e proviamo anche l'attivazione da tastiera.
         more_pattern = re.compile(
-            r"^(?:…|\.\.\.)?\s*(?:Altro|Mostra altro|See more)\s*\.*$",
+            r"^(?:…|\.\.\.)?\s*(?:Altro|Mostra altro|See more|Ver más|Voir plus|Mehr anzeigen)\s*\.*$",
             re.IGNORECASE,
         )
         for more_locator in (post.get_by_text(more_pattern), page.get_by_text(more_pattern)):
@@ -376,7 +377,7 @@ def expand_facebook_see_more(post, page) -> None:
                 for element in post.locator(selector).all():
                     label = element.inner_text(timeout=700).strip()
                     lower_label = label.lower()
-                    if "altro" not in lower_label and "see more" not in lower_label:
+                    if not any(label in lower_label for label in ("altro", "see more", "ver más", "voir plus", "mehr anzeigen")):
                         continue
                     if not element.is_visible(timeout=700):
                         continue
@@ -1180,27 +1181,7 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
             lower_text = post_text.lower()
             has_required_terms = all(term.lower() in lower_text for term in (required_terms or []))
 
-            if truncated:
-                # Non siamo riusciti a espandere "Altro" (tipico senza un
-                # login valido): meglio un menu incompleto che nessun menu,
-                # ma solo come ultima riserva se non troviamo di meglio. Tra
-                # piu' candidati troncati (es. altri post scorrendo la
-                # pagina), preferiamo comunque quello che contiene i termini
-                # richiesti (es. "secondi piatti"), invece di fermarci al
-                # primo trovato anche se si interrompe prima nel testo e
-                # mostra quindi solo i primi piatti.
-                # Se il chiamante richiede sezioni precise (come "secondi
-                # piatti" per Bollenti piatti), un post troncato che non le
-                # contiene non e' un candidato valido: continuare la ricerca
-                # evita di pubblicare soltanto l'inizio del menu.
-                if required_terms and not has_required_terms:
-                    continue
-                if len(post_text) > 20 and (
-                    truncated_fallback_post is None
-                    or (has_required_terms and not truncated_fallback_has_terms)
-                ):
-                    truncated_fallback_post = candidate
-                    truncated_fallback_has_terms = has_required_terms
+            if truncated or not has_required_terms:
                 continue
 
             if has_required_terms and ("menu" in lower_text or "menù" in lower_text) and normalized_published_at:
@@ -1215,7 +1196,7 @@ def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) 
         if fallback_post:
             return fallback_post
 
-    return fallback_post or truncated_fallback_post
+    return fallback_post
 
 
 def find_largest_visible_image_url(page) -> str:
@@ -3709,6 +3690,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   </style>
   <script>
     const PANELS = {panels_json};
+    const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
+    if (hardReloadToken) {{
+        PANELS.forEach(panel => {{
+            ['image', 'logo'].forEach(key => {{
+                if (!panel[key]) return;
+                const url = new URL(panel[key], window.location.href);
+                url.searchParams.set('reload', hardReloadToken);
+                panel[key] = url.href;
+            }});
+        }});
+    }}
     let currentIndex = -1;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -4479,6 +4471,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         return new Intl.DateTimeFormat('en-CA', {{timeZone: 'Europe/Rome', year:'numeric',month:'2-digit',day:'2-digit'}}).format(new Date());
     }}
     let lastMenuRefreshDay = '';
+    function hardRefreshPage() {{
+        const url = new URL(window.location.href);
+        url.searchParams.set('reload', Date.now().toString());
+        window.location.replace(url.href);
+    }}
+    document.addEventListener('keydown', event => {{
+        if (event.ctrlKey && event.altKey && event.key.toLowerCase() === 'r') {{
+            event.preventDefault();
+            hardRefreshPage();
+        }}
+    }});
+
     async function forceFreshReload(showFeedback = true) {{
         if (menuRefreshRunning) return;
         menuRefreshRunning = true;
@@ -4610,8 +4614,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       <button type="button" id="reorder-reset-btn" onclick="resetOrderToDefault()">Reset</button>
       <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
     </div>
-    <p id="main-updated" class="updated" onclick="forceFreshReload()">{html.escape(today_label)}</p>
-    <p id="main-signature" class="signature" onclick="forceFreshReload()">by Mazzarisi</p>
+    <p id="main-updated" class="updated" onclick="hardRefreshPage()">{html.escape(today_label)}</p>
+    <p id="main-signature" class="signature" onclick="hardRefreshPage()">by Mazzarisi</p>
   </header>
 
   <main id="grid-view">
