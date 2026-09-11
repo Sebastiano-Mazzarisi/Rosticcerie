@@ -4187,7 +4187,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             dialog.addEventListener('cancel', preventCancel);
             dialog.showModal();
             ok.focus();
-            timer = setTimeout(finish, 5000);
+            timer = setTimeout(finish, 8000);
         }});
     }}
 
