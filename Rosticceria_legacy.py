@@ -4536,7 +4536,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     let lastMenuRefreshDay = '';
     let lastMenuRefreshAt = 0;
-    const MENU_REFRESH_INTERVAL_MS = 300000;
+    const MENU_REFRESH_INTERVAL_MS = 600000;
     function hardRefreshPage() {{
         // Mantieni vivo il lettore durante gli aggiornamenti richiesti dalla pagina.
         if (homeAudio && !homeAudio.paused) return forceFreshReload();
