@@ -299,17 +299,20 @@
     #waiting-update-dialog::backdrop { background: rgba(0,0,0,.55); }
     #waiting-update-dialog p { margin: 0 0 24px; font-size: 24px; line-height: 1.35; text-align: center; }
     #waiting-update-dialog button { font-size: 18px; padding: 8px 30px; border: 1px solid #aaa; border-radius: 7px; cursor: pointer; }
-    #michela-notice { width: min(88vw, 420px); max-height: 80vh; overflow: auto; box-sizing: border-box; border: 1px solid #555; border-radius: 14px; padding: 24px; background: #111; color: #fff; font-family: Arial, sans-serif; }
+    #michela-notice { text-align: center; width: min(88vw, 420px); max-height: 80vh; overflow: auto; box-sizing: border-box; border: 1px solid #555; border-radius: 14px; padding: 24px; background: #111; color: #fff; font-family: Arial, sans-serif; }
     #michela-notice::backdrop { background: rgba(0, 0, 0, 0.72); }
     #michela-notice h2 { margin: 0 0 16px; color: #00c853; font-size: 22px; }
     #michela-notice-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
     #michela-notice-ok { display: block; margin: 20px auto 0; padding: 10px 32px; border: 0; border-radius: 8px; background: #00c853; color: #111; font-size: 18px; cursor: pointer; }
     #identity-block { position: relative; }
     .sound-waves { display: none; position: absolute; right: 100%; top: 50%; width: clamp(28px, 10vw, 44px); height: 88px; transform: translateY(-50%); pointer-events: none; color: #00c853; overflow: visible; }
-    .home-identity.audio-playing .sound-waves { display: block; }
+    .home-identity .sound-waves { display: block; }
     .sound-waves path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }
     .sound-waves path:nth-child(2) { animation-delay: -0.6s; }
     .sound-waves path:nth-child(3) { animation-delay: -1.2s; }
+    .home-identity:not(.audio-playing) .sound-waves path { animation: none; opacity: 0.7; }
+    .home-identity:not(.audio-playing) .sound-waves path:nth-child(2) { transform: translateX(-12px) scaleY(1.4); }
+    .home-identity:not(.audio-playing) .sound-waves path:nth-child(3) { transform: translateX(-24px) scaleY(1.8); }
     @keyframes sound-wave-out {
       0% { transform: translateX(0) scaleY(0.65); opacity: 0; }
       15% { opacity: 0.9; }
@@ -323,7 +326,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789134125", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789134125", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:23", "menu_date": "2026-09-11", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789134125", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789134125", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:24", "menu_date": "2026-09-11", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789134125", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789134125", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "07:36", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1789134125", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1789134125", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789134125", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789134125", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:28", "menu_date": "2026-09-11", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789134125", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789134125", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789134125", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789134125", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "10:41", "menu_date": "2026-09-11", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789134125", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789134389", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789134389", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:30", "menu_date": "2026-09-11", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789134389", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789134389", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:31", "menu_date": "2026-09-11", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789134389", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789134389", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "07:36", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1789134389", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1789134389", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789134389", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789134389", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:36", "menu_date": "2026-09-11", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789134389", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789134389", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789134389", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789134389", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "10:46", "menu_date": "2026-09-11", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789134389", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -794,7 +797,7 @@
             dialog.addEventListener('cancel', preventCancel);
             dialog.showModal();
             ok.focus();
-            timer = setTimeout(finish, 5000);
+            timer = setTimeout(finish, 8000);
         });
     }
 
@@ -1403,14 +1406,14 @@
         <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(0)">
             
             <span class="card-name" style="color:#111">Fantasia</span>
-            <span class="card-reference">09:23</span>
+            <span class="card-reference">09:30</span>
             <span class="card-counter" id="card-counter-0"></span>
         </button>
         
         <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(1)">
             
             <span class="card-name" style="color:#111">Cibària</span>
-            <span class="card-reference">09:24</span>
+            <span class="card-reference">09:31</span>
             <span class="card-counter" id="card-counter-1"></span>
         </button>
         
@@ -1431,7 +1434,7 @@
         <button type="button" class="card" data-pid="4" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(4)">
             
             <span class="card-name" style="color:#111">Santoro (Castellana)</span>
-            <span class="card-reference">09:28</span>
+            <span class="card-reference">09:36</span>
             <span class="card-counter" id="card-counter-4"></span>
         </button>
         
@@ -1445,7 +1448,7 @@
         <button type="button" class="card" data-pid="6" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(6)">
             
             <span class="card-name" style="color:#111">Bollenti piatti</span>
-            <span class="card-reference">10:41</span>
+            <span class="card-reference">10:46</span>
             <span class="card-counter" id="card-counter-6"></span>
         </button>
         
