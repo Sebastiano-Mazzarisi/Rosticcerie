@@ -3393,7 +3393,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="300">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Rosticcerie">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -4536,7 +4535,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         return new Intl.DateTimeFormat('en-CA', {{timeZone: 'Europe/Rome', year:'numeric',month:'2-digit',day:'2-digit'}}).format(new Date());
     }}
     let lastMenuRefreshDay = '';
+    let lastMenuRefreshAt = 0;
+    const MENU_REFRESH_INTERVAL_MS = 300000;
     function hardRefreshPage() {{
+        // Mantieni vivo il lettore durante gli aggiornamenti richiesti dalla pagina.
+        if (homeAudio && !homeAudio.paused) return forceFreshReload();
         const url = new URL(window.location.href);
         url.searchParams.set('reload', Date.now().toString());
         window.location.replace(url.href);
@@ -4558,7 +4561,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         try {{
             const base = window.location.protocol === 'file:'
                 ? new URL('https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/')
-                : new URL('.', window.location.href);
+                : new URL('.', document.baseURI);
             const statusUrl = new URL('status.json', base);
             statusUrl.searchParams.set('refresh', Date.now().toString());
             const response = await fetch(statusUrl.href, {{cache:'no-store', signal:controller.signal}});
@@ -4601,6 +4604,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             refreshReferenceDate();
             if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
             lastMenuRefreshDay = italianDay();
+            lastMenuRefreshAt = Date.now();
             if (isAdmin) loadCounter();
             if (showFeedback) signature.innerText = 'by Mazzarisi';
             if (isAdmin) updateAdminTitle();
@@ -4615,7 +4619,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
     }}
     function refreshWhenNeeded() {{
-        if (!document.hidden && lastMenuRefreshDay !== italianDay()) forceFreshReload(false);
+        if (!document.hidden && (lastMenuRefreshDay !== italianDay() || Date.now() - lastMenuRefreshAt >= MENU_REFRESH_INTERVAL_MS)) forceFreshReload(false);
     }}
     document.addEventListener('DOMContentLoaded', refreshWhenNeeded);
     document.addEventListener('visibilitychange', refreshWhenNeeded);
