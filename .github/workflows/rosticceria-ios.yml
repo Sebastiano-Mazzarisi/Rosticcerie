@@ -41,7 +41,7 @@ jobs:
           from zoneinfo import ZoneInfo
 
           now = datetime.now(ZoneInfo("Europe/Rome"))
-          midnight_refresh = now.hour == 0 and now.minute < 15
+          midnight_refresh = now.hour == 0 and now.minute >= 1
           scheduled_refresh = (5 <= now.hour < 20) or (now.hour == 20 and now.minute < 10)
           manual = os.environ.get("GITHUB_EVENT_NAME") in {"workflow_dispatch", "push"}
 
@@ -59,6 +59,19 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+
+      - name: Salva contatori prima degli aggiornamenti
+        if: steps.timecheck.outputs.run == 'true'
+        run: |
+          python -m rosticcerie_clean.counters
+          git config user.name "Rosticcerie Bot"
+          git config user.email "actions@github.com"
+          git add output/rosticceria_ios/Rosticcerie-contatori*.txt 2>/dev/null || true
+          if ! git diff --staged --quiet; then
+            git commit -m "Salva contatori giornalieri"
+            git pull --rebase origin main
+            git push
+          fi
 
       - name: Installa dipendenze
         if: steps.timecheck.outputs.run == 'true'

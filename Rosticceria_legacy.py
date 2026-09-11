@@ -211,7 +211,7 @@ def clean_post_text(text: str) -> str:
         line = raw_line.strip()
         if not line or line in blocked:
             continue
-        
+
         lower_line = line.lower()
         if (
             lower_line.startswith("foto di ")
@@ -3397,7 +3397,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Rosticcerie">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#111111">
   <meta property="og:title" content="Rosticcerie">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{site_url}Rosticcerie.html">
@@ -3441,7 +3443,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     #identity-block {{ display: flex; align-items: center; justify-content: center; gap: 16px; width: fit-content; max-width: 100%; margin: 0 auto; }}
     #identity-logo {{ cursor: pointer; display: none; width: 88px; height: 88px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }}
-    #identity-block.has-logo #main-title {{ color: #fff; }}
+    #identity-block.has-logo:not(.home-identity) #main-title {{ color: #fff; }}
+    #identity-block.home-identity #identity-logo {{ cursor: pointer; }}
     #identity-text {{ min-width: 0; }}
     #identity-block.has-logo #identity-text {{ text-align: left; }}
     #identity-block.has-logo #phone-line {{ text-align: left; padding: 8px 0 0; }}
@@ -3687,6 +3690,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
     #waiting-update-dialog p {{ margin: 0 0 24px; font-size: 24px; line-height: 1.35; text-align: center; }}
     #waiting-update-dialog button {{ font-size: 18px; padding: 8px 30px; border: 1px solid #aaa; border-radius: 7px; cursor: pointer; }}
+    #michela-notice {{ width: min(88vw, 420px); max-height: 80vh; overflow: auto; box-sizing: border-box; border: 1px solid #555; border-radius: 14px; padding: 24px; background: #111; color: #fff; font-family: Arial, sans-serif; }}
+    #michela-notice::backdrop {{ background: rgba(0, 0, 0, 0.72); }}
+    #michela-notice h2 {{ margin: 0 0 16px; color: #00c853; font-size: 22px; }}
+    #michela-notice-text {{ white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }}
+    #michela-notice-ok {{ display: block; margin: 20px auto 0; padding: 10px 32px; border: 0; border-radius: 8px; background: #00c853; color: #111; font-size: 18px; cursor: pointer; }}
   </style>
   <script>
     const PANELS = {panels_json};
@@ -3957,7 +3965,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (PANELS[i].counter_enabled === false) continue;
             val += visibleCounter(i) ?? 0;
         }}
-        document.getElementById('main-title').innerText = `Rosticcerie (${{formatCounter(val)}})`;
+        document.getElementById('main-title').innerText = 'Rosticcerie';
+        document.getElementById('main-signature').innerText = 'by Mazzarisi' + (isAdmin ? ' ' + formatCounter(val) : '');
     }}
 
     function updateCardCounters() {{
@@ -4081,10 +4090,41 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         if (pid !== null) openDetail(order.indexOf(pid));
     }}
 
-    function cardClicked(pid) {{
-        // Mentre si sta riordinando (casella tenuta premuta/trascinata)
-        // il tocco non deve aprire il dettaglio del menu.
-        if (reorderMode) return;
+    function michelaNoticeFrom(text) {{
+        const lines = text.replace(/^\\uFEFF/, '').split(/\\r?\\n/);
+        const start = lines.findIndex(line => line.trim() === '*Michela');
+        if (start < 0) return '';
+        const notice = [];
+        for (let i = start + 1; i < lines.length && lines[i].trim(); i++) notice.push(lines[i]);
+        return notice.join('\\n').trim();
+    }}
+
+    function showMichelaNotice(text) {{
+        return new Promise(resolve => {{
+            const dialog = document.getElementById('michela-notice');
+            document.getElementById('michela-notice-text').textContent = text;
+            const ok = document.getElementById('michela-notice-ok');
+            let timer;
+            const finish = () => {{
+                clearTimeout(timer);
+                ok.removeEventListener('click', finish);
+                dialog.removeEventListener('cancel', preventCancel);
+                dialog.close();
+                resolve();
+            }};
+            const preventCancel = event => event.preventDefault();
+            ok.addEventListener('click', finish);
+            dialog.addEventListener('cancel', preventCancel);
+            dialog.showModal();
+            ok.focus();
+            timer = setTimeout(finish, 5000);
+        }});
+    }}
+
+    let cardOpening = false;
+    async function cardClicked(pid) {{
+        // Non aprire il menu durante il riordino o una precedente apertura.
+        if (reorderMode || cardOpening) return;
         refreshMenuDates();
         if (isWaitingForUpdate(PANELS[pid])) {{
             waitingUpdatePid = pid;
@@ -4093,7 +4133,29 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             waitingUpdateTimer = setTimeout(continueAfterWaiting, 5000);
             return;
         }}
-        openDetail(order.indexOf(pid));
+        cardOpening = true;
+        try {{
+            const panel = PANELS[pid];
+            if (panel.name === 'Le delizie di Michela' && panel.updated) {{
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 3000);
+                let notice = '';
+                try {{
+                    const response = await fetch(new URL('../../Rosticcerie.txt', document.baseURI), {{
+                        cache: 'no-store', signal: controller.signal
+                    }});
+                    if (response.ok) notice = michelaNoticeFrom(await response.text());
+                }} catch (error) {{
+                    console.warn('Avviso Michela non disponibile', error);
+                }} finally {{
+                    clearTimeout(timeout);
+                }}
+                if (notice) await showMichelaNotice(notice);
+            }}
+            openDetail(order.indexOf(pid));
+        }} finally {{
+            cardOpening = false;
+        }}
     }}
 
     function syncOrderFromDom() {{
@@ -4379,6 +4441,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         currentIndex = ((i % n) + n) % n;
         const p = PANELS[order[currentIndex]];
 
+        document.getElementById('identity-block').classList.remove('home-identity');
         const identityLogo = document.getElementById('identity-logo');
         document.getElementById('identity-block').classList.toggle('has-logo', Boolean(p.logo));
         identityLogo.style.display = p.logo ? 'block' : 'none';
@@ -4444,9 +4507,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function showNext() {{ renderDetail(currentIndex + 1); recordCurrentView(); }}
 
     function closeDetail() {{
-        document.getElementById('identity-block').classList.remove('has-logo');
-        document.getElementById('identity-logo').style.display = 'none';
-        document.getElementById('identity-logo').removeAttribute('src');
+        document.getElementById('identity-block').classList.add('has-logo', 'home-identity');
+        const logo = document.getElementById('identity-logo');
+        logo.style.display = 'block';
+        logo.src = 'apple-touch-icon.png';
+        logo.alt = 'Logo Rosticcerie';
         document.getElementById('detail-view').style.display = 'none';
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
@@ -4537,7 +4602,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
             lastMenuRefreshDay = italianDay();
             if (isAdmin) loadCounter();
-            if (showFeedback) signature.innerText = 'Aggiornato • by Mazzarisi';
+            if (showFeedback) signature.innerText = 'by Mazzarisi';
+            if (isAdmin) updateAdminTitle();
         }} catch (error) {{
             refreshMenuDates();
             refreshReferenceDate();
@@ -4557,6 +4623,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     window.addEventListener('online', refreshWhenNeeded);
     setInterval(refreshWhenNeeded, 60000);
 
+    let homeAudio;
+    function toggleHomeAudio() {{
+        if (!document.getElementById('identity-block').classList.contains('home-identity')) {{ handleTitleClick(); return; }}
+        if (!homeAudio) homeAudio = new Audio('Rosticcerie.mp3');
+        if (homeAudio.paused) homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
+        else homeAudio.pause();
+    }}
+
     function handleTitleClick() {{
         const inDetail = document.getElementById('grid-view').style.display === 'none';
         if (inDetail) {{
@@ -4570,6 +4644,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (confirm("Vuoi davvero azzerare il contatore? (Verra' azzerato per tutti i dispositivi)")) {{
                 resetCounterGlobally();
             }}
+        }} else {{
+            hardRefreshPage();
         }}
     }}
 
@@ -4602,11 +4678,19 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   </script>
 </head>
 <body>
+  <dialog id="michela-notice" aria-labelledby="michela-notice-title" aria-describedby="michela-notice-text">
+    <h2 id="michela-notice-title">Le delizie di Michela</h2>
+    <p id="michela-notice-text"></p>
+    <button type="button" id="michela-notice-ok">OK</button>
+  </dialog>
+
   <header id="main-header">
-    <div id="identity-block">
-      <img id="identity-logo" alt="" role="link" tabindex="0" onclick="handleTitleClick()" onkeydown="if(event.key === 'Enter' || event.key === ' ') {{ event.preventDefault(); handleTitleClick(); }}">
+    <div id="identity-block" class="has-logo home-identity">
+      <img id="identity-logo" src="apple-touch-icon.png" alt="Logo Rosticcerie" style="display:block" role="button" tabindex="0" onclick="toggleHomeAudio()" onkeydown="if(event.key === 'Enter' || event.key === ' ') {{ event.preventDefault(); toggleHomeAudio(); }}">
       <div id="identity-text">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
+    <p id="main-updated" class="updated" onclick="hardRefreshPage()">{html.escape(today_label)}</p>
+    <p id="main-signature" class="signature" onclick="hardRefreshPage()">by Mazzarisi</p>
         <div id="phone-line"></div>
       </div>
     </div>
@@ -4614,8 +4698,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       <button type="button" id="reorder-reset-btn" onclick="resetOrderToDefault()">Reset</button>
       <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
     </div>
-    <p id="main-updated" class="updated" onclick="hardRefreshPage()">{html.escape(today_label)}</p>
-    <p id="main-signature" class="signature" onclick="hardRefreshPage()">by Mazzarisi</p>
+
   </header>
 
   <main id="grid-view">
@@ -4806,7 +4889,7 @@ def extract_pages() -> List[Dict]:
                 prefer_facebook_date=(name == "Fantasia"),
             )
             image_bytes = download_image(post["image_url"])
-            
+
             if name == "Fantasia":
                 image_bytes = crop_fantasia_chalkboard(image_bytes)
             elif name == "Le delizie di Michela":

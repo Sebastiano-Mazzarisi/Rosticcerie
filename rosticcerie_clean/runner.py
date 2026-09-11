@@ -5,9 +5,11 @@ import time
 import Rosticceria_legacy as legacy
 
 from .pipeline import extract_all
+from .counters import snapshot_if_due
 
 
 def run_once(show: bool = False, publish_to_git: bool = True) -> None:
+    snapshot_if_due()
     panels = extract_all()
     output_dir = legacy.save_publish_files(panels)
     print(f"File per iOS aggiornati in: {output_dir}")

@@ -1,13 +1,16 @@
 <!doctype html>
 <html lang="it">
 <head>
+  <base href="output/rosticceria_ios/">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="refresh" content="300">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Rosticcerie">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#111111">
   <meta property="og:title" content="Rosticcerie">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html">
@@ -41,14 +44,25 @@
       color: #fff;
       font-size: 16px;
       cursor: pointer;
-      user-select: none;
     }
     .signature {
       margin: 2px 0 0;
       color: #fff;
       font-size: 14px;
       cursor: pointer;
-      user-select: none;
+    }
+
+    #identity-block { display: flex; align-items: center; justify-content: center; gap: 16px; width: fit-content; max-width: 100%; margin: 0 auto; }
+    #identity-logo { cursor: pointer; display: none; width: 88px; height: 88px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
+    #identity-block.has-logo:not(.home-identity) #main-title { color: #fff; }
+    #identity-block.home-identity #identity-logo { cursor: pointer; }
+    #identity-text { min-width: 0; }
+    #identity-block.has-logo #identity-text { text-align: left; }
+    #identity-block.has-logo #phone-line { text-align: left; padding: 8px 0 0; }
+    @media (max-width: 480px) {
+      #identity-block { gap: 12px; }
+      #identity-logo { width: 72px; height: 72px; }
+      #identity-block.has-logo #main-title { font-size: 25px; }
     }
     /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
     #phone-line {
@@ -75,15 +89,16 @@
       appearance: none;
       -webkit-appearance: none;
       font: inherit;
-      background: #e5e5e5; /* Giallo tenue per i menu aggiornati, grigio per gli altri */
+      background: #ffffff; /* Giallo tenue per i menu aggiornati, bianco per gli altri */
       box-sizing: border-box;
       cursor: pointer;
       min-height: 110px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 12px;
+      padding: 32px 10px 12px;
       border: 4px solid #555555; /* Giallo se aggiornata oggi, grigio scuro altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
@@ -102,15 +117,39 @@
       font-size: clamp(16px, 5vw, 26px);
       color: #111; /* Nomi neri */
       font-weight: bold;
+      line-height: 1.1;
+      width: 100%;
+      overflow-wrap: anywhere;
     }
     .card-counter {
       display: none;
       position: absolute;
-      bottom: 4px;
-      right: 8px;
-      font-size: 11px;
+      top: 6px;
+      right: 10px;
+      font-size: 16px;
       font-weight: normal;
-      color: #555;
+      color: #000;
+    }
+    .card-reference {
+      position: absolute;
+      top: 6px;
+      left: 10px;
+      font-size: 14px;
+      font-weight: normal;
+      color: #000;
+    }
+    .card.is-updated .card-reference {
+      color: #fff;
+      background: #00863b;
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 18px;
+    }
+    .suggestions-image { width: 100px; height: auto; max-width: 100%; display: block; margin: 0 auto 8px; }
+    .card.is-suggestions {
+      padding: 12px 10px;
+      justify-content: center;
+      align-items: center;
     }
     /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
        tenendo premuta una casella, tutte "tremano" leggermente e quella
@@ -181,7 +220,9 @@
       cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
     }
     #detail-content img {
-      width: 100%;
+      width: 100vw;
+      max-width: 100vw;
+      max-height: none;
       height: auto;
       display: block;
       margin: 0 auto;
@@ -190,12 +231,39 @@
       border: 4px solid #ffd641;
       box-sizing: border-box;
     }
+    .share-panel {
+      width: min(100%, 520px);
+      margin: 0 auto 16px;
+      text-align: center;
+    }
+    .share-button {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 2px solid #49a95c;
+      border-radius: 8px;
+      background: #eaf7ea;
+      color: #111;
+      padding: 12px 22px;
+      font: inherit;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .share-button .share-symbol {
+      font-size: 24px;
+      margin-right: 8px;
+    }
+    .share-help {
+      margin: 10px 12px 0;
+      color: #111;
+      font-size: 16px;
+    }
 
-    /* Su schermi da PC la foto occupa circa un terzo della larghezza
-       (equivalente a 3 colonne), invece di riempire tutto lo schermo. */
+    /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {
       #detail-content img {
-        width: 33%;
+        width: 33.333vw;
+        max-width: 33.333vw;
       }
     }
 
@@ -229,9 +297,29 @@
       font-size: 18px;
       font-weight: bold;
     }
+    #waiting-update-dialog { border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }
+    #waiting-update-dialog::backdrop { background: rgba(0,0,0,.55); }
+    #waiting-update-dialog p { margin: 0 0 24px; font-size: 24px; line-height: 1.35; text-align: center; }
+    #waiting-update-dialog button { font-size: 18px; padding: 8px 30px; border: 1px solid #aaa; border-radius: 7px; cursor: pointer; }
+    #michela-notice { width: min(88vw, 420px); max-height: 80vh; overflow: auto; box-sizing: border-box; border: 1px solid #555; border-radius: 14px; padding: 24px; background: #111; color: #fff; font-family: Arial, sans-serif; }
+    #michela-notice::backdrop { background: rgba(0, 0, 0, 0.72); }
+    #michela-notice h2 { margin: 0 0 16px; color: #00c853; font-size: 22px; }
+    #michela-notice-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+    #michela-notice-ok { display: block; margin: 20px auto 0; padding: 10px 32px; border: 0; border-radius: 8px; background: #00c853; color: #111; font-size: 18px; cursor: pointer; }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/RosticceriaFantasia"}, {"name": "Cibària", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/cibaria.asporto"}, {"name": "Impastamò", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=61560452176728"}, {"name": "Le delizie di Michela", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/profile.php?id=100045208848338"}, {"name": "Santoro (Castellana)", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/santorogastronomia"}, {"name": "Pane & Co", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.paneeco.it/menu"}, {"name": "Bollenti piatti", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1788859460", "error": "", "updated": true, "url": "https://www.facebook.com/BollentiPiatti"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789123560", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789123560", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:49", "menu_date": "2026-09-11", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789123560", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789123560", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:50", "menu_date": "2026-09-11", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789123560", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789123560", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "07:36", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1789123560", "phone_display": "080-521.22.33", "phone_tel": "0805212233", "image": "Le_delizie_di_Michela.jpg?v=1789123560", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789123560", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789123560", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "09:54", "menu_date": "2026-09-11", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789123560", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789123560", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "11 set", "menu_date": "2026-09-11", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789123560", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789123560", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "card_reference": "10:09", "menu_date": "2026-09-11", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789123560", "error": "", "updated": true, "updated_label": "Venerdì 11 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
+    if (hardReloadToken) {
+        PANELS.forEach(panel => {
+            ['image', 'logo'].forEach(key => {
+                if (!panel[key]) return;
+                const url = new URL(panel[key], window.location.href);
+                url.searchParams.set('reload', hardReloadToken);
+                panel[key] = url.href;
+            });
+        });
+    }
     let currentIndex = -1;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -245,7 +333,17 @@
             .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     }
     function counterKeyFor(name) { return 'menu-views-' + slugify(name); }
-    function offsetKeyFor(name) { return 'menu-views-offset-' + slugify(name); }
+    // La chiave di azzeramento (offset) di "Pane & Co" e' rimasta quasi
+    // allineata al totale (offset molto vicino al totale reale) per via di
+    // prove fatte in passato direttamente sulla chiave in produzione: dato
+    // che l'API del contatore permette solo di FAR CRESCERE l'offset (mai
+    // di farlo scendere), non e' possibile "correggerlo" con un nuovo
+    // azzeramento. Usiamo quindi per questa sola rosticceria una chiave di
+    // azzeramento diversa e mai usata prima (che l'API legge come 0), cosi'
+    // il numero mostrato torna a riflettere il totale reale delle
+    // aperture invece di restare bloccato vicino a zero.
+    const OFFSET_KEY_OVERRIDES = { 'Pane & Co': 'pane-co-r2' };
+    function offsetKeyFor(name) { return 'menu-views-offset-' + (OFFSET_KEY_OVERRIDES[name] || slugify(name)); }
     function counterGetUrlFor(name) { return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }
     function counterHitUrlFor(name) { return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }
     function offsetGetUrlFor(name) { return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + offsetKeyFor(name); }
@@ -264,6 +362,52 @@
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    function currentItalianDateLabel() {
+        const now = new Date();
+        const weekdays = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+        const months = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+        return weekdays[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()];
+    }
+
+    function refreshMenuDates(now = new Date()) {
+        const parts = new Intl.DateTimeFormat('en-GB', {timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'}).formatToParts(now);
+        const datePart = type => parts.find(p => p.type === type).value;
+        const today = datePart('year') + '-' + datePart('month') + '-' + datePart('day');
+        document.querySelectorAll('.card[data-pid]').forEach(card => {
+            const panel = PANELS[Number(card.dataset.pid)];
+            if (!panel || panel.card_border) return;
+            panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
+            card.classList.toggle('is-updated', panel.updated && Boolean((panel.card_reference || '').trim()));
+            card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
+            card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
+            card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#777777';
+            const reference = card.querySelector('.card-reference');
+            if (reference && panel.menu_date) {
+                // Se il menu e' di oggi ma non abbiamo un orario preciso (es.
+                // Pane & Co, che sul sito riporta solo la data), mostriamo
+                // comunque la data invece di svuotare il confetto verde:
+                // prima questo ricalcolo lato client (che gira ogni secondo
+                // per tenere la pagina aggiornata senza ricaricarla)
+                // sovrascriveva con '' il testo gia' corretto generato dal
+                // programma, facendo sparire il confetto poco dopo il
+                // caricamento della pagina.
+                const dateLabel = new Intl.DateTimeFormat('it-IT', {timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+                const hasTime = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(panel.card_reference || '');
+                reference.innerText = (panel.updated && hasTime) ? panel.card_reference : dateLabel;
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', refreshMenuDatesOnEvent);
+    function refreshMenuDatesOnEvent() { refreshMenuDates(); }
+    window.addEventListener('focus', refreshMenuDatesOnEvent);
+    document.addEventListener('visibilitychange', refreshMenuDatesOnEvent);
+    setInterval(refreshMenuDatesOnEvent, 1000);
+
+    function refreshReferenceDate() {
+        const el = document.getElementById('main-updated');
+        if (el) el.innerText = currentItalianDateLabel();
+    }
+
     function parseRetryAfterSeconds(text) {
         const match = /try again in\s*([\d.]+)\s*s/i.exec(text || '');
         return match ? Math.ceil(parseFloat(match[1])) : 10;
@@ -279,11 +423,11 @@
     // azzerava il contatore solo sullo schermo, senza aver davvero
     // azzerato nulla sul server: al ricaricamento della pagina il valore
     // precedente ricompariva.
-    async function fetchJsonWithRetry(url, attempts) {
+    async function fetchJsonWithRetry(url, attempts, missingIsZero = false) {
         for (let attempt = 1; attempt <= attempts; attempt++) {
             let response;
             try {
-                response = await fetch(url);
+                response = await fetch(url, {cache:'no-store'});
             } catch (err) {
                 if (attempt === attempts) {
                     throw err;
@@ -292,6 +436,7 @@
                 continue;
             }
 
+            if (response.status === 404 && missingIsZero) return {value:0};
             if (response.status === 429) {
                 const body = await response.text();
                 if (attempt === attempts) {
@@ -325,23 +470,59 @@
     let totalClicksByPanel = [];
     let offsetClicksByPanel = [];
 
+    function visibleCounter(i) {
+        const total = totalClicksByPanel[i];
+        const offset = offsetClicksByPanel[i];
+        if (!Number.isFinite(total) || !Number.isFinite(offset)) return null;
+        // An impossible reset baseline must not hide real recorded openings.
+        return offset > total ? total : total - offset;
+    }
+    let counterLoadRunning = false;
+    let counterHitQueue = Promise.resolve();
+    function recordCurrentView() {
+        if (isAdmin) return;
+        const panel = PANELS[order[currentIndex]];
+        if (!panel || panel.counter_enabled === false) return;
+        counterHitQueue = counterHitQueue.then(async () => {
+            for (let attempt = 0; attempt < 4; attempt++) {
+                // Do not repeat an ambiguous network failure: it may have counted.
+                const response = await fetch(counterHitUrlFor(panel.name), {cache:'no-store', keepalive:true});
+                if (response.status === 429 && attempt < 3) {
+                    await sleep((parseRetryAfterSeconds(await response.text()) + 1) * 1000);
+                    continue;
+                }
+                if (!response.ok) throw new Error('Registrazione HTTP ' + response.status);
+                const data = await response.json();
+                if (!Number.isFinite(data.value)) throw new Error('Registrazione non confermata');
+                return;
+            }
+        }).catch(error => console.error('Apertura non confermata: ' + panel.name, error));
+    }
+
     async function loadCounter() {
-        if (!isAdmin) return;
+        if (!isAdmin || counterLoadRunning) return;
+        counterLoadRunning = true;
+        updateCardCounters();
         // Leggiamo i contatori uno alla volta (non tutti insieme) e con una
         // piccola pausa tra una richiesta e l'altra, per restare sotto il
         // limite di frequenza dell'API gratuita di Abacus.
         for (let i = 0; i < PANELS.length; i++) {
             const p = PANELS[i];
+            if (p.counter_enabled === false) continue;
             try {
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
-                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
                 totalClicksByPanel[i] = totalData.value;
                 offsetClicksByPanel[i] = offsetData.value;
             } catch (e) {
+                totalClicksByPanel[i] = undefined;
+                offsetClicksByPanel[i] = undefined;
                 console.error('Impossibile leggere il contatore di ' + p.name, e);
             }
+            updateCardCounters();
             await sleep(150);
         }
+        counterLoadRunning = false;
         updateAdminTitle();
         updateCardCounters();
     }
@@ -350,12 +531,14 @@
         const mainTitle = document.getElementById('main-title');
         for (let i = 0; i < PANELS.length; i++) {
             const p = PANELS[i];
+            if (p.counter_enabled === false) continue;
             mainTitle.innerText = 'Azzeramento in corso... (' + (i + 1) + '/' + PANELS.length + ')';
             try {
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
                 const target = totalData.value;
-                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
                 let current = offsetData.value;
+                if (current > target) throw new Error('Azzeramento incoerente: impossibile ridurre il valore remoto');
                 while (current < target) {
                     // L'unico modo per "azzerare" un contatore di sola
                     // lettura/incremento come quello di Abacus e' portare
@@ -382,12 +565,19 @@
         }
     }
 
+    function formatCounter(value) {
+        return String(Math.max(0, Math.trunc(Number(value)))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
     function updateAdminTitle() {
+        if (document.getElementById('detail-view').style.display === 'block') return;
         let val = 0;
         for (let i = 0; i < PANELS.length; i++) {
-            val += Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
+            if (PANELS[i].counter_enabled === false) continue;
+            val += visibleCounter(i) ?? 0;
         }
-        document.getElementById('main-title').innerText = `Rosticcerie (${val.toLocaleString('it-IT')})`;
+        document.getElementById('main-title').innerText = 'Rosticcerie';
+        document.getElementById('main-signature').innerText = 'by Mazzarisi' + (isAdmin ? ' ' + formatCounter(val) : '');
     }
 
     function updateCardCounters() {
@@ -395,8 +585,13 @@
         for (let i = 0; i < PANELS.length; i++) {
             const el = document.getElementById('card-counter-' + i);
             if (!el) continue;
-            const val = Math.max(0, (totalClicksByPanel[i] || 0) - (offsetClicksByPanel[i] || 0));
-            el.innerText = val.toLocaleString('it-IT');
+            if (PANELS[i].counter_enabled === false) {
+                el.style.display = 'none';
+                continue;
+            }
+            const val = visibleCounter(i);
+            el.innerText = val === null ? '…' : formatCounter(val);
+            el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate');
             el.style.display = 'block';
         }
     }
@@ -406,8 +601,32 @@
     // L'ordine e' salvato in localStorage: e' quindi personale per ogni
     // dispositivo/browser, non condiviso tra dispositivi diversi ne'
     // pubblicato sul sito.
-    const ORDER_STORAGE_KEY = 'rosticcerie-order-v1';
-    let order = PANELS.map((_, i) => i);
+    const ORDER_STORAGE_KEY = 'rosticcerie-order-v2';
+    const DEFAULT_ORDER_NAMES = [
+        'Fantasia', 'Bollenti piatti', 'Pane & Co', 'Cibària',
+        'Le delizie di Michela', 'Impastamò', 'Santoro (Castellana)', 'Suggerimenti',
+    ];
+
+    function buildDefaultOrder() {
+        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+        const restored = [];
+        const seen = new Set();
+        DEFAULT_ORDER_NAMES.forEach(name => {
+            if (nameToIndex.has(name) && !seen.has(name)) {
+                restored.push(nameToIndex.get(name));
+                seen.add(name);
+            }
+        });
+        PANELS.forEach((p, i) => {
+            if (!seen.has(p.name)) {
+                restored.push(i);
+                seen.add(p.name);
+            }
+        });
+        return restored;
+    }
+
+    let order = buildDefaultOrder();
     let reorderMode = false;
     let dragState = null;
     const LONG_PRESS_MS = 450;
@@ -460,11 +679,94 @@
         });
     }
 
-    function cardClicked(pid) {
-        // Mentre si sta riordinando (casella tenuta premuta/trascinata)
-        // il tocco non deve aprire il dettaglio del menu.
-        if (reorderMode) return;
-        openDetail(order.indexOf(pid));
+    function isWaitingForUpdate(panel, now = new Date()) {
+        if (!panel || panel.card_border || panel.updated) return false;
+        const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        }).formatToParts(now);
+        const value = type => Number(parts.find(part => part.type === type).value);
+        const minutes = value('hour') * 60 + value('minute');
+        return minutes >= 1 && minutes < 600;
+    }
+
+    let waitingUpdateTimer = null;
+    let waitingUpdatePid = null;
+    function continueAfterWaiting() {
+        clearTimeout(waitingUpdateTimer);
+        waitingUpdateTimer = null;
+        const pid = waitingUpdatePid;
+        waitingUpdatePid = null;
+        const dialog = document.getElementById('waiting-update-dialog');
+        if (dialog.open) dialog.close();
+        if (pid !== null) openDetail(order.indexOf(pid));
+    }
+
+    function michelaNoticeFrom(text) {
+        const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
+        const start = lines.findIndex(line => line.trim() === '*Michela');
+        if (start < 0) return '';
+        const notice = [];
+        for (let i = start + 1; i < lines.length && lines[i].trim(); i++) notice.push(lines[i]);
+        return notice.join('\n').trim();
+    }
+
+    function showMichelaNotice(text) {
+        return new Promise(resolve => {
+            const dialog = document.getElementById('michela-notice');
+            document.getElementById('michela-notice-text').textContent = text;
+            const ok = document.getElementById('michela-notice-ok');
+            let timer;
+            const finish = () => {
+                clearTimeout(timer);
+                ok.removeEventListener('click', finish);
+                dialog.removeEventListener('cancel', preventCancel);
+                dialog.close();
+                resolve();
+            };
+            const preventCancel = event => event.preventDefault();
+            ok.addEventListener('click', finish);
+            dialog.addEventListener('cancel', preventCancel);
+            dialog.showModal();
+            ok.focus();
+            timer = setTimeout(finish, 5000);
+        });
+    }
+
+    let cardOpening = false;
+    async function cardClicked(pid) {
+        // Non aprire il menu durante il riordino o una precedente apertura.
+        if (reorderMode || cardOpening) return;
+        refreshMenuDates();
+        if (isWaitingForUpdate(PANELS[pid])) {
+            waitingUpdatePid = pid;
+            document.getElementById('waiting-update-dialog').showModal();
+            clearTimeout(waitingUpdateTimer);
+            waitingUpdateTimer = setTimeout(continueAfterWaiting, 5000);
+            return;
+        }
+        cardOpening = true;
+        try {
+            const panel = PANELS[pid];
+            if (panel.name === 'Le delizie di Michela' && panel.updated) {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 3000);
+                let notice = '';
+                try {
+                    const response = await fetch(new URL('../../Rosticcerie.txt', document.baseURI), {
+                        cache: 'no-store', signal: controller.signal
+                    });
+                    if (response.ok) notice = michelaNoticeFrom(await response.text());
+                } catch (error) {
+                    console.warn('Avviso Michela non disponibile', error);
+                } finally {
+                    clearTimeout(timeout);
+                }
+                if (notice) await showMichelaNotice(notice);
+            }
+            openDetail(order.indexOf(pid));
+        } finally {
+            cardOpening = false;
+        }
     }
 
     function syncOrderFromDom() {
@@ -485,31 +787,31 @@
         saveOrder();
     }
 
-    const DEFAULT_ORDER_NAMES = [
-        'Fantasia', 'Cibària', 'Pane & Co', 'Impastamò',
-        'Bollenti piatti', 'Le delizie di Michela', 'Santoro (Castellana)',
-    ];
+    const SHARE_URL = 'https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html';
+
+    async function shareSite(event) {
+        event.stopPropagation();
+        const shareData = {
+            title: 'Rosticcerie',
+            text: 'Guarda i menu delle rosticcerie',
+            url: SHARE_URL,
+        };
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+                return;
+            }
+            await navigator.clipboard.writeText(SHARE_URL);
+            alert('Link copiato negli appunti.');
+        } catch (err) {
+            if (err && err.name !== 'AbortError') {
+                alert('Impossibile avviare la condivisione.');
+            }
+        }
+    }
 
     function resetOrderToDefault() {
-        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
-        const restored = [];
-        const seen = new Set();
-        DEFAULT_ORDER_NAMES.forEach(name => {
-            if (nameToIndex.has(name) && !seen.has(name)) {
-                restored.push(nameToIndex.get(name));
-                seen.add(name);
-            }
-        });
-        // Eventuali rosticcerie non presenti nell'elenco di default (es.
-        // aggiunte in futuro) vengono messe in coda, cosi' il pulsante
-        // Reset non le fa sparire.
-        PANELS.forEach((p, i) => {
-            if (!seen.has(p.name)) {
-                restored.push(i);
-                seen.add(p.name);
-            }
-        });
-        order = restored;
+        order = buildDefaultOrder();
         applyOrderToGrid();
         saveOrder();
     }
@@ -734,9 +1036,10 @@
         document.querySelectorAll('.card[data-pid]').forEach(card => {
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel) return;
-            card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
-            card.style.backgroundColor = panel.updated ? '#fff7de' : '#e5e5e5';
-            card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#555555';
+            card.classList.toggle('is-suggestions', panel.name === 'Suggerimenti');
+            card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#555555');
+            card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#ffffff');
+            card.querySelector('.card-name').style.color = panel.card_name_color || (panel.updated ? '#111' : '#777777');
         });
         loadSavedOrder();
         applyOrderToGrid();
@@ -749,7 +1052,19 @@
         currentIndex = ((i % n) + n) % n;
         const p = PANELS[order[currentIndex]];
 
-        document.getElementById('main-title').innerText = p.name;
+        document.getElementById('identity-block').classList.remove('home-identity');
+        const identityLogo = document.getElementById('identity-logo');
+        document.getElementById('identity-block').classList.toggle('has-logo', Boolean(p.logo));
+        identityLogo.style.display = p.logo ? 'block' : 'none';
+        if (p.logo) {
+            identityLogo.src = p.logo;
+            identityLogo.alt = 'Logo ' + p.name;
+        } else {
+            identityLogo.removeAttribute('src');
+            identityLogo.alt = '';
+        }
+        document.getElementById('main-title').innerText = p.detail_title || p.name;
+        document.getElementById('main-updated').innerText = p.updated_label || 'Venerdì 11 settembre';
         document.getElementById('main-updated').style.display = 'none';
         document.getElementById('main-signature').style.display = 'none';
         document.getElementById('nav-position').innerText = (currentIndex + 1) + '/' + n;
@@ -766,10 +1081,25 @@
         const content = document.getElementById('detail-content');
         if (p.image) {
             const imageClass = p.name === 'Le delizie di Michela' ? ' class="michela-menu"' : '';
-            content.innerHTML = '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
+            const sharePanel = p.name === 'Suggerimenti'
+                ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
+                : '';
+            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
+            applyDetailImageFit();
         } else {
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
         }
+    }
+
+    function applyDetailImageFit() {
+        const img = document.querySelector('#detail-content img');
+        if (!img) return;
+        const desktop = window.matchMedia('(min-width: 900px)').matches;
+        const width = desktop ? (window.innerWidth / 3) : window.innerWidth;
+        img.style.width = width + 'px';
+        img.style.maxWidth = width + 'px';
+        img.style.maxHeight = 'none';
+        img.style.height = 'auto';
     }
 
     function openDetail(i) {
@@ -778,23 +1108,28 @@
         renderDetail(i);
         document.getElementById('detail-view').style.display = 'block';
         document.getElementById('nav-bar').style.display = 'flex';
+        applyDetailImageFit();
         window.scrollTo(0, 0);
 
-        if (!isAdmin) {
-            const p = PANELS[order[currentIndex]];
-            fetchWithRetry(counterHitUrlFor(p.name), 3).catch(e => {});
-        }
+        recordCurrentView();
     }
 
-    function showPrev() { renderDetail(currentIndex - 1); }
-    function showNext() { renderDetail(currentIndex + 1); }
+    function showPrev() { renderDetail(currentIndex - 1); recordCurrentView(); }
+    function showNext() { renderDetail(currentIndex + 1); recordCurrentView(); }
 
     function closeDetail() {
+        document.getElementById('identity-block').classList.add('has-logo', 'home-identity');
+        const logo = document.getElementById('identity-logo');
+        logo.style.display = 'block';
+        logo.src = 'apple-touch-icon.png';
+        logo.alt = 'Logo Rosticcerie';
         document.getElementById('detail-view').style.display = 'none';
         document.getElementById('phone-line').style.display = 'none';
         document.getElementById('nav-bar').style.display = 'none';
         document.getElementById('grid-view').style.display = 'grid';
+        fitCardNames();
         document.getElementById('main-updated').style.display = '';
+        document.getElementById('main-updated').innerText = currentItalianDateLabel();
         document.getElementById('main-signature').style.display = '';
 
         const mainTitle = document.getElementById('main-title');
@@ -807,37 +1142,104 @@
         window.scrollTo(0, 0);
     }
 
-    async function forceFreshReload() {
-        // Svuota le cache gestite dalla pagina e apre un URL sempre nuovo.
-        try {
-            if ('caches' in window) {
-                const cacheNames = await caches.keys();
-                await Promise.all(cacheNames.map(name => caches.delete(name)));
-            }
-        } catch (e) {
-            console.warn('Cache non svuotabile', e);
-        }
-
-        const freshUrl = new URL(window.location.href);
-        freshUrl.searchParams.set('refresh', Date.now().toString());
-        window.location.replace(freshUrl.toString());
+    let menuRefreshRunning = false;
+    function italianDay() {
+        return new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Rome', year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
     }
+    let lastMenuRefreshDay = '';
+    function hardRefreshPage() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('reload', Date.now().toString());
+        window.location.replace(url.href);
+    }
+    document.addEventListener('keydown', event => {
+        if (event.ctrlKey && event.altKey && event.key.toLowerCase() === 'r') {
+            event.preventDefault();
+            hardRefreshPage();
+        }
+    });
 
-    function attachRefreshHandlers() {
-        ['main-updated', 'main-signature'].forEach(id => {
-            const element = document.getElementById(id);
-            if (!element) return;
-            element.setAttribute('role', 'button');
-            element.setAttribute('tabindex', '0');
-            element.setAttribute('title', 'Aggiorna i dati');
-            element.addEventListener('click', forceFreshReload);
-            element.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    forceFreshReload();
+    async function forceFreshReload(showFeedback = true) {
+        if (menuRefreshRunning) return;
+        menuRefreshRunning = true;
+        const signature = document.getElementById('main-signature');
+        if (showFeedback) signature.innerText = 'Aggiornamento in corso…';
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+            const base = window.location.protocol === 'file:'
+                ? new URL('https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/')
+                : new URL('.', window.location.href);
+            const statusUrl = new URL('status.json', base);
+            statusUrl.searchParams.set('refresh', Date.now().toString());
+            const response = await fetch(statusUrl.href, {cache:'no-store', signal:controller.signal});
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const status = await response.json();
+            if (!Array.isArray(status.pages) || !status.pages.length) throw new Error('Dati non validi');
+            status.pages.forEach(source => {
+                const panel = PANELS.find(p => p.name === source.name);
+                if (!panel || panel.card_border) return;
+                const date = /([0-9]{2})\/([0-9]{2})\/([0-9]{4})/.exec(source.published_at || '');
+                panel.menu_date = date ? date[3] + '-' + date[2] + '-' + date[1] : '';
+                const time = /([0-9]{1,2}:[0-9]{2})/.exec(source.published_at || '');
+                // Come in refreshMenuDates: se manca un orario preciso (es.
+                // Pane & Co, che riporta solo la data) mostriamo comunque la
+                // data invece di svuotare il confetto verde, altrimenti
+                // questo aggiornamento automatico (che gira gia' al primo
+                // caricamento della pagina) lo faceva sparire subito dopo.
+                if (time) {
+                    panel.card_reference = time[1];
+                } else if (panel.menu_date) {
+                    panel.card_reference = new Intl.DateTimeFormat('it-IT', {timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+                } else {
+                    panel.card_reference = '';
                 }
+                panel.updated_label = source.published_at || '';
+                panel.error = source.error || '';
+                if (source.image) {
+                    const imageUrl = new URL(source.image, base);
+                    imageUrl.searchParams.set('refresh', Date.now().toString());
+                    panel.image = imageUrl.href;
+                } else { panel.image = ''; }
+                const card = document.querySelector('.card[data-pid="' + PANELS.indexOf(panel) + '"]');
+                if (card && !card.querySelector('.card-reference')) {
+                    const ref = document.createElement('span');
+                    ref.className = 'card-reference'; card.appendChild(ref);
+                }
+                if (card) card.querySelector('.card-reference').innerText = panel.card_reference;
             });
-        });
+            refreshMenuDates();
+            refreshReferenceDate();
+            if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
+            lastMenuRefreshDay = italianDay();
+            if (isAdmin) loadCounter();
+            if (showFeedback) signature.innerText = 'by Mazzarisi';
+            if (isAdmin) updateAdminTitle();
+        } catch (error) {
+            refreshMenuDates();
+            refreshReferenceDate();
+            if (showFeedback) signature.innerText = 'Aggiornamento non riuscito • Tocca per riprovare';
+            console.warn('Aggiornamento menu non riuscito', error);
+        } finally {
+            clearTimeout(timeout);
+            menuRefreshRunning = false;
+        }
+    }
+    function refreshWhenNeeded() {
+        if (!document.hidden && lastMenuRefreshDay !== italianDay()) forceFreshReload(false);
+    }
+    document.addEventListener('DOMContentLoaded', refreshWhenNeeded);
+    document.addEventListener('visibilitychange', refreshWhenNeeded);
+    window.addEventListener('focus', refreshWhenNeeded);
+    window.addEventListener('online', refreshWhenNeeded);
+    setInterval(refreshWhenNeeded, 60000);
+
+    let homeAudio;
+    function toggleHomeAudio() {
+        if (!document.getElementById('identity-block').classList.contains('home-identity')) { handleTitleClick(); return; }
+        if (!homeAudio) homeAudio = new Audio('Rosticcerie.mp3');
+        if (homeAudio.paused) homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
+        else homeAudio.pause();
     }
 
     function handleTitleClick() {
@@ -853,65 +1255,121 @@
             if (confirm("Vuoi davvero azzerare il contatore? (Verra' azzerato per tutti i dispositivi)")) {
                 resetCounterGlobally();
             }
+        } else {
+            hardRefreshPage();
         }
     }
 
+    function fitCardNames() {
+        document.querySelectorAll('.card-name').forEach(name => {
+            if (!name.clientWidth) return;
+            name.style.fontSize = '';
+            let size = parseFloat(getComputedStyle(name).fontSize);
+            while (size > 10 && (name.scrollHeight > size * 1.1 * 2 + 1 || name.scrollWidth > name.clientWidth + 1)) {
+                size -= 0.5;
+                name.style.fontSize = size + 'px';
+            }
+            const picture = name.parentElement.querySelector('.suggestions-image');
+            if (picture) {
+                const range = document.createRange();
+                range.selectNodeContents(name);
+                picture.style.width = range.getBoundingClientRect().width + 'px';
+            }
+        });
+    }
+    window.addEventListener('resize', fitCardNames);
+    document.addEventListener('DOMContentLoaded', fitCardNames);
     window.onload = loadCounter;
+    window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {
+        refreshReferenceDate();
         initReorder();
-        attachRefreshHandlers();
+        refreshMenuDates();
     });
   </script>
 </head>
 <body>
+  <dialog id="michela-notice" aria-labelledby="michela-notice-title" aria-describedby="michela-notice-text">
+    <h2 id="michela-notice-title">Le delizie di Michela</h2>
+    <p id="michela-notice-text"></p>
+    <button type="button" id="michela-notice-ok">OK</button>
+  </dialog>
+
   <header id="main-header">
+    <div id="identity-block" class="has-logo home-identity">
+      <img id="identity-logo" src="apple-touch-icon.png" alt="Logo Rosticcerie" style="display:block" role="button" tabindex="0" onclick="toggleHomeAudio()" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleHomeAudio(); }">
+      <div id="identity-text">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
+    <p id="main-updated" class="updated" onclick="hardRefreshPage()">Venerdì 11 settembre</p>
+    <p id="main-signature" class="signature" onclick="hardRefreshPage()">by Mazzarisi</p>
+        <div id="phone-line"></div>
+      </div>
+    </div>
     <div id="reorder-actions">
       <button type="button" id="reorder-reset-btn" onclick="resetOrderToDefault()">Reset</button>
       <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
     </div>
-    <div id="phone-line"></div>
-    <p id="main-updated" class="updated" onclick="forceFreshReload()">Martedì 8 settembre</p>
-    <p id="main-signature" class="signature" onclick="forceFreshReload()">by Mazzarisi</p>
+
   </header>
 
   <main id="grid-view">
-    
+
         <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(0)">
+
             <span class="card-name" style="color:#111">Fantasia</span>
+            <span class="card-reference">09:49</span>
             <span class="card-counter" id="card-counter-0"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(1)">
+
             <span class="card-name" style="color:#111">Cibària</span>
+            <span class="card-reference">09:50</span>
             <span class="card-counter" id="card-counter-1"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="2" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(2)">
+
             <span class="card-name" style="color:#111">Impastamò</span>
+            <span class="card-reference">07:36</span>
             <span class="card-counter" id="card-counter-2"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="3" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(3)">
+
             <span class="card-name" style="color:#111">Le delizie di Michela</span>
+            <span class="card-reference">11 set</span>
             <span class="card-counter" id="card-counter-3"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="4" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(4)">
+
             <span class="card-name" style="color:#111">Santoro (Castellana)</span>
+            <span class="card-reference">09:54</span>
             <span class="card-counter" id="card-counter-4"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(5)">
+
             <span class="card-name" style="color:#111">Pane &amp; Co</span>
+            <span class="card-reference">11 set</span>
             <span class="card-counter" id="card-counter-5"></span>
         </button>
-        
+
         <button type="button" class="card" data-pid="6" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(6)">
+
             <span class="card-name" style="color:#111">Bollenti piatti</span>
+            <span class="card-reference">10:09</span>
             <span class="card-counter" id="card-counter-6"></span>
         </button>
-        
+
+        <button type="button" class="card" data-pid="7" style="border-color:#49a95c;background-color:#eaf7ea" onclick="cardClicked(7)">
+            <img class="suggestions-image" src="../../Magica.jpg" alt="" aria-hidden="true">
+            <span class="card-name" style="color:#111">Suggerimenti</span>
+
+            <span class="card-counter" id="card-counter-7"></span>
+        </button>
+
   </main>
 
   <div id="detail-view">
@@ -923,5 +1381,9 @@
     <span id="nav-position"></span>
     <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
   </div>
+<dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
+    <p id="waiting-update-text">In attesa di<br>aggiornamento</p>
+    <button type="button" autofocus onclick="continueAfterWaiting()">OK</button>
+  </dialog>
 </body>
 </html>
