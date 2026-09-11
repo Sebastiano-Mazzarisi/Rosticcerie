@@ -3954,6 +3954,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
     }}
 
+    function formatCounter(value) {{
+        return String(Math.max(0, Math.trunc(Number(value)))).replace(/\B(?=(\d{{3}})+(?!\d))/g, '.');
+    }}
+
     function updateAdminTitle() {{
         if (document.getElementById('detail-view').style.display === 'block') return;
         let val = 0;
@@ -3961,7 +3965,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (PANELS[i].counter_enabled === false) continue;
             val += visibleCounter(i) ?? 0;
         }}
-        document.getElementById('main-title').innerText = `Rosticcerie (${{val.toLocaleString('it-IT')}})`;
+        document.getElementById('main-title').innerText = `Rosticcerie (${{formatCounter(val)}})`;
     }}
 
     function updateCardCounters() {{
@@ -3974,7 +3978,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 continue;
             }}
             const val = visibleCounter(i);
-            el.innerText = val === null ? '…' : val.toLocaleString('it-IT');
+            el.innerText = val === null ? '…' : formatCounter(val);
             el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate');
             el.style.display = 'block';
         }}

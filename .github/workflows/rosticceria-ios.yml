@@ -58,6 +58,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Installa dipendenze
         if: steps.timecheck.outputs.run == 'true'

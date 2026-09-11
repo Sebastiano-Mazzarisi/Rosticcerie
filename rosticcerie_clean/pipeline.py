@@ -6,6 +6,7 @@ import Rosticceria_legacy as legacy
 
 from .config import ROSTICCERIE, RosticceriaConfig
 from .daily_posts import merge_today
+from . import quick_check
 from .local_menu import NAME as MICHELA_NAME, local_panel
 
 
@@ -42,16 +43,27 @@ def _elapsed_hours(post: Dict) -> float:
 
 
 def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
+    if config.name == MICHELA_NAME and local_panel():
+        return _extract_facebook_image_full(config)
+    saved = _existing(config, require_today=False)
+    # Le storie hanno una sorgente separata: non inferirne lo stato dal feed.
+    signature = None if config.story_url else quick_check.probe(config)
+    if saved and quick_check.unchanged(config.name, signature):
+        print(f"{config.name}: verifica rapida, nessuna variazione; riuso i dati salvati.")
+        return saved
+    panel = _extract_facebook_image_full(config)
+    if panel.get("image_bytes") and not panel.get("error"):
+        quick_check.remember(config.name, signature)
+    return panel
+
+
+def _extract_facebook_image_full(config: RosticceriaConfig) -> Dict:
     if config.name == MICHELA_NAME:
         supplied = local_panel()
         if supplied:
             print(f"{config.name}: uso il menu locale di oggi.")
             return supplied
     existing = _existing(config)
-    if existing and legacy.format_card_reference(existing.get("published_at", ""), True) and not config.force_refresh_today:
-        print(f"{config.name}: foto di oggi gia' presente, salto la verifica.")
-        return existing
-
     print(f"{config.name}: cerco i post di oggi su Facebook...")
     try:
         posts = legacy.extract_today_facebook_posts(
@@ -64,9 +76,8 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
             label=config.name,
             story_url=config.story_url,
         )
-    except Exception as exc:
-        posts = []
-        print(f"{config.name}: errore cercando i post di oggi ({exc}).")
+    except Exception:
+        raise
 
     if config.name == "Impastamò":
         posts = merge_today(config.name, posts)
