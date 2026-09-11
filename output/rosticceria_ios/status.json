@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-09-11T07:12:05",
+  "updated_at": "2026-09-11T07:22:52",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 11/09/26",
       "published_at": "11/09/2026 09:04 circa",
-      "published_at_raw": "3 min",
+      "published_at_raw": "12m",
       "error": null
     },
     {
@@ -52,9 +52,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FUSILLI ALLA CRUDAIOLA CON PESTO, CILIEGINO E FIORDILATTE 5,0\n●TRIVELLE ALLA CRUDAIOLA CON PESTO DI PEPERONI SPECK E NOCI 5,5… Ver más\nMe gusta\nComentar",
-      "published_at": "10/09/2026 10:11 circa",
-      "published_at_raw": "23 h",
+      "text": "PRIMI PIATTI\n●RISO A INSALATA\n●FUSILLI ALLA CRUDAIOLA CON PESTO, CILIEGINO E FIORDILATTE 5,0\n●TRIVELLE ALLA CRUDAIOLA CON PESTO DI PEPERONI SPECK E NOCI 5,5\n●NIDI ALLA CARNE 5,5\n●LINGUINE AGLI SCAMPI 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●FETTINA DI VITELLO AL VINO BIANCO E PINOLI TOSTATI\n●HAMBURGER DI VITELLO CON POMODORO E FIORDILATTE\n●PANZEROTTO DI CARNE DI FARCITO CON PISELLI E CAROTE\n●TORRETTE DI MELANZANE VEGETARIANE AL FORNO\n●FILETTO DI ORATA ALLA MEDITERRANEA\n●CUORE DI CERNIA GRATINATA AL PROFUMO DI LIMONE E ERBA CIPOLLINA\n●INSALATA DI POLLO CON CAROTE, INSALATA VERDE, RADICCHIO\n●INSALATA DI PATATE CETRIOLO CAROTE E TONNO",
+      "published_at": "10/09/2026 10:22 circa",
+      "published_at_raw": "23h",
       "error": null
     }
   ]
