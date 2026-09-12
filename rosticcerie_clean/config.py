@@ -51,16 +51,22 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         photo_grid_first=False,
         force_refresh_today=True,
     ),
-    RosticceriaConfig(
-        name="Le delizie di Michela",
-        url="https://www.facebook.com/profile.php?id=100045208848338",
-        kind="facebook_image",
-        output_image="Rosticceria_LeDelizieDiMichela.jpg",
-        story_url="https://www.facebook.com/stories/186699229513704/",
-        force_refresh_today=True,
-        prefer_active_closure=True,
-        skip_closure_notices=True,
-    ),
+    # Michela e' temporaneamente disattivata: pubblica il menu solo nelle
+    # Storie di Facebook, che l'automazione headless non riesce ad aprire in
+    # modo affidabile (Facebook limita/renderizza diversamente le sessioni
+    # automatizzate). Riquadro tolto dal sito su richiesta - richiede
+    # importazione manuale quotidiana (Importa_Michela.py), non sostenibile.
+    # Riattivare rimuovendo il commento appena si trova una soluzione stabile.
+    # RosticceriaConfig(
+    #     name="Le delizie di Michela",
+    #     url="https://www.facebook.com/profile.php?id=100045208848338",
+    #     kind="facebook_image",
+    #     output_image="Rosticceria_LeDelizieDiMichela.jpg",
+    #     story_url="https://www.facebook.com/stories/186699229513704/",
+    #     force_refresh_today=True,
+    #     prefer_active_closure=True,
+    #     skip_closure_notices=True,
+    # ),
     RosticceriaConfig(
         name="Santoro (Castellana)",
         url="https://www.facebook.com/santorogastronomia",
