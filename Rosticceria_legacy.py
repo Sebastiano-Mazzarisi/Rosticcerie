@@ -3494,7 +3494,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "updated": True,
         "updated_label": today_label,
         "url": "",
-        "counter_enabled": True,
+        "counter_enabled": False,
         "card_border": "#49a95c",
         "card_bg": "#eaf7ea",
         "card_name_color": "#111",
@@ -3524,9 +3524,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             # pulsante di condivisione del sito, gestiti da renderDetail()).
             cards.append(f"""
             <div class="card is-suggestions" data-pid="{i}" tabindex="0" style="border-color:{border_color};background-color:{bg_color}">
-                <button type="button" class="split-half split-pdf" onclick="event.stopPropagation(); openMenuPdf();">PDF</button>
-                <button type="button" class="split-half split-info" onclick="event.stopPropagation(); cardClicked({i});">Info</button>
-                {counter_html}
+                <button type="button" class="split-half split-pdf" onclick="event.stopPropagation(); openMenuPdf();">PDF<span class="split-counter" id="extra-counter-pdf"></span></button>
+                <button type="button" class="split-half split-info" onclick="event.stopPropagation(); recordExtraHit('Info'); cardClicked({i});">Info<span class="split-counter" id="extra-counter-info"></span></button>
                 {reference_html}
             </div>
             """)
@@ -3703,6 +3702,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       align-items: stretch;
     }}
     .split-half {{
+      position: relative;
       appearance: none;
       -webkit-appearance: none;
       border: none;
@@ -3722,6 +3722,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     .split-pdf {{
       border-right: 2px solid rgba(0,0,0,0.18);
+    }}
+    .split-counter {{
+      display: none;
+      position: absolute;
+      top: 2px;
+      right: 6px;
+      font-size: 12px;
+      font-weight: normal;
+      color: #333;
     }}
     .site-note {{
       grid-column: 1 / -1;
@@ -3951,7 +3960,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     #identity-block {{ position: relative; }}
     .audio-counter-wrap {{ display: none; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); align-items: center; gap: 6px; }}
     .home-identity .audio-counter-wrap {{ display: flex; }}
-    .audio-play-counter {{ font-size: 13px; font-weight: bold; color: #00c853; min-width: 1em; text-align: right; }}
+    .audio-play-counter {{ display: none; font-size: 13px; font-weight: bold; color: #00c853; min-width: 1em; text-align: right; }}
     .sound-waves {{ display: none; width: clamp(28px, 10vw, 44px); height: 88px; pointer-events: none; color: #00c853; overflow: visible; }}
     .home-identity .sound-waves {{ display: block; }}
     .sound-waves path {{ fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }}
@@ -4144,14 +4153,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     let counterLoadRunning = false;
     let counterHitQueue = Promise.resolve();
-    function recordCurrentView() {{
+    // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
+    // anche l'audio della Home, il PDF o la scheda Info): stessa logica di
+    // ritentativo/coda usata gia' per i menu, cosi' tutti i contatori sono
+    // salvati allo stesso modo (persistenti e comuni a tutti i dispositivi,
+    // non solo sul telefono di chi clicca).
+    function recordExtraHit(name) {{
         if (isAdmin) return;
-        const panel = PANELS[order[currentIndex]];
-        if (!panel || panel.counter_enabled === false) return;
         counterHitQueue = counterHitQueue.then(async () => {{
             for (let attempt = 0; attempt < 4; attempt++) {{
                 // Do not repeat an ambiguous network failure: it may have counted.
-                const response = await fetch(counterHitUrlFor(panel.name), {{cache:'no-store', keepalive:true}});
+                const response = await fetch(counterHitUrlFor(name), {{cache:'no-store', keepalive:true}});
                 if (response.status === 429 && attempt < 3) {{
                     await sleep((parseRetryAfterSeconds(await response.text()) + 1) * 1000);
                     continue;
@@ -4161,7 +4173,54 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 if (!Number.isFinite(data.value)) throw new Error('Registrazione non confermata');
                 return;
             }}
-        }}).catch(error => console.error('Apertura non confermata: ' + panel.name, error));
+        }}).catch(error => console.error('Apertura non confermata: ' + name, error));
+    }}
+    function recordCurrentView() {{
+        const panel = PANELS[order[currentIndex]];
+        if (!panel || panel.counter_enabled === false) return;
+        recordExtraHit(panel.name);
+    }}
+
+    // Contatori "extra" (non legati a una rosticceria): riproduzioni audio
+    // della Home, apertura del PDF, apertura della scheda Info. Visibili
+    // solo in modalita' amministratore (?v=57), con lo stesso meccanismo
+    // (Abacus + offset di azzeramento) dei contatori dei menu.
+    const EXTRA_COUNTERS = [
+        {{ name: 'Audio', elId: 'audio-play-counter', display: 'inline-block' }},
+        {{ name: 'PDF', elId: 'extra-counter-pdf', display: 'block' }},
+        {{ name: 'Info', elId: 'extra-counter-info', display: 'block' }},
+    ];
+    let extraCounterState = {{}};
+    function extraVisibleCounter(name) {{
+        const s = extraCounterState[name];
+        if (!s || !Number.isFinite(s.total) || !Number.isFinite(s.offset)) return null;
+        return s.offset > s.total ? s.total : s.total - s.offset;
+    }}
+    function updateExtraCounters() {{
+        EXTRA_COUNTERS.forEach(({{name, elId, display}}) => {{
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (!isAdmin) {{ el.style.display = 'none'; return; }}
+            const val = extraVisibleCounter(name);
+            el.innerText = val === null ? '…' : formatCounter(val);
+            el.style.display = display;
+        }});
+    }}
+    async function loadExtraCounters() {{
+        if (!isAdmin) return;
+        updateExtraCounters();
+        for (const {{name}} of EXTRA_COUNTERS) {{
+            try {{
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(name), 4, true);
+                await sleep(150);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(name), 4, true);
+                extraCounterState[name] = {{ total: totalData.value, offset: offsetData.value }};
+            }} catch (error) {{
+                console.error('Impossibile leggere il contatore di ' + name, error);
+            }}
+            updateExtraCounters();
+            await sleep(150);
+        }}
     }}
 
     const COUNTER_CACHE_KEY = 'rosticcerie-counter-cache-v1';
@@ -4498,6 +4557,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         // con "object-fit: contain" si adatta sempre per intero allo
         // schermo, su qualunque telefono, cosa che un PDF dentro un iframe
         // su alcuni browser mobili (Safari incluso) non garantisce.
+        recordExtraHit('PDF');
         document.getElementById('pdf-image').src = 'Rosticcerie-Menu.png?v=' + Date.now();
         document.getElementById('pdf-view').style.display = 'flex';
         window.scrollTo(0, 0);
@@ -5051,7 +5111,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
             lastMenuRefreshDay = italianDay();
             lastMenuRefreshAt = Date.now();
-            if (isAdmin) loadCounter();
+            if (isAdmin) {{ loadCounter(); loadExtraCounters(); }}
             if (showFeedback) signature.innerText = 'by Mazzarisi';
             if (isAdmin) updateAdminTitle();
         }} catch (error) {{
@@ -5074,15 +5134,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     setInterval(refreshWhenNeeded, 60000);
 
     let homeAudio;
-    function getAudioPlayCount() {{
-        try {{ return parseInt(localStorage.getItem('audioPlayCount') || '0', 10) || 0; }} catch (e) {{ return 0; }}
-    }}
-    function setAudioPlayCount(n) {{
-        try {{ localStorage.setItem('audioPlayCount', String(n)); }} catch (e) {{}}
-        const el = document.getElementById('audio-play-counter');
-        if (el) el.textContent = String(n);
-    }}
-    document.addEventListener('DOMContentLoaded', () => setAudioPlayCount(getAudioPlayCount()));
     function toggleHomeAudio() {{
         if (!document.getElementById('identity-block').classList.contains('home-identity')) {{ handleTitleClick(); return; }}
         if (!homeAudio) {{
@@ -5097,7 +5148,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             }});
         }}
         if (homeAudio.paused) {{
-            setAudioPlayCount(getAudioPlayCount() + 1);
+            recordExtraHit('Audio');
             homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
         }} else {{
             homeAudio.pause();
@@ -5141,7 +5192,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     window.addEventListener('resize', fitCardNames);
     document.addEventListener('DOMContentLoaded', fitCardNames);
-    window.onload = loadCounter;
+    window.onload = () => {{ loadCounter(); loadExtraCounters(); }};
     window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {{
         refreshReferenceDate();
@@ -5210,7 +5261,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
     <span id="nav-position-group">
       <button type="button" id="nav-share-btn" onclick="shareMenuImage(event)" aria-label="Condividi il menu">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="18" cy="5" r="2.4" fill="currentColor"/><circle cx="6" cy="12" r="2.4" fill="currentColor"/><circle cx="18" cy="19" r="2.4" fill="currentColor"/><path d="M8.2 10.8 L15.8 6.2 M8.2 13.2 L15.8 17.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 V13 M7.5 7 L12 2 L16.5 7 M5 10 V19 H19 V10"/></svg>
       </button>
       <span id="nav-position"></span>
       <button type="button" id="nav-home-btn" onclick="closeDetail()" aria-label="Torna alla Home">&#127968;</button>
