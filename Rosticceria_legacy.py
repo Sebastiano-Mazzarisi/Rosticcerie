@@ -3963,10 +3963,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     .audio-play-counter {{ display: none; font-size: 13px; font-weight: bold; color: #00c853; min-width: 1em; text-align: right; }}
     .audio-hint-arrow {{ display: none; align-items: center; color: #00c853; }}
     .home-identity:not(.audio-playing) .audio-hint-arrow.show-hint {{ display: inline-flex; animation: audio-hint-move 1.1s ease-in-out infinite; }}
+    .home-identity.hint-text-phase:not(.audio-playing) .audio-hint-arrow.show-hint {{ display: none; }}
     @keyframes audio-hint-move {{
       0%, 100% {{ transform: translateX(0); }}
       50% {{ transform: translateX(6px); }}
     }}
+    .audio-hint-text {{ display: none; line-height: 1.05; font-size: 9px; font-weight: bold; color: #00c853; text-align: center; }}
+    .home-identity.hint-text-phase:not(.audio-playing) .audio-hint-text.show-hint {{ display: inline-block; }}
     .sound-waves {{ display: none; width: clamp(28px, 10vw, 44px); height: 88px; pointer-events: none; color: #00c853; overflow: visible; }}
     .home-identity .sound-waves {{ display: block; }}
     .sound-waves path {{ fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }}
@@ -5268,10 +5271,25 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     setInterval(refreshWhenNeeded, 60000);
 
     let homeAudio;
+    let audioHintCycleTimer = null;
     function updateAudioHintArrow() {{
         const hintEl = document.getElementById('audio-hint-arrow');
-        if (!hintEl) return;
-        hintEl.classList.toggle('show-hint', !isAdmin);
+        const textEl = document.getElementById('audio-hint-text');
+        if (hintEl) hintEl.classList.toggle('show-hint', !isAdmin);
+        if (textEl) textEl.classList.toggle('show-hint', !isAdmin);
+    }}
+    // Da sola la freccia animata non bastava a far capire che il logo si
+    // puo' cliccare per ascoltare l'audio: ogni 10 secondi, per 3 secondi,
+    // al posto della freccia compare la scritta "Clicca per ascoltare".
+    function startAudioHintTextCycle() {{
+        if (audioHintCycleTimer || isAdmin) return;
+        const block = document.getElementById('identity-block');
+        if (!block) return;
+        audioHintCycleTimer = setInterval(() => {{
+            if (block.classList.contains('audio-playing')) return;
+            block.classList.add('hint-text-phase');
+            setTimeout(() => block.classList.remove('hint-text-phase'), 3000);
+        }}, 10000);
     }}
     function toggleHomeAudio() {{
         if (!document.getElementById('identity-block').classList.contains('home-identity')) {{ handleTitleClick(); return; }}
@@ -5331,7 +5349,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     window.addEventListener('resize', fitCardNames);
     document.addEventListener('DOMContentLoaded', fitCardNames);
-    window.onload = () => {{ loadCounter(); loadExtraCounters(); updateAudioHintArrow(); }};
+    window.onload = () => {{ loadCounter(); loadExtraCounters(); updateAudioHintArrow(); startAudioHintTextCycle(); }};
     window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {{
         refreshReferenceDate();
@@ -5351,6 +5369,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     <div id="identity-block" class="has-logo home-identity">
       <div class="audio-counter-wrap">
         <span id="audio-hint-arrow" class="audio-hint-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13M13 6l6 6-6 6"/></svg></span>
+        <span id="audio-hint-text" class="audio-hint-text" aria-hidden="true">Clicca<br>per<br>ascoltare</span>
         <span id="audio-play-counter" class="audio-play-counter">0</span>
         <svg class="sound-waves" viewBox="0 0 44 88" aria-hidden="true" focusable="false">
           <path d="M 40 30 Q 26 44 40 58"></path>
