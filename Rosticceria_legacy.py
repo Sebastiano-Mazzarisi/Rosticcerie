@@ -4160,6 +4160,64 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     let counterLoadRunning = false;
     let counterHitQueue = Promise.resolve();
+
+    // Registrazione dei click su un foglio Google, per sapere quando e da
+    // dove viene aperta ciascuna rosticceria (oltre ai contatori pubblici
+    // gia' visti sopra). Data e ora sono aggiunte lato server (Apps
+    // Script, fuso orario Europe/Rome): qui mandiamo solo il nome del
+    // pulsante, un'etichetta sintetica del dispositivo e una posizione
+    // approssimativa ricavata dall'indirizzo IP (mai dati precisi di
+    // geolocalizzazione del dispositivo, che richiederebbero un permesso
+    // esplicito al visitatore).
+    const SHEET_LOG_URL = 'https://script.google.com/macros/s/AKfycbxD0bXOZ-bmVjhOCH8NhUNa2oao8XxEEkFJeArTbZk-1VQ3_1UFZlVV0P7WXVjo6VhnhA/exec';
+
+    function detectDeviceLabel() {{
+        const ua = navigator.userAgent || '';
+        let os = 'Altro';
+        if (/iPad/.test(ua)) os = 'iPad';
+        else if (/iPhone/.test(ua)) os = 'iPhone';
+        else if (/Android/.test(ua)) os = 'Android';
+        else if (/Macintosh/.test(ua)) os = 'Mac';
+        else if (/Windows/.test(ua)) os = 'Windows';
+        else if (/Linux/.test(ua)) os = 'Linux';
+        let browser = 'Altro';
+        if (/Edg\//.test(ua)) browser = 'Edge';
+        else if (/OPR\//.test(ua) || /Opera/.test(ua)) browser = 'Opera';
+        else if (/CriOS\//.test(ua) || (/Chrome\//.test(ua) && !/Edg\//.test(ua))) browser = 'Chrome';
+        else if (/FxiOS\//.test(ua) || /Firefox\//.test(ua)) browser = 'Firefox';
+        else if (/Safari\//.test(ua) && !/Chrome\//.test(ua) && !/CriOS\//.test(ua)) browser = 'Safari';
+        return os + ' / ' + browser;
+    }}
+
+    // La posizione approssimativa (citta'/regione dedotta dall'IP) e'
+    // sempre la stessa durante la visita: la richiediamo una sola volta e
+    // riusiamo il risultato per tutti i click successivi, invece di
+    // interrogare il servizio esterno ad ogni singolo click.
+    let approxLocationPromise = null;
+    function getApproxLocation() {{
+        if (!approxLocationPromise) {{
+            approxLocationPromise = fetch('https://ipwho.is/', {{cache:'no-store'}})
+                .then(r => r.json())
+                .then(data => {{
+                    if (!data || data.success === false) return '';
+                    return [data.city, data.region, data.country_code].filter(Boolean).join(', ');
+                }})
+                .catch(() => '');
+        }}
+        return approxLocationPromise;
+    }}
+
+    function logClickToSheet(name) {{
+        getApproxLocation().then(posizione => {{
+            const payload = {{ pulsante: name, dispositivo: detectDeviceLabel(), posizione: posizione }};
+            try {{
+                fetch(SHEET_LOG_URL, {{ method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }});
+            }} catch (err) {{
+                console.error('Log su Google Sheets non riuscito', err);
+            }}
+        }});
+    }}
+
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
     // anche l'audio della Home, il PDF o la scheda Info): stessa logica di
     // ritentativo/coda usata gia' per i menu, cosi' tutti i contatori sono
@@ -4167,6 +4225,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // non solo sul telefono di chi clicca).
     function recordExtraHit(name) {{
         if (isAdmin) return;
+        logClickToSheet(name);
         counterHitQueue = counterHitQueue.then(async () => {{
             for (let attempt = 0; attempt < 4; attempt++) {{
                 // Do not repeat an ambiguous network failure: it may have counted.
