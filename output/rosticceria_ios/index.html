@@ -159,6 +159,7 @@
       align-items: stretch;
     }
     .split-half {
+      position: relative;
       appearance: none;
       -webkit-appearance: none;
       border: none;
@@ -178,6 +179,15 @@
     }
     .split-pdf {
       border-right: 2px solid rgba(0,0,0,0.18);
+    }
+    .split-counter {
+      display: none;
+      position: absolute;
+      top: 2px;
+      right: 6px;
+      font-size: 12px;
+      font-weight: normal;
+      color: #333;
     }
     .site-note {
       grid-column: 1 / -1;
@@ -407,7 +417,7 @@
     #identity-block { position: relative; }
     .audio-counter-wrap { display: none; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); align-items: center; gap: 6px; }
     .home-identity .audio-counter-wrap { display: flex; }
-    .audio-play-counter { font-size: 13px; font-weight: bold; color: #00c853; min-width: 1em; text-align: right; }
+    .audio-play-counter { display: none; font-size: 13px; font-weight: bold; color: #00c853; min-width: 1em; text-align: right; }
     .sound-waves { display: none; width: clamp(28px, 10vw, 44px); height: 88px; pointer-events: none; color: #00c853; overflow: visible; }
     .home-identity .sound-waves { display: block; }
     .sound-waves path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }
@@ -429,7 +439,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789223762", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:23", "menu_date": "2026-09-12", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789223762", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "11:23", "menu_date": "2026-09-12", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789223762", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "07:27", "menu_date": "2026-09-12", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789223762", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:24", "menu_date": "2026-09-12", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789223762", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "12 set", "menu_date": "2026-09-12", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789223762", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:35", "menu_date": "2026-09-12", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789226170", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789226170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:23", "menu_date": "2026-09-12", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789226170", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789226170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "11:23", "menu_date": "2026-09-12", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789226170", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789226170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "07:27", "menu_date": "2026-09-12", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789226170", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789226170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:24", "menu_date": "2026-09-12", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789226170", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789226170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "12 set", "menu_date": "2026-09-12", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789226170", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789226170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "10:16", "menu_date": "2026-09-12", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789226170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -600,14 +610,17 @@
     }
     let counterLoadRunning = false;
     let counterHitQueue = Promise.resolve();
-    function recordCurrentView() {
+    // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
+    // anche l'audio della Home, il PDF o la scheda Info): stessa logica di
+    // ritentativo/coda usata gia' per i menu, cosi' tutti i contatori sono
+    // salvati allo stesso modo (persistenti e comuni a tutti i dispositivi,
+    // non solo sul telefono di chi clicca).
+    function recordExtraHit(name) {
         if (isAdmin) return;
-        const panel = PANELS[order[currentIndex]];
-        if (!panel || panel.counter_enabled === false) return;
         counterHitQueue = counterHitQueue.then(async () => {
             for (let attempt = 0; attempt < 4; attempt++) {
                 // Do not repeat an ambiguous network failure: it may have counted.
-                const response = await fetch(counterHitUrlFor(panel.name), {cache:'no-store', keepalive:true});
+                const response = await fetch(counterHitUrlFor(name), {cache:'no-store', keepalive:true});
                 if (response.status === 429 && attempt < 3) {
                     await sleep((parseRetryAfterSeconds(await response.text()) + 1) * 1000);
                     continue;
@@ -617,7 +630,54 @@
                 if (!Number.isFinite(data.value)) throw new Error('Registrazione non confermata');
                 return;
             }
-        }).catch(error => console.error('Apertura non confermata: ' + panel.name, error));
+        }).catch(error => console.error('Apertura non confermata: ' + name, error));
+    }
+    function recordCurrentView() {
+        const panel = PANELS[order[currentIndex]];
+        if (!panel || panel.counter_enabled === false) return;
+        recordExtraHit(panel.name);
+    }
+
+    // Contatori "extra" (non legati a una rosticceria): riproduzioni audio
+    // della Home, apertura del PDF, apertura della scheda Info. Visibili
+    // solo in modalita' amministratore (?v=57), con lo stesso meccanismo
+    // (Abacus + offset di azzeramento) dei contatori dei menu.
+    const EXTRA_COUNTERS = [
+        { name: 'Audio', elId: 'audio-play-counter', display: 'inline-block' },
+        { name: 'PDF', elId: 'extra-counter-pdf', display: 'block' },
+        { name: 'Info', elId: 'extra-counter-info', display: 'block' },
+    ];
+    let extraCounterState = {};
+    function extraVisibleCounter(name) {
+        const s = extraCounterState[name];
+        if (!s || !Number.isFinite(s.total) || !Number.isFinite(s.offset)) return null;
+        return s.offset > s.total ? s.total : s.total - s.offset;
+    }
+    function updateExtraCounters() {
+        EXTRA_COUNTERS.forEach(({name, elId, display}) => {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (!isAdmin) { el.style.display = 'none'; return; }
+            const val = extraVisibleCounter(name);
+            el.innerText = val === null ? '…' : formatCounter(val);
+            el.style.display = display;
+        });
+    }
+    async function loadExtraCounters() {
+        if (!isAdmin) return;
+        updateExtraCounters();
+        for (const {name} of EXTRA_COUNTERS) {
+            try {
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(name), 4, true);
+                await sleep(150);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(name), 4, true);
+                extraCounterState[name] = { total: totalData.value, offset: offsetData.value };
+            } catch (error) {
+                console.error('Impossibile leggere il contatore di ' + name, error);
+            }
+            updateExtraCounters();
+            await sleep(150);
+        }
     }
 
     const COUNTER_CACHE_KEY = 'rosticcerie-counter-cache-v1';
@@ -954,6 +1014,7 @@
         // con "object-fit: contain" si adatta sempre per intero allo
         // schermo, su qualunque telefono, cosa che un PDF dentro un iframe
         // su alcuni browser mobili (Safari incluso) non garantisce.
+        recordExtraHit('PDF');
         document.getElementById('pdf-image').src = 'Rosticcerie-Menu.png?v=' + Date.now();
         document.getElementById('pdf-view').style.display = 'flex';
         window.scrollTo(0, 0);
@@ -1507,7 +1568,7 @@
             if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
             lastMenuRefreshDay = italianDay();
             lastMenuRefreshAt = Date.now();
-            if (isAdmin) loadCounter();
+            if (isAdmin) { loadCounter(); loadExtraCounters(); }
             if (showFeedback) signature.innerText = 'by Mazzarisi';
             if (isAdmin) updateAdminTitle();
         } catch (error) {
@@ -1530,15 +1591,6 @@
     setInterval(refreshWhenNeeded, 60000);
 
     let homeAudio;
-    function getAudioPlayCount() {
-        try { return parseInt(localStorage.getItem('audioPlayCount') || '0', 10) || 0; } catch (e) { return 0; }
-    }
-    function setAudioPlayCount(n) {
-        try { localStorage.setItem('audioPlayCount', String(n)); } catch (e) {}
-        const el = document.getElementById('audio-play-counter');
-        if (el) el.textContent = String(n);
-    }
-    document.addEventListener('DOMContentLoaded', () => setAudioPlayCount(getAudioPlayCount()));
     function toggleHomeAudio() {
         if (!document.getElementById('identity-block').classList.contains('home-identity')) { handleTitleClick(); return; }
         if (!homeAudio) {
@@ -1553,7 +1605,7 @@
             });
         }
         if (homeAudio.paused) {
-            setAudioPlayCount(getAudioPlayCount() + 1);
+            recordExtraHit('Audio');
             homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
         } else {
             homeAudio.pause();
@@ -1597,7 +1649,7 @@
     }
     window.addEventListener('resize', fitCardNames);
     document.addEventListener('DOMContentLoaded', fitCardNames);
-    window.onload = loadCounter;
+    window.onload = () => { loadCounter(); loadExtraCounters(); };
     window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {
         refreshReferenceDate();
@@ -1672,14 +1724,13 @@
         
         <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(5)">
             <span class="card-name" style="color:#111">Bollenti piatti</span>
-            <span class="card-reference">09:35</span>
+            <span class="card-reference">10:16</span>
             <span class="card-counter" id="card-counter-5"></span>
         </button>
         
             <div class="card is-suggestions" data-pid="6" tabindex="0" style="border-color:#49a95c;background-color:#eaf7ea">
-                <button type="button" class="split-half split-pdf" onclick="event.stopPropagation(); openMenuPdf();">PDF</button>
-                <button type="button" class="split-half split-info" onclick="event.stopPropagation(); cardClicked(6);">Info</button>
-                <span class="card-counter" id="card-counter-6"></span>
+                <button type="button" class="split-half split-pdf" onclick="event.stopPropagation(); openMenuPdf();">PDF<span class="split-counter" id="extra-counter-pdf"></span></button>
+                <button type="button" class="split-half split-info" onclick="event.stopPropagation(); recordExtraHit('Info'); cardClicked(6);">Info<span class="split-counter" id="extra-counter-info"></span></button>
                 
             </div>
             
@@ -1709,7 +1760,7 @@
     <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
     <span id="nav-position-group">
       <button type="button" id="nav-share-btn" onclick="shareMenuImage(event)" aria-label="Condividi il menu">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="18" cy="5" r="2.4" fill="currentColor"/><circle cx="6" cy="12" r="2.4" fill="currentColor"/><circle cx="18" cy="19" r="2.4" fill="currentColor"/><path d="M8.2 10.8 L15.8 6.2 M8.2 13.2 L15.8 17.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 V13 M7.5 7 L12 2 L16.5 7 M5 10 V19 H19 V10"/></svg>
       </button>
       <span id="nav-position"></span>
       <button type="button" id="nav-home-btn" onclick="closeDetail()" aria-label="Torna alla Home">&#127968;</button>
