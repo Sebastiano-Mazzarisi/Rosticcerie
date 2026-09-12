@@ -1869,7 +1869,7 @@ def extract_today_facebook_posts(
 
             page.wait_for_timeout(5000)
             try:
-                page.screenshot(path="debug_facebook_feed.png", full_page=True)
+                page.screenshot(path=os.path.join(script_dir(), f"debug_facebook_feed_{safe_file_name(label)}.png"), full_page=True)
             except Exception:
                 pass
 

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from typing import Dict, List
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+import json
+import time
 
 import Rosticceria_legacy as legacy
 
@@ -196,18 +200,46 @@ def _fallback_panel(config: RosticceriaConfig, exc: Exception) -> Dict:
     return {"name": config.name, "error": str(exc)}
 
 
+def _extract_timed(config: RosticceriaConfig):
+    started = time.perf_counter()
+    outcome = "ok"
+    try:
+        if config.kind == "facebook_image":
+            panel = _extract_facebook_image(config)
+        elif config.kind == "facebook_text":
+            panel = _extract_facebook_text(config)
+        elif config.kind == "paneeco":
+            panel = _extract_paneeco(config)
+        else:
+            raise RuntimeError(f"Sorgente non gestita: {config.kind}")
+    except Exception as exc:
+        panel = _fallback_panel(config, exc)
+        outcome = "error" if panel.get("error") else "fallback"
+    elapsed = time.perf_counter() - started
+    print(f"TEMPI {config.name}: {elapsed:.1f}s ({outcome})", flush=True)
+    return panel, {"name": config.name, "seconds": round(elapsed, 2), "outcome": outcome}
+
+
 def extract_all() -> List[Dict]:
-    panels: List[Dict] = []
-    for config in ROSTICCERIE:
-        try:
-            if config.kind == "facebook_image":
-                panels.append(_extract_facebook_image(config))
-            elif config.kind == "facebook_text":
-                panels.append(_extract_facebook_text(config))
-            elif config.kind == "paneeco":
-                panels.append(_extract_paneeco(config))
-            else:
-                raise RuntimeError(f"Sorgente non gestita: {config.kind}")
-        except Exception as exc:
-            panels.append(_fallback_panel(config, exc))
-    return panels
+    started = time.perf_counter()
+    # Ogni estrazione crea e chiude Playwright nel proprio thread.
+    # Due sessioni al massimo, senza condividere browser, context o page.
+    with ThreadPoolExecutor(max_workers=2, thread_name_prefix="rosticceria") as pool:
+        results = list(pool.map(_extract_timed, ROSTICCERIE))
+    elapsed = time.perf_counter() - started
+    timings = [timing for _, timing in results]
+    report = {
+        "updated_at": legacy.rome_now().isoformat(),
+        "workers": 2,
+        "elapsed_seconds": round(elapsed, 2),
+        "sum_restaurant_seconds": round(sum(item["seconds"] for item in timings), 2),
+        "restaurants": timings,
+    }
+    print(f"TEMPI estrazione completa: {elapsed:.1f}s con 2 sessioni", flush=True)
+    try:
+        target = Path(legacy.publish_dir()) / "extraction-timings.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError as exc:
+        print(f"Riepilogo tempi non salvato: {exc}")
+    return [panel for panel, _ in results]
