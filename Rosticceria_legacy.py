@@ -4307,44 +4307,114 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
     }}
 
+    // Limitatore di frequenza condiviso fra tutte le richieste
+    // dell'azzeramento: Abacus accetta al massimo 30 richieste ogni 10
+    // secondi per indirizzo IP. Restare un po' sotto quel limite evita del
+    // tutto le risposte 429 (che altrimenti costringono fetchJsonWithRetry
+    // ad attendere e riprovare, rendendo l'azzeramento ancora piu' lento e,
+    // se i tentativi si esauriscono, anche incompleto).
+    function createRateGate(maxPerWindow, windowMs) {{
+        const timestamps = [];
+        return async function gate() {{
+            for (;;) {{
+                const now = Date.now();
+                while (timestamps.length && now - timestamps[0] >= windowMs) timestamps.shift();
+                if (timestamps.length < maxPerWindow) {{
+                    timestamps.push(now);
+                    return;
+                }}
+                await sleep(windowMs - (now - timestamps[0]) + 20);
+            }}
+        }};
+    }}
+
     async function resetCounterGlobally() {{
         const mainTitle = document.getElementById('main-title');
+        mainTitle.innerText = 'Azzeramento: lettura contatori...';
+
+        // Sia le rosticcerie sia i contatori extra (Audio/PDF/Info) usano
+        // lo stesso meccanismo totale+offset, quindi si azzerano allo
+        // stesso modo: prima mancavano del tutto da questo elenco.
+        const targets = [];
         for (let i = 0; i < PANELS.length; i++) {{
-            const p = PANELS[i];
-            if (p.counter_enabled === false) continue;
-            mainTitle.innerText = 'Azzeramento in corso... (' + (i + 1) + '/' + PANELS.length + ')';
-            try {{
-                const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
-                const target = totalData.value;
-                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
-                let current = offsetData.value;
-                if (current > target) throw new Error('Azzeramento incoerente: impossibile ridurre il valore remoto');
-                while (current < target) {{
-                    // L'unico modo per "azzerare" un contatore di sola
-                    // lettura/incremento come quello di Abacus e' portare
-                    // l'offset allo stesso valore del totale: la pausa tra
-                    // un incremento e l'altro evita di superare il limite
-                    // di frequenza dell'API (che altrimenti interrompeva
-                    // l'azzeramento quasi subito sui contatori con molte
-                    // visualizzazioni).
-                    await fetchJsonWithRetry(offsetHitUrlFor(p.name), 4);
-                    current++;
-                    await sleep(300);
-                }}
+            if (PANELS[i].counter_enabled === false) continue;
+            targets.push({{ key: PANELS[i].name, apply: (target, current) => {{
                 totalClicksByPanel[i] = target;
                 offsetClicksByPanel[i] = current;
                 counterFreshByPanel[i] = true;
-                saveCounterCache();
-            }} catch (e) {{
-                // Un errore su una rosticceria non deve bloccare
-                // l'azzeramento delle altre: proseguiamo con la prossima
-                // invece di interrompere tutto il ciclo.
-                console.error('Azzeramento fallito per ' + p.name, e);
-            }}
-            updateAdminTitle();
-            updateCardCounters();
-            await sleep(200);
+            }} }});
         }}
+        for (const {{ name }} of EXTRA_COUNTERS) {{
+            targets.push({{ key: name, apply: (target, current) => {{
+                extraCounterState[name] = {{ total: target, offset: current }};
+            }} }});
+        }}
+
+        // Primo giro: leggo solo quante unita' mancano per ciascun
+        // contatore (poche richieste, indipendenti dai valori in gioco).
+        const jobs = [];
+        for (const t of targets) {{
+            try {{
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(t.key), 4);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(t.key), 4, true);
+                const target = totalData.value;
+                const current = offsetData.value;
+                if (current > target) throw new Error('Azzeramento incoerente: impossibile ridurre il valore remoto');
+                jobs.push({{ ...t, target, current }});
+            }} catch (e) {{
+                console.error('Lettura fallita per ' + t.key, e);
+            }}
+            await sleep(120);
+        }}
+
+        // Secondo giro: eseguo tutti i "colpi" mancanti di tutti i
+        // contatori insieme, con piu' richieste in volo contemporaneamente
+        // ma condividendo lo stesso limitatore di frequenza, cosi' da
+        // restare il piu' vicino possibile al limite dell'API invece di
+        // sommare inutilmente latenza di rete e pausa fissa per ogni
+        // singolo colpo (come faceva la versione precedente, un contatore
+        // alla volta).
+        const queue = [];
+        for (const job of jobs) {{
+            for (let k = job.current; k < job.target; k++) queue.push(job);
+        }}
+        const totalHits = queue.length;
+        let doneHits = 0;
+        let nextInQueue = 0;
+        const gate = createRateGate(24, 10000);
+
+        function updateProgress() {{
+            mainTitle.innerText = totalHits === 0
+                ? 'Azzeramento completato'
+                : 'Azzeramento in corso... ' + doneHits + '/' + totalHits;
+        }}
+        updateProgress();
+
+        async function worker() {{
+            while (nextInQueue < queue.length) {{
+                const job = queue[nextInQueue++];
+                await gate();
+                try {{
+                    await fetchJsonWithRetry(offsetHitUrlFor(job.key), 4);
+                    job.current++;
+                }} catch (e) {{
+                    // Un colpo fallito su un contatore non deve bloccare
+                    // gli altri: proseguiamo con la prossima unita' in coda.
+                    console.error('Azzeramento fallito per ' + job.key, e);
+                }}
+                doneHits++;
+                updateProgress();
+            }}
+        }}
+        await Promise.all([worker(), worker(), worker(), worker()]);
+
+        for (const job of jobs) {{
+            job.apply(job.target, job.current);
+        }}
+        saveCounterCache();
+        updateAdminTitle();
+        updateCardCounters();
+        updateExtraCounters();
     }}
 
     function formatCounter(value) {{
@@ -5177,7 +5247,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             return;
         }}
         if (isAdmin) {{
-            if (confirm("Vuoi davvero azzerare il contatore? (Verra' azzerato per tutti i dispositivi)")) {{
+            if (confirm("Vuoi davvero azzerare tutti i contatori, incluse le visualizzazioni extra (Audio/PDF/Info)? Verranno azzerati per tutti i dispositivi. L'operazione puo' richiedere qualche minuto sui contatori con molte visualizzazioni.")) {{
                 resetCounterGlobally();
             }}
         }} else {{
