@@ -4445,7 +4445,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         // lo mostriamo dentro la pagina stessa (non in una nuova scheda),
         // con un parametro anti-cache cosi' da vedere sempre l'ultima
         // versione, e un pulsante "Home" per tornare alla griglia.
-        document.getElementById('pdf-frame').src = 'Rosticcerie-Menu.pdf?v=' + Date.now();
+        // "#view=Fit" chiede al visualizzatore PDF del browser di mostrare
+        // l'intera pagina (larghezza e altezza) senza dover scorrere.
+        document.getElementById('pdf-frame').src = 'Rosticcerie-Menu.pdf?v=' + Date.now() + '#view=Fit';
         document.getElementById('pdf-view').style.display = 'flex';
         window.scrollTo(0, 0);
     }}
