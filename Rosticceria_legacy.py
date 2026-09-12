@@ -3310,14 +3310,15 @@ def write_menu_pdf(panels: List[Dict], output_dir: str) -> None:
             return None
 
         page_w, page_h = A4
-        margin = 28
-        gap = 16
-        header_h = 46
+        margin = 16
+        gap = 12
+        header_h = 40
         col_w = (page_w - margin * 2 - gap) / 2
         body_top = page_h - margin - header_h
         body_h = body_top - margin
-        cell_h = body_h / 3
-        label_h = 20
+        row_gap = 10
+        cell_h = (body_h - row_gap * 2) / 3
+        label_h = 18
 
         pdf_path = os.path.join(output_dir, "Rosticcerie-Menu.pdf")
         c = pdf_canvas.Canvas(pdf_path, pagesize=A4)
@@ -3329,13 +3330,13 @@ def write_menu_pdf(panels: List[Dict], output_dir: str) -> None:
 
         for col_x, names in ((margin, left_names), (margin + col_w + gap, right_names)):
             for row, name in enumerate(names):
-                cell_top = body_top - row * cell_h
+                cell_top = body_top - row * (cell_h + row_gap)
                 c.setFont("Helvetica-Bold", 12)
                 c.setFillColorRGB(0, 0, 0)
                 c.drawCentredString(col_x + col_w / 2, cell_top - 13, name)
 
                 area_top = cell_top - label_h
-                area_h = cell_h - label_h - 6
+                area_h = cell_h - label_h - 2
                 data = image_bytes_for(name)
                 if data:
                     try:
@@ -3913,19 +3914,25 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       border-top: 1px solid #333;
     }}
     #pdf-actions button {{
-      flex: 1 1 50%;
+      flex: 1 1 33.333%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       appearance: none;
       -webkit-appearance: none;
       border: none;
       background: #00c853;
       color: #111;
-      font-size: 26px;
-      line-height: 1;
       padding: 14px;
       cursor: pointer;
     }}
-    #pdf-home-btn {{
+    #pdf-actions button:not(:last-child) {{
       border-right: 1px solid rgba(0, 0, 0, 0.18);
+    }}
+    #pdf-actions svg {{
+      width: 28px;
+      height: 28px;
+      display: block;
     }}
     #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }}
     #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
@@ -4489,10 +4496,51 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     function printMenuPdf() {{
-        // Per la stampa si usa il PDF vero e proprio (non il PNG), aperto
-        // in una nuova scheda: da li' il pulsante di condivisione/stampa
-        // del browser (anche su iPhone) permette di stamparlo.
-        window.open('Rosticcerie-Menu.pdf?v=' + Date.now(), '_blank');
+        // Stampa il menu su un foglio A4 verticale: un iframe nascosto con
+        // una pagina che forza esplicitamente formato e orientamento del
+        // foglio (CSS @page) garantisce che il risultato stampato sia
+        // sempre A4 verticale, indipendentemente dalle impostazioni
+        // predefinite di stampante/browser. Si torna subito alla Home: la
+        // stampa prosegue per conto suo nella finestra di dialogo del
+        // sistema operativo.
+        const frame = document.createElement('iframe');
+        frame.style.position = 'fixed';
+        frame.style.width = '0';
+        frame.style.height = '0';
+        frame.style.border = '0';
+        frame.style.right = '0';
+        frame.style.bottom = '0';
+        document.body.appendChild(frame);
+        frame.onload = () => {{
+            try {{
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            }} catch (err) {{
+                console.error('Stampa non riuscita:', err);
+            }}
+            setTimeout(() => {{ frame.remove(); }}, 2000);
+        }};
+        const src = 'Rosticcerie-Menu.png?v=' + Date.now();
+        frame.srcdoc = '<!doctype html><html><head><style>' +
+            '@page {{ size: A4 portrait; margin: 0; }}' +
+            'html, body {{ margin: 0; padding: 0; }}' +
+            'img {{ width: 210mm; height: 297mm; object-fit: contain; display: block; }}' +
+            '</style></head><body><img src="' + src + '"></body></html>';
+        closePdfView();
+    }}
+
+    function saveMenuPdf() {{
+        // Salva il PDF vero e proprio (non il PNG) sul dispositivo: un link
+        // con l'attributo "download" attivato via JavaScript e' il modo
+        // standard per far scattare il salvataggio di un file dal browser,
+        // senza aprire una nuova scheda. Si torna alla Home subito dopo.
+        const link = document.createElement('a');
+        link.href = 'Rosticcerie-Menu.pdf?v=' + Date.now();
+        link.download = 'Rosticcerie-Menu.pdf';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        closePdfView();
     }}
 
     function closePdfView() {{
@@ -5085,8 +5133,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   <div id="pdf-view">
     <img id="pdf-image" alt="Menu del giorno di tutte le rosticcerie">
     <div id="pdf-actions">
-      <button type="button" id="pdf-home-btn" onclick="closePdfView()" aria-label="Torna alla Home">&#127968;</button>
-      <button type="button" id="pdf-print-btn" onclick="printMenuPdf()" aria-label="Stampa il menu">&#128424;</button>
+      <button type="button" id="pdf-home-btn" onclick="closePdfView()" aria-label="Torna alla Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M4 11 L12 4 L20 11 M6 9.5 V20 H18 V9.5 M10 20 V14 H14 V20"/></svg>
+      </button>
+      <button type="button" id="pdf-print-btn" onclick="printMenuPdf()" aria-label="Stampa il menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3 H17 V8 H7 Z M4 8 H20 V17 H4 Z M8 17 H16 V21 H8 Z"/></svg>
+      </button>
+      <button type="button" id="pdf-save-btn" onclick="saveMenuPdf()" aria-label="Salva il PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M4 4 H16 L20 8 V20 H4 Z M8 4 H14 V9 H8 Z M7 13 H17 V20 H7 Z"/></svg>
+      </button>
     </div>
   </div>
 
