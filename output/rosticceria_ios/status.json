@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-12T12:19:16",
+  "updated_at": "2026-09-12T12:22:51",
   "pages": [
     {
       "name": "Fantasia",
@@ -27,11 +27,11 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": "Le_delizie_di_Michela.jpg",
+      "image": null,
       "text": "",
-      "published_at": "12/09/2026",
-      "published_at_raw": "Data del menu confermata all'importazione locale",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Le delizie di Michela."
     },
     {
       "name": "Santoro (Castellana)",
@@ -53,7 +53,7 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●LASAGNA AL FORNO 5,0\n●RISO PATATE E COZZE 6,5\n●PENNETTE ALLA CRUDAIOLA CON TONNO, CILIEGINO E ZUCCHINA 5,0\n●FARFALLE CON FUNGHI MISTI CON PORCINI E SPECK 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ROSTBEEF DI SUINO AI FUNGHI\n●PUNTINE IN SALSA BARBECUE\n●MESSICANI CON IMPANATURA DI CACIO E PEPE\n●ROSE DI CAPOCOLLO CON MORTADELLA E MELANZANA AL SUGO\n●MELANZANE RIPIENE\n●INSALATA DI MARE CON VERDURINE\n●INSALATA DI PATATE ALLO YOGURT BIANCO  E MAIONESE",
-      "published_at": "12/09/2026 09:18 circa",
+      "published_at": "12/09/2026 09:21 circa",
       "published_at_raw": "5h",
       "error": null
     }
