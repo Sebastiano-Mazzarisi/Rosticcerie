@@ -3968,10 +3968,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       0%, 100% {{ transform: translateX(0); }}
       50% {{ transform: translateX(6px); }}
     }}
-    .audio-hint-text {{ display: none; line-height: 1.05; font-size: 9px; font-weight: bold; color: #00c853; text-align: center; }}
+    .audio-hint-text {{ display: none; line-height: 1.05; font-size: 9px; font-weight: bold; color: #00c853; text-align: right; margin-right: 2mm; }}
     .home-identity.hint-text-phase:not(.audio-playing) .audio-hint-text.show-hint {{ display: inline-block; }}
     .sound-waves {{ display: none; width: clamp(28px, 10vw, 44px); height: 88px; pointer-events: none; color: #00c853; overflow: visible; }}
     .home-identity .sound-waves {{ display: block; }}
+    .home-identity.hint-text-phase:not(.audio-playing) .sound-waves {{ display: none; }}
     .sound-waves path {{ fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }}
     .sound-waves path:nth-child(2) {{ animation-delay: -0.6s; }}
     .sound-waves path:nth-child(3) {{ animation-delay: -1.2s; }}
@@ -5369,13 +5370,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     <div id="identity-block" class="has-logo home-identity">
       <div class="audio-counter-wrap">
         <span id="audio-hint-arrow" class="audio-hint-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13M13 6l6 6-6 6"/></svg></span>
-        <span id="audio-hint-text" class="audio-hint-text" aria-hidden="true">Clicca<br>per<br>ascoltare</span>
         <span id="audio-play-counter" class="audio-play-counter">0</span>
         <svg class="sound-waves" viewBox="0 0 44 88" aria-hidden="true" focusable="false">
           <path d="M 40 30 Q 26 44 40 58"></path>
           <path d="M 40 30 Q 26 44 40 58"></path>
           <path d="M 40 30 Q 26 44 40 58"></path>
         </svg>
+        <span id="audio-hint-text" class="audio-hint-text" aria-hidden="true">Clicca<br>per<br>ascoltare</span>
       </div>
       <img id="identity-logo" src="apple-touch-icon.png" alt="Logo Rosticcerie" style="display:block" role="button" tabindex="0" onclick="toggleHomeAudio()" onkeydown="if(event.key === 'Enter' || event.key === ' ') {{ event.preventDefault(); toggleHomeAudio(); }}">
       <div id="identity-text">
