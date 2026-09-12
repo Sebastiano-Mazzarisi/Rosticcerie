@@ -343,6 +343,11 @@
       font-size: 22px;
       padding: 4px;
     }
+    #nav-bar #nav-share-btn {
+      padding: 4px;
+      display: flex;
+      align-items: center;
+    }
     /* Vista a schermo intero con il menu del giorno di tutte le
        rosticcerie (immagine, non il PDF direttamente: cosi' si adatta
        sempre allo schermo, anche su iPhone) e una barra in basso divisa in
@@ -424,7 +429,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789223170", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789223170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:23", "menu_date": "2026-09-12", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789223170", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789223170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "11:23", "menu_date": "2026-09-12", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789223170", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789223170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "07:27", "menu_date": "2026-09-12", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789223170", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789223170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:24", "menu_date": "2026-09-12", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789223170", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789223170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "12 set", "menu_date": "2026-09-12", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789223170", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789223170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:26", "menu_date": "2026-09-12", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789223170", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789223762", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:23", "menu_date": "2026-09-12", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789223762", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "11:23", "menu_date": "2026-09-12", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789223762", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "07:27", "menu_date": "2026-09-12", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789223762", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:24", "menu_date": "2026-09-12", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789223762", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "12 set", "menu_date": "2026-09-12", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789223762", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:35", "menu_date": "2026-09-12", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789223762", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -1026,6 +1031,43 @@
     }
 
     const SHARE_URL = 'https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html';
+
+    async function shareMenuImage(event) {
+        event.stopPropagation();
+        const p = PANELS[order[currentIndex]];
+        if (!p || !p.image) {
+            alert('Nessuna immagine da condividere.');
+            return;
+        }
+        const menuUrl = new URL(p.image, window.location.href).href;
+        try {
+            const response = await fetch(p.image);
+            const blob = await response.blob();
+            const fileName = (p.name || 'menu').replace(/[\/:*?"<>|]+/g, '_') + '.jpg';
+            const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: p.name, text: 'Menu di ' + p.name });
+                return;
+            }
+            if (navigator.share) {
+                await navigator.share({ title: p.name, text: 'Menu di ' + p.name, url: menuUrl });
+                return;
+            }
+            // Nessuna Web Share API disponibile (tipico dei browser desktop):
+            // si scarica l'immagine, cosi' l'utente puo' comunque allegarla
+            // manualmente dove vuole.
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            if (err && err.name !== 'AbortError') {
+                alert('Impossibile condividere il menu.');
+            }
+        }
+    }
 
     async function shareSite(event) {
         event.stopPropagation();
@@ -1630,7 +1672,7 @@
         
         <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(5)">
             <span class="card-name" style="color:#111">Bollenti piatti</span>
-            <span class="card-reference">09:26</span>
+            <span class="card-reference">09:35</span>
             <span class="card-counter" id="card-counter-5"></span>
         </button>
         
@@ -1666,6 +1708,9 @@
   <div id="nav-bar">
     <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
     <span id="nav-position-group">
+      <button type="button" id="nav-share-btn" onclick="shareMenuImage(event)" aria-label="Condividi il menu">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="18" cy="5" r="2.4" fill="currentColor"/><circle cx="6" cy="12" r="2.4" fill="currentColor"/><circle cx="18" cy="19" r="2.4" fill="currentColor"/><path d="M8.2 10.8 L15.8 6.2 M8.2 13.2 L15.8 17.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
       <span id="nav-position"></span>
       <button type="button" id="nav-home-btn" onclick="closeDetail()" aria-label="Torna alla Home">&#127968;</button>
     </span>
