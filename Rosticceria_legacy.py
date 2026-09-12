@@ -3357,6 +3357,22 @@ def write_menu_pdf(panels: List[Dict], output_dir: str) -> None:
 
         c.showPage()
         c.save()
+
+        try:
+            # Genera anche un PNG della pagina (usato dal sito per mostrare
+            # il menu come immagine, che si adatta sempre perfettamente
+            # allo schermo anche su iPhone: un PDF dentro un iframe, su
+            # alcuni browser mobili, non si ridimensiona bene e mostra solo
+            # una parte del foglio). Il PDF resta comunque disponibile per
+            # la stampa.
+            import pymupdf  # PyMuPDF
+
+            pdf_doc = pymupdf.open(pdf_path)
+            pix = pdf_doc[0].get_pixmap(matrix=pymupdf.Matrix(2.0, 2.0))
+            pix.save(os.path.join(output_dir, "Rosticcerie-Menu.png"))
+            pdf_doc.close()
+        except Exception as exc:
+            print(f"PDF menu: anteprima PNG non generata: {exc}")
     except Exception as exc:
         print(f"PDF menu non generato per un errore imprevisto: {exc}")
 
@@ -3870,8 +3886,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 22px;
       padding: 4px;
     }}
-    /* Vista a schermo intero per il PDF con tutti i menu, con il pulsante
-       "Home" fisso in basso per tornare alla griglia iniziale. */
+    /* Vista a schermo intero con il menu del giorno di tutte le
+       rosticcerie (immagine, non il PDF direttamente: cosi' si adatta
+       sempre allo schermo, anche su iPhone) e una barra in basso divisa in
+       due: casetta per tornare alla griglia, stampante per stampare il
+       PDF originale. */
     #pdf-view {{
       display: none;
       position: fixed;
@@ -3880,25 +3899,33 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       flex-direction: column;
       z-index: 200;
     }}
-    #pdf-frame {{
+    #pdf-image {{
       flex: 1 1 auto;
+      min-height: 0; /* senza questo un <img> dentro un flex a colonna puo' non ridursi ed eccedere lo schermo */
       width: 100%;
-      border: none;
+      height: 100%;
+      object-fit: contain;
       background: #fff;
     }}
-    #pdf-home-btn {{
+    #pdf-actions {{
       flex: 0 0 auto;
+      display: flex;
+      border-top: 1px solid #333;
+    }}
+    #pdf-actions button {{
+      flex: 1 1 50%;
       appearance: none;
       -webkit-appearance: none;
       border: none;
-      border-top: 1px solid #333;
       background: #00c853;
       color: #111;
-      font: inherit;
-      font-size: 20px;
-      font-weight: bold;
+      font-size: 26px;
+      line-height: 1;
       padding: 14px;
       cursor: pointer;
+    }}
+    #pdf-home-btn {{
+      border-right: 1px solid rgba(0, 0, 0, 0.18);
     }}
     #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }}
     #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
@@ -4449,21 +4476,28 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     function openMenuPdf() {{
-        // Il PDF con tutti i menu del giorno (due colonne) viene generato
-        // lato server ad ogni pubblicazione (write_menu_pdf in Python): qui
-        // lo mostriamo dentro la pagina stessa (non in una nuova scheda),
-        // con un parametro anti-cache cosi' da vedere sempre l'ultima
-        // versione, e un pulsante "Home" per tornare alla griglia.
-        // "#view=Fit" chiede al visualizzatore PDF del browser di mostrare
-        // l'intera pagina (larghezza e altezza) senza dover scorrere.
-        document.getElementById('pdf-frame').src = 'Rosticcerie-Menu.pdf?v=' + Date.now() + '#view=Fit';
+        // Il menu del giorno di tutte le rosticcerie (due colonne) viene
+        // generato lato server ad ogni pubblicazione (write_menu_pdf in
+        // Python), sia come PDF (per la stampa) sia come PNG della stessa
+        // pagina. Qui mostriamo il PNG dentro la pagina stessa: un'immagine
+        // con "object-fit: contain" si adatta sempre per intero allo
+        // schermo, su qualunque telefono, cosa che un PDF dentro un iframe
+        // su alcuni browser mobili (Safari incluso) non garantisce.
+        document.getElementById('pdf-image').src = 'Rosticcerie-Menu.png?v=' + Date.now();
         document.getElementById('pdf-view').style.display = 'flex';
         window.scrollTo(0, 0);
     }}
 
+    function printMenuPdf() {{
+        // Per la stampa si usa il PDF vero e proprio (non il PNG), aperto
+        // in una nuova scheda: da li' il pulsante di condivisione/stampa
+        // del browser (anche su iPhone) permette di stamparlo.
+        window.open('Rosticcerie-Menu.pdf?v=' + Date.now(), '_blank');
+    }}
+
     function closePdfView() {{
         document.getElementById('pdf-view').style.display = 'none';
-        document.getElementById('pdf-frame').src = '';
+        document.getElementById('pdf-image').src = '';
     }}
 
     function syncOrderFromDom() {{
@@ -5049,8 +5083,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   </div>
 
   <div id="pdf-view">
-    <iframe id="pdf-frame" title="Menu del giorno in PDF"></iframe>
-    <button type="button" id="pdf-home-btn" onclick="closePdfView()">Home</button>
+    <img id="pdf-image" alt="Menu del giorno di tutte le rosticcerie">
+    <div id="pdf-actions">
+      <button type="button" id="pdf-home-btn" onclick="closePdfView()" aria-label="Torna alla Home">&#127968;</button>
+      <button type="button" id="pdf-print-btn" onclick="printMenuPdf()" aria-label="Stampa il menu">&#128424;</button>
+    </div>
   </div>
 
   <div id="nav-bar">
