@@ -3709,7 +3709,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     .site-note {{
       grid-column: 1 / -1;
       color: #ccc;
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1.4;
       text-align: center;
       padding: 4px 12px 2px;
@@ -5030,7 +5030,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <main id="grid-view">
     {"".join(cards)}
-    <p class="site-note">Nota: è possibile aggiungere altre rosticcerie ma devono avere un menu che cambia giornalmente e che viene pubblicato su un sito web, oppure nei post di Facebook</p>
+    <p class="site-note"><span style="color:#ffd641">Nota</span>: è possibile aggiungere altre rosticcerie ma devono avere un menu che cambia giornalmente e che viene pubblicato su un sito web, oppure nei post di Facebook</p>
   </main>
 
   <div id="detail-view">
