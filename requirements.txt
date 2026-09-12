@@ -2,3 +2,4 @@ playwright
 playwright-stealth
 requests
 Pillow
+reportlab
