@@ -3709,7 +3709,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     .site-note {{
       grid-column: 1 / -1;
       color: #ccc;
-      font-size: 13px;
+      font-size: 15px;
       line-height: 1.4;
       text-align: center;
       padding: 4px 12px 2px;
@@ -3860,6 +3860,36 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       color: #fff;
       font-size: 18px;
       font-weight: bold;
+    }}
+    /* Vista a schermo intero per il PDF con tutti i menu, con il pulsante
+       "Home" fisso in basso per tornare alla griglia iniziale. */
+    #pdf-view {{
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #111;
+      flex-direction: column;
+      z-index: 200;
+    }}
+    #pdf-frame {{
+      flex: 1 1 auto;
+      width: 100%;
+      border: none;
+      background: #fff;
+    }}
+    #pdf-home-btn {{
+      flex: 0 0 auto;
+      appearance: none;
+      -webkit-appearance: none;
+      border: none;
+      border-top: 1px solid #333;
+      background: #00c853;
+      color: #111;
+      font: inherit;
+      font-size: 20px;
+      font-weight: bold;
+      padding: 14px;
+      cursor: pointer;
     }}
     #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }}
     #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
@@ -4312,6 +4342,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const el = grid.querySelector('.card[data-pid="' + pid + '"]');
             if (el) grid.appendChild(el);
         }});
+        // La nota informativa non e' una casella riordinabile: va sempre
+        // tenuta come ultimo elemento della griglia, altrimenti gli
+        // appendChild qui sopra la spingerebbero prima delle caselle.
+        const note = grid.querySelector('.site-note');
+        if (note) grid.appendChild(note);
     }}
 
     function isWaitingForUpdate(panel, now = new Date()) {{
@@ -4407,9 +4442,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function openMenuPdf() {{
         // Il PDF con tutti i menu del giorno (due colonne) viene generato
         // lato server ad ogni pubblicazione (write_menu_pdf in Python): qui
-        // si apre semplicemente il file gia' pronto, con un parametro
-        // anti-cache cosi' da vedere sempre l'ultima versione.
-        window.open('Rosticcerie-Menu.pdf?v=' + Date.now(), '_blank');
+        // lo mostriamo dentro la pagina stessa (non in una nuova scheda),
+        // con un parametro anti-cache cosi' da vedere sempre l'ultima
+        // versione, e un pulsante "Home" per tornare alla griglia.
+        document.getElementById('pdf-frame').src = 'Rosticcerie-Menu.pdf?v=' + Date.now();
+        document.getElementById('pdf-view').style.display = 'flex';
+        window.scrollTo(0, 0);
+    }}
+
+    function closePdfView() {{
+        document.getElementById('pdf-view').style.display = 'none';
+        document.getElementById('pdf-frame').src = '';
     }}
 
     function syncOrderFromDom() {{
@@ -4691,6 +4734,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         applyOrderToGrid();
         document.addEventListener('keydown', handleGlobalKeydown);
         attachDragHandlers();
+        // In modalita' spostamento, toccare una zona vuota della griglia
+        // (fuori da qualunque casella) chiude il riordino come "Fine".
+        document.getElementById('grid-view').addEventListener('click', (e) => {{
+            if (reorderMode && !e.target.closest('.card')) {{
+                exitReorderMode();
+            }}
+        }});
     }}
 
     function renderDetail(i) {{
@@ -4985,6 +5035,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <div id="detail-view">
     <div id="detail-content" onclick="closeDetail()"></div>
+  </div>
+
+  <div id="pdf-view">
+    <iframe id="pdf-frame" title="Menu del giorno in PDF"></iframe>
+    <button type="button" id="pdf-home-btn" onclick="closePdfView()">Home</button>
   </div>
 
   <div id="nav-bar">
