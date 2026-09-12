@@ -26,6 +26,7 @@ from PIL import Image, ImageDraw, ImageFont
 try:
     from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
     from playwright.sync_api import sync_playwright
+    from playwright_stealth import Stealth
 except ImportError:
     print("Manca Playwright. Installa con: pip install playwright")
     print("Poi esegui: playwright install chromium")
@@ -1564,6 +1565,10 @@ def extract_first_facebook_image(
                     "Chrome/126.0.0.0 Safari/537.36"
                 ),
             )
+            # Maschera i segnali tipici di un browser automatizzato
+            # (navigator.webdriver, plugin mancanti, ecc.): Facebook puo'
+            # limitare il contenuto servito a sessioni riconosciute come bot.
+            Stealth().apply_stealth_sync(context)
 
             cookies = load_facebook_cookies(cookie_path)
             if cookies:
@@ -1824,6 +1829,10 @@ def extract_today_facebook_posts(
                     "Chrome/126.0.0.0 Safari/537.36"
                 ),
             )
+            # Maschera i segnali tipici di un browser automatizzato
+            # (navigator.webdriver, plugin mancanti, ecc.): Facebook puo'
+            # limitare il contenuto servito a sessioni riconosciute come bot.
+            Stealth().apply_stealth_sync(context)
 
             cookies = load_facebook_cookies(cookie_path)
             if cookies:
@@ -2105,6 +2114,10 @@ def extract_first_facebook_text_menu(page_config: Dict[str, str]) -> Dict[str, s
                     "Chrome/126.0.0.0 Safari/537.36"
                 ),
             )
+            # Maschera i segnali tipici di un browser automatizzato
+            # (navigator.webdriver, plugin mancanti, ecc.): Facebook puo'
+            # limitare il contenuto servito a sessioni riconosciute come bot.
+            Stealth().apply_stealth_sync(context)
 
             cookies = load_facebook_cookies(cookie_path)
             if cookies:
