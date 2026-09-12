@@ -1,20 +1,20 @@
 {
-  "updated_at": "2026-09-12T07:31:41",
+  "updated_at": "2026-09-12T09:49:43",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 12/09/26",
-      "published_at": "12/09/2026 09:12 circa",
-      "published_at_raw": "12m",
+      "published_at": "12/09/2026 09:43 circa",
+      "published_at_raw": "2h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "11 Settembre 2026.\nMenù del giorno.",
-      "published_at": "11/09/2026 09:58 circa",
-      "published_at_raw": "11/09/2026",
+      "text": "12 Settembre 2026.\nMenù del giorno.",
+      "published_at": "12/09/2026 11:20 circa",
+      "published_at_raw": "12/09/2026",
       "error": null
     },
     {
@@ -37,14 +37,14 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 12 Settembre",
-      "published_at": "12/09/2026 08:59 circa",
+      "published_at": "12/09/2026 09:48 circa",
       "published_at_raw": "12/09/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 12 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Farfalle con pomodoro fresco, basilico e cacio - €6.50\n- Risotto con vellutata di asparagi e speck croccante - €7.50\n- Cavatelli al grano arso con ragù di pesce - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Spezzatino di lonza al vino bianco - €7.50\n- Trancio di pesce spada in guazzetto di mare - €8.50",
+      "text": "Menu 12 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla norma con melanzane, olive e pomodoro - €6.50\n- Risotto con radicchio e salsiccia - €8.50\n- Farfalle con pomodorino, pesce spada, cozze e vongole - €8.50\n- Zuppa di ceci e lenticchie - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Fusi di pollo al forno con patate - €7.50\n  2 pezzi\n- Filetto persico alla pizzaiola - €8.50",
       "published_at": "12/09/2026",
       "published_at_raw": "12 Settembre",
       "error": null
@@ -53,8 +53,8 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●LASAGNA AL FORNO 5,0\n●RISO PATATE E COZZE 6,5\n●PENNETTE ALLA CRUDAIOLA CON TONNO, CILIEGINO E ZUCCHINA 5,0\n●FARFALLE CON FUNGHI MISTI CON PORCINI E SPECK 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ROSTBEEF DI SUINO AI FUNGHI\n●PUNTINE IN SALSA BARBECUE\n●MESSICANI CON IMPANATURA DI CACIO E PEPE\n●ROSE DI CAPOCOLLO CON MORTADELLA E MELANZANA AL SUGO\n●MELANZANE RIPIENE\n●INSALATA DI MARE CON VERDURINE\n●INSALATA DI PATATE ALLO YOGURT BIANCO  E MAIONESE",
-      "published_at": "12/09/2026 09:17 circa",
-      "published_at_raw": "14m",
+      "published_at": "12/09/2026 09:49 circa",
+      "published_at_raw": "2h",
       "error": null
     }
   ]
