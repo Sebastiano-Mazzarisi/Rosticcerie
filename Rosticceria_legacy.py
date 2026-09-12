@@ -3887,6 +3887,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 22px;
       padding: 4px;
     }}
+    #nav-bar #nav-share-btn {{
+      padding: 4px;
+      display: flex;
+      align-items: center;
+    }}
     /* Vista a schermo intero con il menu del giorno di tutte le
        rosticcerie (immagine, non il PDF direttamente: cosi' si adatta
        sempre allo schermo, anche su iPhone) e una barra in basso divisa in
@@ -4571,6 +4576,43 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     const SHARE_URL = 'https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html';
 
+    async function shareMenuImage(event) {{
+        event.stopPropagation();
+        const p = PANELS[order[currentIndex]];
+        if (!p || !p.image) {{
+            alert('Nessuna immagine da condividere.');
+            return;
+        }}
+        const menuUrl = new URL(p.image, window.location.href).href;
+        try {{
+            const response = await fetch(p.image);
+            const blob = await response.blob();
+            const fileName = (p.name || 'menu').replace(/[\\/:*?"<>|]+/g, '_') + '.jpg';
+            const file = new File([blob], fileName, {{ type: blob.type || 'image/jpeg' }});
+            if (navigator.canShare && navigator.canShare({{ files: [file] }})) {{
+                await navigator.share({{ files: [file], title: p.name, text: 'Menu di ' + p.name }});
+                return;
+            }}
+            if (navigator.share) {{
+                await navigator.share({{ title: p.name, text: 'Menu di ' + p.name, url: menuUrl }});
+                return;
+            }}
+            // Nessuna Web Share API disponibile (tipico dei browser desktop):
+            // si scarica l'immagine, cosi' l'utente puo' comunque allegarla
+            // manualmente dove vuole.
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }} catch (err) {{
+            if (err && err.name !== 'AbortError') {{
+                alert('Impossibile condividere il menu.');
+            }}
+        }}
+    }}
+
     async function shareSite(event) {{
         event.stopPropagation();
         const shareData = {{
@@ -5167,6 +5209,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   <div id="nav-bar">
     <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
     <span id="nav-position-group">
+      <button type="button" id="nav-share-btn" onclick="shareMenuImage(event)" aria-label="Condividi il menu">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="18" cy="5" r="2.4" fill="currentColor"/><circle cx="6" cy="12" r="2.4" fill="currentColor"/><circle cx="18" cy="19" r="2.4" fill="currentColor"/><path d="M8.2 10.8 L15.8 6.2 M8.2 13.2 L15.8 17.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
       <span id="nav-position"></span>
       <button type="button" id="nav-home-btn" onclick="closeDetail()" aria-label="Torna alla Home">&#127968;</button>
     </span>
