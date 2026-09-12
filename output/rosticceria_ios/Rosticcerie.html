@@ -370,19 +370,25 @@
       border-top: 1px solid #333;
     }
     #pdf-actions button {
-      flex: 1 1 50%;
+      flex: 1 1 33.333%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       appearance: none;
       -webkit-appearance: none;
       border: none;
       background: #00c853;
       color: #111;
-      font-size: 26px;
-      line-height: 1;
       padding: 14px;
       cursor: pointer;
     }
-    #pdf-home-btn {
+    #pdf-actions button:not(:last-child) {
       border-right: 1px solid rgba(0, 0, 0, 0.18);
+    }
+    #pdf-actions svg {
+      width: 28px;
+      height: 28px;
+      display: block;
     }
     #waiting-update-dialog { border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }
     #waiting-update-dialog::backdrop { background: rgba(0,0,0,.55); }
@@ -415,7 +421,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789221563", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789221563", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "10:04", "menu_date": "2026-09-12", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789221563", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789221563", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "12:04", "menu_date": "2026-09-12", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789221563", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789221563", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "07:27", "menu_date": "2026-09-12", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789221563", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789221563", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:05", "menu_date": "2026-09-12", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789221563", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789221563", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "12 set", "menu_date": "2026-09-12", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789221563", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789221563", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:59", "menu_date": "2026-09-12", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789221563", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1789222963", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1789222963", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:20", "menu_date": "2026-09-12", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1789222963", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1789222963", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "11:20", "menu_date": "2026-09-12", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1789222963", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1789222963", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "07:27", "menu_date": "2026-09-12", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1789222963", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1789222963", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:21", "menu_date": "2026-09-12", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1789222963", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1789222963", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "12 set", "menu_date": "2026-09-12", "url": "https://www.paneeco.it/menu", "counter_enabled": true}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1789222963", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1789222963", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "card_reference": "09:22", "menu_date": "2026-09-12", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1789222963", "error": "", "updated": true, "updated_label": "Sabato 12 settembre", "url": "", "counter_enabled": true, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -946,10 +952,51 @@
     }
 
     function printMenuPdf() {
-        // Per la stampa si usa il PDF vero e proprio (non il PNG), aperto
-        // in una nuova scheda: da li' il pulsante di condivisione/stampa
-        // del browser (anche su iPhone) permette di stamparlo.
-        window.open('Rosticcerie-Menu.pdf?v=' + Date.now(), '_blank');
+        // Stampa il menu su un foglio A4 verticale: un iframe nascosto con
+        // una pagina che forza esplicitamente formato e orientamento del
+        // foglio (CSS @page) garantisce che il risultato stampato sia
+        // sempre A4 verticale, indipendentemente dalle impostazioni
+        // predefinite di stampante/browser. Si torna subito alla Home: la
+        // stampa prosegue per conto suo nella finestra di dialogo del
+        // sistema operativo.
+        const frame = document.createElement('iframe');
+        frame.style.position = 'fixed';
+        frame.style.width = '0';
+        frame.style.height = '0';
+        frame.style.border = '0';
+        frame.style.right = '0';
+        frame.style.bottom = '0';
+        document.body.appendChild(frame);
+        frame.onload = () => {
+            try {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            } catch (err) {
+                console.error('Stampa non riuscita:', err);
+            }
+            setTimeout(() => { frame.remove(); }, 2000);
+        };
+        const src = 'Rosticcerie-Menu.png?v=' + Date.now();
+        frame.srcdoc = '<!doctype html><html><head><style>' +
+            '@page { size: A4 portrait; margin: 0; }' +
+            'html, body { margin: 0; padding: 0; }' +
+            'img { width: 210mm; height: 297mm; object-fit: contain; display: block; }' +
+            '</style></head><body><img src="' + src + '"></body></html>';
+        closePdfView();
+    }
+
+    function saveMenuPdf() {
+        // Salva il PDF vero e proprio (non il PNG) sul dispositivo: un link
+        // con l'attributo "download" attivato via JavaScript e' il modo
+        // standard per far scattare il salvataggio di un file dal browser,
+        // senza aprire una nuova scheda. Si torna alla Home subito dopo.
+        const link = document.createElement('a');
+        link.href = 'Rosticcerie-Menu.pdf?v=' + Date.now();
+        link.download = 'Rosticcerie-Menu.pdf';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        closePdfView();
     }
 
     function closePdfView() {
@@ -1534,13 +1581,13 @@
     
         <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(0)">
             <span class="card-name" style="color:#111">Fantasia</span>
-            <span class="card-reference">10:04</span>
+            <span class="card-reference">09:20</span>
             <span class="card-counter" id="card-counter-0"></span>
         </button>
         
         <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(1)">
             <span class="card-name" style="color:#111">Cibària</span>
-            <span class="card-reference">12:04</span>
+            <span class="card-reference">11:20</span>
             <span class="card-counter" id="card-counter-1"></span>
         </button>
         
@@ -1552,7 +1599,7 @@
         
         <button type="button" class="card" data-pid="3" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(3)">
             <span class="card-name" style="color:#111">Santoro (Castellana)</span>
-            <span class="card-reference">09:05</span>
+            <span class="card-reference">09:21</span>
             <span class="card-counter" id="card-counter-3"></span>
         </button>
         
@@ -1564,7 +1611,7 @@
         
         <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="cardClicked(5)">
             <span class="card-name" style="color:#111">Bollenti piatti</span>
-            <span class="card-reference">09:59</span>
+            <span class="card-reference">09:22</span>
             <span class="card-counter" id="card-counter-5"></span>
         </button>
         
@@ -1585,8 +1632,15 @@
   <div id="pdf-view">
     <img id="pdf-image" alt="Menu del giorno di tutte le rosticcerie">
     <div id="pdf-actions">
-      <button type="button" id="pdf-home-btn" onclick="closePdfView()" aria-label="Torna alla Home">&#127968;</button>
-      <button type="button" id="pdf-print-btn" onclick="printMenuPdf()" aria-label="Stampa il menu">&#128424;</button>
+      <button type="button" id="pdf-home-btn" onclick="closePdfView()" aria-label="Torna alla Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M4 11 L12 4 L20 11 M6 9.5 V20 H18 V9.5 M10 20 V14 H14 V20"/></svg>
+      </button>
+      <button type="button" id="pdf-print-btn" onclick="printMenuPdf()" aria-label="Stampa il menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3 H17 V8 H7 Z M4 8 H20 V17 H4 Z M8 17 H16 V21 H8 Z"/></svg>
+      </button>
+      <button type="button" id="pdf-save-btn" onclick="saveMenuPdf()" aria-label="Salva il PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M4 4 H16 L20 8 V20 H4 Z M8 4 H14 V9 H8 Z M7 13 H17 V20 H7 Z"/></svg>
+      </button>
     </div>
   </div>
 
