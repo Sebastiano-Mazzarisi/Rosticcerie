@@ -3861,6 +3861,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 18px;
       font-weight: bold;
     }}
+    #nav-position-group {{
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }}
+    #nav-bar #nav-home-btn {{
+      font-size: 22px;
+      padding: 4px;
+    }}
     /* Vista a schermo intero per il PDF con tutti i menu, con il pulsante
        "Home" fisso in basso per tornare alla griglia iniziale. */
     #pdf-view {{
@@ -5046,7 +5055,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <div id="nav-bar">
     <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
-    <span id="nav-position"></span>
+    <span id="nav-position-group">
+      <span id="nav-position"></span>
+      <button type="button" id="nav-home-btn" onclick="closeDetail()" aria-label="Torna alla Home">&#127968;</button>
+    </span>
     <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
   </div>
 <dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
