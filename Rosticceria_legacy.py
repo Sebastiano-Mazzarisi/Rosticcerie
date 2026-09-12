@@ -3944,7 +3944,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     #michela-notice-text {{ white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }}
     #michela-notice-ok {{ display: block; margin: 20px auto 0; padding: 10px 32px; border: 0; border-radius: 8px; background: #00c853; color: #111; font-size: 18px; cursor: pointer; }}
     #identity-block {{ position: relative; }}
-    .sound-waves {{ display: none; position: absolute; right: 100%; top: 50%; width: clamp(28px, 10vw, 44px); height: 88px; transform: translateY(-50%); pointer-events: none; color: #00c853; overflow: visible; }}
+    .audio-counter-wrap {{ display: none; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); align-items: center; gap: 6px; }}
+    .home-identity .audio-counter-wrap {{ display: flex; }}
+    .audio-play-counter {{ font-size: 13px; font-weight: bold; color: #00c853; min-width: 1em; text-align: right; }}
+    .sound-waves {{ display: none; width: clamp(28px, 10vw, 44px); height: 88px; pointer-events: none; color: #00c853; overflow: visible; }}
     .home-identity .sound-waves {{ display: block; }}
     .sound-waves path {{ fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }}
     .sound-waves path:nth-child(2) {{ animation-delay: -0.6s; }}
@@ -5029,6 +5032,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     setInterval(refreshWhenNeeded, 60000);
 
     let homeAudio;
+    function getAudioPlayCount() {{
+        try {{ return parseInt(localStorage.getItem('audioPlayCount') || '0', 10) || 0; }} catch (e) {{ return 0; }}
+    }}
+    function setAudioPlayCount(n) {{
+        try {{ localStorage.setItem('audioPlayCount', String(n)); }} catch (e) {{}}
+        const el = document.getElementById('audio-play-counter');
+        if (el) el.textContent = String(n);
+    }}
+    document.addEventListener('DOMContentLoaded', () => setAudioPlayCount(getAudioPlayCount()));
     function toggleHomeAudio() {{
         if (!document.getElementById('identity-block').classList.contains('home-identity')) {{ handleTitleClick(); return; }}
         if (!homeAudio) {{
@@ -5042,8 +5054,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 }});
             }});
         }}
-        if (homeAudio.paused) homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
-        else homeAudio.pause();
+        if (homeAudio.paused) {{
+            setAudioPlayCount(getAudioPlayCount() + 1);
+            homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
+        }} else {{
+            homeAudio.pause();
+        }}
     }}
 
     function handleTitleClick() {{
@@ -5101,11 +5117,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <header id="main-header">
     <div id="identity-block" class="has-logo home-identity">
-      <svg class="sound-waves" viewBox="0 0 44 88" aria-hidden="true" focusable="false">
-        <path d="M 40 30 Q 26 44 40 58"></path>
-        <path d="M 40 30 Q 26 44 40 58"></path>
-        <path d="M 40 30 Q 26 44 40 58"></path>
-      </svg>
+      <div class="audio-counter-wrap">
+        <span id="audio-play-counter" class="audio-play-counter">0</span>
+        <svg class="sound-waves" viewBox="0 0 44 88" aria-hidden="true" focusable="false">
+          <path d="M 40 30 Q 26 44 40 58"></path>
+          <path d="M 40 30 Q 26 44 40 58"></path>
+          <path d="M 40 30 Q 26 44 40 58"></path>
+        </svg>
+      </div>
       <img id="identity-logo" src="apple-touch-icon.png" alt="Logo Rosticcerie" style="display:block" role="button" tabindex="0" onclick="toggleHomeAudio()" onkeydown="if(event.key === 'Enter' || event.key === ' ') {{ event.preventDefault(); toggleHomeAudio(); }}">
       <div id="identity-text">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
