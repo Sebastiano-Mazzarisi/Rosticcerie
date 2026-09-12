@@ -3962,7 +3962,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     .home-identity .audio-counter-wrap {{ display: flex; }}
     .audio-play-counter {{ display: none; font-size: 13px; font-weight: bold; color: #00c853; min-width: 1em; text-align: right; }}
     .audio-hint-arrow {{ display: none; align-items: center; color: #00c853; }}
-    .home-identity .audio-hint-arrow.show-hint {{ display: inline-flex; animation: audio-hint-move 1.1s ease-in-out infinite; }}
+    .home-identity:not(.audio-playing) .audio-hint-arrow.show-hint {{ display: inline-flex; animation: audio-hint-move 1.1s ease-in-out infinite; }}
     @keyframes audio-hint-move {{
       0%, 100% {{ transform: translateX(0); }}
       50% {{ transform: translateX(6px); }}
@@ -5141,21 +5141,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     setInterval(refreshWhenNeeded, 60000);
 
     let homeAudio;
-    function dismissAudioHint() {{
-        try {{ localStorage.setItem('audioHintDismissed', '1'); }} catch (e) {{}}
-        const hintEl = document.getElementById('audio-hint-arrow');
-        if (hintEl) hintEl.classList.remove('show-hint');
-    }}
     function updateAudioHintArrow() {{
         const hintEl = document.getElementById('audio-hint-arrow');
         if (!hintEl) return;
-        let dismissed = false;
-        try {{ dismissed = localStorage.getItem('audioHintDismissed') === '1'; }} catch (e) {{}}
-        hintEl.classList.toggle('show-hint', !isAdmin && !dismissed);
+        hintEl.classList.toggle('show-hint', !isAdmin);
     }}
     function toggleHomeAudio() {{
         if (!document.getElementById('identity-block').classList.contains('home-identity')) {{ handleTitleClick(); return; }}
-        dismissAudioHint();
         if (!homeAudio) {{
             homeAudio = new Audio('Rosticcerie.mp3');
             homeAudio.addEventListener('playing', () => {{
