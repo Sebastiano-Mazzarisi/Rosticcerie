@@ -4314,17 +4314,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // ad attendere e riprovare, rendendo l'azzeramento ancora piu' lento e,
     // se i tentativi si esauriscono, anche incompleto).
     function createRateGate(maxPerWindow, windowMs) {{
-        const timestamps = [];
+        const intervalMs = windowMs / maxPerWindow;
+        let nextSlot = 0;
         return async function gate() {{
-            for (;;) {{
-                const now = Date.now();
-                while (timestamps.length && now - timestamps[0] >= windowMs) timestamps.shift();
-                if (timestamps.length < maxPerWindow) {{
-                    timestamps.push(now);
-                    return;
-                }}
-                await sleep(windowMs - (now - timestamps[0]) + 20);
-            }}
+            const now = Date.now();
+            nextSlot = Math.max(nextSlot + intervalMs, now);
+            const wait = nextSlot - now;
+            if (wait > 0) await sleep(wait);
         }};
     }}
 
@@ -4378,43 +4374,45 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         for (const job of jobs) {{
             for (let k = job.current; k < job.target; k++) queue.push(job);
         }}
-        const totalHits = queue.length;
-        let doneHits = 0;
         let nextInQueue = 0;
         const gate = createRateGate(24, 10000);
 
-        function updateProgress() {{
-            mainTitle.innerText = totalHits === 0
-                ? 'Azzeramento completato'
-                : 'Azzeramento in corso... ' + doneHits + '/' + totalHits;
+        // Mostra i numeri reali (card, contatori extra e il totale accanto
+        // a "by Mazzarisi") aggiornati una volta al secondo, cosi' si vede
+        // scendere ogni contatore mentre l'azzeramento e' in corso, invece
+        // di scoprire il risultato solo alla fine.
+        function refreshVisibleCounters() {{
+            for (const job of jobs) job.apply(job.target, job.current);
+            updateCardCounters();
+            updateAdminTitle();
+            updateExtraCounters();
         }}
-        updateProgress();
+        refreshVisibleCounters();
+        const refreshTimer = setInterval(refreshVisibleCounters, 1000);
 
-        async function worker() {{
-            while (nextInQueue < queue.length) {{
-                const job = queue[nextInQueue++];
-                await gate();
-                try {{
-                    await fetchJsonWithRetry(offsetHitUrlFor(job.key), 4);
-                    job.current++;
-                }} catch (e) {{
-                    // Un colpo fallito su un contatore non deve bloccare
-                    // gli altri: proseguiamo con la prossima unita' in coda.
-                    console.error('Azzeramento fallito per ' + job.key, e);
+        try {{
+            async function worker() {{
+                while (nextInQueue < queue.length) {{
+                    const job = queue[nextInQueue++];
+                    await gate();
+                    try {{
+                        await fetchJsonWithRetry(offsetHitUrlFor(job.key), 4);
+                        job.current++;
+                    }} catch (e) {{
+                        // Un colpo fallito su un contatore non deve
+                        // bloccare gli altri: proseguiamo con la prossima
+                        // unita' in coda.
+                        console.error('Azzeramento fallito per ' + job.key, e);
+                    }}
                 }}
-                doneHits++;
-                updateProgress();
             }}
+            await Promise.all([worker(), worker(), worker(), worker()]);
+        }} finally {{
+            clearInterval(refreshTimer);
         }}
-        await Promise.all([worker(), worker(), worker(), worker()]);
 
-        for (const job of jobs) {{
-            job.apply(job.target, job.current);
-        }}
         saveCounterCache();
-        updateAdminTitle();
-        updateCardCounters();
-        updateExtraCounters();
+        refreshVisibleCounters();
     }}
 
     function formatCounter(value) {{
