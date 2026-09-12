@@ -1501,42 +1501,60 @@ def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dic
     return None
 
 
-def extract_facebook_story(context, story_url: str) -> Optional[Dict[str, str]]:
-    """Read the selected story only; never use thumbnails from the sidebar."""
+def extract_facebook_story(context, story_url: str, label: str = "Pagina") -> Optional[Dict[str, str]]:
+    """Apre la vista Storie di Facebook e cattura un fermo immagine della
+    storia attiva della pagina indicata. Le storie-foto vengono mostrate da
+    Facebook dentro un elemento <video> (non un tag <img> come i post
+    normali), quindi qui il contenuto si cattura con uno screenshot
+    dell'elemento video invece di cercare un URL immagine da scaricare."""
     page = context.new_page()
     try:
         page.goto(story_url, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(5000)
-        if not page.url.startswith(story_url):
-            print("Storia Facebook non accessibile: controllo i post.")
+        page.wait_for_timeout(3000)
+        try:
+            page.get_by_text(re.compile(re.escape(label), re.IGNORECASE)).first.click(timeout=5000)
+        except Exception:
+            print(f"{label}: nessuna storia attiva in lista, controllo i post.")
             return None
-        candidate = page.evaluate(r"""() => {
-            for (const img of document.querySelectorAll('img')) {
-                const box = img.getBoundingClientRect();
-                if (box.width < 250 || box.height < 350 || box.x < 360 ||
-                    box.top < 0 || box.bottom > innerHeight ||
-                    !img.src.startsWith('https://') || !img.complete) continue;
-                let node = img.parentElement;
-                for (let depth = 0; node && depth < 8; depth++, node = node.parentElement) {
-                    if (node === document.body || node === document.documentElement) break;
-                    const text = node.innerText || '';
-                    if (text.length > 800) break;
-                    if (/Le Delizie di Michela/i.test(text)) {
-                        const time = text.match(/\b\d+\s*(?:minuti?|min|ore?|ora|h|hours?)\b/i);
-                        if (time) return {image_url: img.src, image_alt: img.alt || '',
-                                          published_at_raw: time[0]};
+        page.wait_for_timeout(800)
+        try:
+            page.get_by_text("Clicca per visualizzare la storia").click(timeout=3000)
+        except Exception:
+            pass
+        page.wait_for_timeout(1500)
+        video = page.locator("video").first
+        if video.count() == 0:
+            print(f"{label}: storia Facebook non accessibile, controllo i post.")
+            return None
+        published_raw = ""
+        try:
+            published_raw = video.evaluate(
+                r"""el => {
+                    let node = el;
+                    for (let depth = 0; node && depth < 8; depth++, node = node.parentElement) {
+                        const text = node.innerText || '';
+                        if (text.length > 400) break;
+                        const m = text.match(/\b\d+\s*(?:minuti?|min|ore?|ora|h|hours?)\b/i);
+                        if (m) return m[0];
                     }
-                }
-            }
-            return null;
-        }""")
-        if not candidate:
-            return None
-        candidate.update(text="", photo_url=page.url, source_type="story",
-                         published_at=normalize_facebook_time(candidate["published_at_raw"]))
-        return candidate
+                    return '';
+                }"""
+            )
+        except Exception:
+            pass
+        image_bytes = video.screenshot()
+        return {
+            "image_url": "",
+            "image_bytes": image_bytes,
+            "image_alt": "",
+            "text": "",
+            "photo_url": page.url,
+            "source_type": "story",
+            "published_at_raw": published_raw,
+            "published_at": normalize_facebook_time(published_raw) if published_raw else "",
+        }
     except Exception as exc:
-        print(f"Storia Facebook non leggibile ({type(exc).__name__}); cerco nei post.")
+        print(f"{label}: storia Facebook non leggibile ({type(exc).__name__}); cerco nei post.")
         return None
     finally:
         page.close()
@@ -1580,7 +1598,7 @@ def extract_first_facebook_image(
                 )
 
             if story_url:
-                story = extract_facebook_story(context, story_url)
+                story = extract_facebook_story(context, story_url, label=label)
                 if story:
                     print(f"{label}: immagine recuperata dalla storia Facebook.")
                     return story
@@ -1844,7 +1862,7 @@ def extract_today_facebook_posts(
                 )
 
             if story_url:
-                story = extract_facebook_story(context, story_url)
+                story = extract_facebook_story(context, story_url, label=label)
                 if story:
                     print(f"{label}: immagine recuperata dalla storia Facebook.")
                     return [story]
