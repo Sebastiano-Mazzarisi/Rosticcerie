@@ -3244,6 +3244,7 @@ def save_publish_files(panels: List[Dict]) -> str:
 
     write_publish_index(panels, output_dir)
     write_publish_status(panels, output_dir)
+    write_menu_pdf(panels, output_dir)
     return output_dir
 
 
@@ -3265,6 +3266,99 @@ def write_publish_status(panels: List[Dict], output_dir: str) -> None:
     status_path = os.path.join(output_dir, "status.json")
     with open(status_path, "w", encoding="utf-8") as status_file:
         json.dump(status, status_file, ensure_ascii=False, indent=2)
+
+
+def write_menu_pdf(panels: List[Dict], output_dir: str) -> None:
+    """Genera Rosticcerie-Menu.pdf nella cartella di pubblicazione: un PDF
+    con il menu del giorno di tutte le rosticcerie attive, organizzato su
+    due colonne (colonna sinistra Fantasia / Pane & Co / Cibaria, destra
+    Bollenti piatti / Impastamo / Santoro). Ogni rosticceria mostra la
+    stessa immagine gia' salvata su disco per il riquadro del sito. Va
+    chiamata da save_publish_files() DOPO che le immagini sono gia' state
+    scritte in output_dir, cosi' da poterle leggere da li' se il pannello
+    non ha piu' "image_bytes" in memoria (es. dati riusati dal giorno
+    precedente). Il pulsante "PDF" del sito apre semplicemente questo file
+    gia' pronto: nessuna generazione avviene nel browser.
+    Un problema nella generazione del PDF (libreria mancante, immagine non
+    leggibile, ecc.) viene solo segnalato in console e non deve mai
+    interrompere la pubblicazione del resto del sito."""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.utils import ImageReader
+        from reportlab.pdfgen import canvas as pdf_canvas
+    except ImportError:
+        print("PDF menu non generato: manca reportlab (pip install reportlab).")
+        return
+
+    try:
+        by_name = {panel["name"]: panel for panel in panels}
+        left_names = ["Fantasia", "Pane & Co", "Cibària"]
+        right_names = ["Bollenti piatti", "Impastamò", "Santoro (Castellana)"]
+
+        def image_bytes_for(name: str) -> Optional[bytes]:
+            panel = by_name.get(name)
+            if not panel or panel.get("error"):
+                return None
+            data = panel.get("image_bytes")
+            if data:
+                return data
+            image_name = panel.get("publish_image") or f"{safe_file_name(name)}.jpg"
+            image_path = os.path.join(output_dir, image_name)
+            if os.path.exists(image_path):
+                with open(image_path, "rb") as image_file:
+                    return image_file.read()
+            return None
+
+        page_w, page_h = A4
+        margin = 28
+        gap = 16
+        header_h = 46
+        col_w = (page_w - margin * 2 - gap) / 2
+        body_top = page_h - margin - header_h
+        body_h = body_top - margin
+        cell_h = body_h / 3
+        label_h = 20
+
+        pdf_path = os.path.join(output_dir, "Rosticcerie-Menu.pdf")
+        c = pdf_canvas.Canvas(pdf_path, pagesize=A4)
+
+        c.setFont("Helvetica-Bold", 16)
+        c.drawCentredString(page_w / 2, page_h - margin - 16, "Menu del giorno")
+        c.setFont("Helvetica", 10)
+        c.drawCentredString(page_w / 2, page_h - margin - 32, italian_long_date(rome_now().date()))
+
+        for col_x, names in ((margin, left_names), (margin + col_w + gap, right_names)):
+            for row, name in enumerate(names):
+                cell_top = body_top - row * cell_h
+                c.setFont("Helvetica-Bold", 12)
+                c.setFillColorRGB(0, 0, 0)
+                c.drawCentredString(col_x + col_w / 2, cell_top - 13, name)
+
+                area_top = cell_top - label_h
+                area_h = cell_h - label_h - 6
+                data = image_bytes_for(name)
+                if data:
+                    try:
+                        reader = ImageReader(io.BytesIO(data))
+                        iw, ih = reader.getSize()
+                        scale = min(col_w / iw, area_h / ih)
+                        draw_w, draw_h = iw * scale, ih * scale
+                        draw_x = col_x + (col_w - draw_w) / 2
+                        draw_y = area_top - area_h + (area_h - draw_h) / 2
+                        c.drawImage(
+                            reader, draw_x, draw_y, width=draw_w, height=draw_h,
+                            preserveAspectRatio=True, mask="auto",
+                        )
+                        continue
+                    except Exception as exc:
+                        print(f"PDF menu: immagine non incorporata per {name}: {exc}")
+                c.setFont("Helvetica-Oblique", 10)
+                c.drawCentredString(col_x + col_w / 2, area_top - area_h / 2, "Menu non disponibile")
+
+        c.showPage()
+        c.save()
+    except Exception as exc:
+        print(f"PDF menu non generato per un errore imprevisto: {exc}")
 
 
 def _load_bold_font(size: int):
@@ -3393,7 +3487,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     cards = []
     for i, p in enumerate(panels_data):
-        title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
         border_color = p.get("card_border") or ("#ffd641" if p["updated"] else "#555555")
         bg_color = p.get("card_bg") or ("#fff7de" if p["updated"] else "#ffffff")
         name_color = p.get("card_name_color") or ("#111" if p["updated"] else "#777777")
@@ -3407,10 +3500,23 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if p.get("card_reference")
             else ""
         )
-        suggestion_image = '<img class="suggestions-image" src="../../Magica.jpg" alt="" aria-hidden="true">' if p["name"] == "Suggerimenti" else ""
+        if p["name"] == "Suggerimenti":
+            # Pulsante verde diviso in due meta': "PDF" apre il PDF con
+            # tutti i menu del giorno (write_menu_pdf), "Info" fa esattamente
+            # quello che faceva prima il riquadro "Suggerimenti" (immagine +
+            # pulsante di condivisione del sito, gestiti da renderDetail()).
+            cards.append(f"""
+            <div class="card is-suggestions" data-pid="{i}" tabindex="0" style="border-color:{border_color};background-color:{bg_color}">
+                <button type="button" class="split-half split-pdf" onclick="event.stopPropagation(); openMenuPdf();">PDF</button>
+                <button type="button" class="split-half split-info" onclick="event.stopPropagation(); cardClicked({i});">Info</button>
+                {counter_html}
+                {reference_html}
+            </div>
+            """)
+            continue
+        title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
-            {suggestion_image}
             <span class="card-name" style="color:{name_color}">{title}</span>
             {reference_html}
             {counter_html}
@@ -3572,11 +3678,42 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       padding: 2px 8px;
       line-height: 18px;
     }}
-    .suggestions-image {{ width: 100px; height: auto; max-width: 100%; display: block; margin: 0 auto 8px; }}
     .card.is-suggestions {{
-      padding: 12px 10px;
-      justify-content: center;
+      flex-direction: row;
+      padding: 0;
+      overflow: hidden;
+      justify-content: stretch;
+      align-items: stretch;
+    }}
+    .split-half {{
+      appearance: none;
+      -webkit-appearance: none;
+      border: none;
+      background: transparent;
+      color: #111;
+      font: inherit;
+      font-size: clamp(16px, 5vw, 24px);
+      font-weight: bold;
+      flex: 1 1 50%;
+      display: flex;
       align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      padding: 8px 4px;
+      touch-action: manipulation;
+    }}
+    .split-pdf {{
+      border-right: 2px solid rgba(0,0,0,0.18);
+    }}
+    .site-note {{
+      grid-column: 1 / -1;
+      color: #ccc;
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: center;
+      padding: 4px 12px 2px;
+      margin: 0;
     }}
     /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
        tenendo premuta una casella, tutte "tremano" leggermente e quella
@@ -4267,6 +4404,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
     }}
 
+    function openMenuPdf() {{
+        // Il PDF con tutti i menu del giorno (due colonne) viene generato
+        // lato server ad ogni pubblicazione (write_menu_pdf in Python): qui
+        // si apre semplicemente il file gia' pronto, con un parametro
+        // anti-cache cosi' da vedere sempre l'ultima versione.
+        window.open('Rosticcerie-Menu.pdf?v=' + Date.now(), '_blank');
+    }}
+
     function syncOrderFromDom() {{
         const grid = document.getElementById('grid-view');
         order = Array.from(grid.querySelectorAll('.card')).map(c => parseInt(c.dataset.pid, 10));
@@ -4537,7 +4682,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             card.classList.toggle('is-suggestions', panel.name === 'Suggerimenti');
             card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#555555');
             card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#ffffff');
-            card.querySelector('.card-name').style.color = panel.card_name_color || (panel.updated ? '#111' : '#777777');
+            const cardNameEl = card.querySelector('.card-name');
+            if (cardNameEl) {{
+                cardNameEl.style.color = panel.card_name_color || (panel.updated ? '#111' : '#777777');
+            }}
         }});
         loadSavedOrder();
         applyOrderToGrid();
@@ -4832,6 +4980,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <main id="grid-view">
     {"".join(cards)}
+    <p class="site-note">Nota: è possibile aggiungere altre rosticcerie ma devono avere un menu che cambia giornalmente e che viene pubblicato su un sito web, oppure nei post di Facebook</p>
   </main>
 
   <div id="detail-view">
