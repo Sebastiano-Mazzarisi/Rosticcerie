@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-12T10:32:53",
+  "updated_at": "2026-09-12T11:43:37",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 12/09/26",
-      "published_at": "12/09/2026 09:43 circa",
-      "published_at_raw": "2h",
+      "published_at": "12/09/2026 09:40 circa",
+      "published_at_raw": "4h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "12 Settembre 2026.\nMenù del giorno.",
-      "published_at": "12/09/2026 11:20 circa",
+      "published_at": "12/09/2026 11:40 circa",
       "published_at_raw": "12/09/2026",
       "error": null
     },
@@ -37,7 +37,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 12 Settembre",
-      "published_at": "12/09/2026 09:48 circa",
+      "published_at": "12/09/2026 09:42 circa",
       "published_at_raw": "12/09/2026",
       "error": null
     },
