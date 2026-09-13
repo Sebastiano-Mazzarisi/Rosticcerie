@@ -51,22 +51,26 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         photo_grid_first=False,
         force_refresh_today=True,
     ),
-    # Michela e' temporaneamente disattivata: pubblica il menu solo nelle
-    # Storie di Facebook, che l'automazione headless non riesce ad aprire in
-    # modo affidabile (Facebook limita/renderizza diversamente le sessioni
-    # automatizzate). Riquadro tolto dal sito su richiesta - richiede
-    # importazione manuale quotidiana (Importa_Michela.py), non sostenibile.
-    # Riattivare rimuovendo il commento appena si trova una soluzione stabile.
-    # RosticceriaConfig(
-    #     name="Le delizie di Michela",
-    #     url="https://www.facebook.com/profile.php?id=100045208848338",
-    #     kind="facebook_image",
-    #     output_image="Rosticceria_LeDelizieDiMichela.jpg",
-    #     story_url="https://www.facebook.com/stories/186699229513704/",
-    #     force_refresh_today=True,
-    #     prefer_active_closure=True,
-    #     skip_closure_notices=True,
-    # ),
+    # Michela pubblica il menu solo nelle Storie di Facebook, che
+    # l'automazione headless della pipeline non riesce ad aprire in modo
+    # affidabile (Facebook limita/renderizza diversamente le sessioni
+    # automatizzate). Riattivata il 2026-09-13: ImportaStoriaMichela.py, in
+    # esecuzione locale con una sessione Chrome autenticata (stessa tecnica
+    # validata in Stato.py), scrive ogni giorno local_menus/michela_<data>.jpg;
+    # local_panel() lo trova e la pipeline lo usa direttamente (vedi
+    # pipeline._extract_facebook_image_full), senza toccare Facebook. Il
+    # story_url qui sotto resta come ripiego, tentato solo se quel file per
+    # oggi manca ancora: resta soggetto allo stesso limite di affidabilita'.
+    RosticceriaConfig(
+        name="Le delizie di Michela",
+        url="https://www.facebook.com/profile.php?id=100045208848338",
+        kind="facebook_image",
+        output_image="Rosticceria_LeDelizieDiMichela.jpg",
+        story_url="https://www.facebook.com/stories/186699229513704/",
+        force_refresh_today=True,
+        prefer_active_closure=True,
+        skip_closure_notices=True,
+    ),
     RosticceriaConfig(
         name="Santoro (Castellana)",
         url="https://www.facebook.com/santorogastronomia",

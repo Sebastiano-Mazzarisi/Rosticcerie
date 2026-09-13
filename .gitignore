@@ -3,3 +3,5 @@ cookies.txt
 **/cookies_claude.txt
 __pycache__/
 *.pyc
+.michela_story_*.tmp
+local_menus/michela_diagnostica.png
