@@ -4406,13 +4406,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             }} }});
         }}
 
-        // Primo giro: leggo solo quante unita' mancano per ciascun
-        // contatore (poche richieste, indipendenti dai valori in gioco).
+        // Primo giro: leggo quante unita' mancano per ciascun contatore.
+        // In parallelo (non un contatore alla volta come i "colpi" veri e
+        // propri piu' sotto): qui conta la rapidita' percepita da chi ha
+        // appena cliccato, non ancora il limite di frequenza dell'API.
         const jobs = [];
-        for (const t of targets) {{
+        await Promise.all(targets.map(async (t) => {{
             try {{
-                const totalData = await fetchJsonWithRetry(counterGetUrlFor(t.key), 4);
-                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(t.key), 4, true);
+                const [totalData, offsetData] = await Promise.all([
+                    fetchJsonWithRetry(counterGetUrlFor(t.key), 4),
+                    fetchJsonWithRetry(offsetGetUrlFor(t.key), 4, true),
+                ]);
                 const target = totalData.value;
                 const current = offsetData.value;
                 if (current > target) throw new Error('Azzeramento incoerente: impossibile ridurre il valore remoto');
@@ -4420,16 +4424,27 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             }} catch (e) {{
                 console.error('Lettura fallita per ' + t.key, e);
             }}
-            await sleep(120);
-        }}
+        }}));
 
-        // Secondo giro: eseguo tutti i "colpi" mancanti di tutti i
-        // contatori insieme, con piu' richieste in volo contemporaneamente
-        // ma condividendo lo stesso limitatore di frequenza, cosi' da
-        // restare il piu' vicino possibile al limite dell'API invece di
-        // sommare inutilmente latenza di rete e pausa fissa per ogni
-        // singolo colpo (come faceva la versione precedente, un contatore
-        // alla volta).
+        // Azzeramento visibile SUBITO, ma solo su questo dispositivo: non
+        // appena conosciamo i totali mostriamo gia' 0, invece di far
+        // scendere i numeri man mano che i "colpi" verso Abacus (qui
+        // sotto) vanno a segno. Il vero azzeramento sul server - il solo
+        // modo che Abacus offre e' incrementare l'offset di 1 per volta,
+        // fino a raggiungere il totale - prosegue in background e puo'
+        // richiedere piu' tempo: chi ricarica la pagina da un altro
+        // dispositivo nel frattempo puo' ancora vedere un valore
+        // intermedio, finche' i colpi non sono completati.
+        for (const job of jobs) job.apply(job.target, job.target);
+        updateCardCounters();
+        updateAdminTitle();
+        updateExtraCounters();
+        saveCounterCache();
+        mainTitle.innerText = 'Rosticcerie';
+
+        // Da qui in poi i "colpi" mancanti proseguono in background: non
+        // fanno piu' attendere ne' aggiornano la schermata, che resta
+        // gia' a 0 per chi ha cliccato.
         const queue = [];
         for (const job of jobs) {{
             for (let k = job.current; k < job.target; k++) queue.push(job);
@@ -4437,42 +4452,23 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         let nextInQueue = 0;
         const gate = createRateGate(24, 10000);
 
-        // Mostra i numeri reali (card, contatori extra e il totale accanto
-        // a "by Mazzarisi") aggiornati una volta al secondo, cosi' si vede
-        // scendere ogni contatore mentre l'azzeramento e' in corso, invece
-        // di scoprire il risultato solo alla fine.
-        function refreshVisibleCounters() {{
-            for (const job of jobs) job.apply(job.target, job.current);
-            updateCardCounters();
-            updateAdminTitle();
-            updateExtraCounters();
-        }}
-        refreshVisibleCounters();
-        const refreshTimer = setInterval(refreshVisibleCounters, 1000);
-
-        try {{
-            async function worker() {{
-                while (nextInQueue < queue.length) {{
-                    const job = queue[nextInQueue++];
-                    await gate();
-                    try {{
-                        await fetchJsonWithRetry(offsetHitUrlFor(job.key), 4);
-                        job.current++;
-                    }} catch (e) {{
-                        // Un colpo fallito su un contatore non deve
-                        // bloccare gli altri: proseguiamo con la prossima
-                        // unita' in coda.
-                        console.error('Azzeramento fallito per ' + job.key, e);
-                    }}
+        async function worker() {{
+            while (nextInQueue < queue.length) {{
+                const job = queue[nextInQueue++];
+                await gate();
+                try {{
+                    await fetchJsonWithRetry(offsetHitUrlFor(job.key), 4);
+                    job.current++;
+                }} catch (e) {{
+                    // Un colpo fallito su un contatore non deve bloccare
+                    // gli altri: proseguiamo con la prossima unita' in coda.
+                    console.error('Azzeramento fallito per ' + job.key, e);
                 }}
             }}
-            await Promise.all([worker(), worker(), worker(), worker()]);
-        }} finally {{
-            clearInterval(refreshTimer);
         }}
-
-        saveCounterCache();
-        refreshVisibleCounters();
+        Promise.all([worker(), worker(), worker(), worker()]).catch((e) => {{
+            console.error('Azzeramento in background non completato', e);
+        }});
     }}
 
     function formatCounter(value) {{
@@ -5309,7 +5305,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             return;
         }}
         if (isAdmin) {{
-            if (confirm("Vuoi davvero azzerare tutti i contatori, incluse le visualizzazioni extra (Audio/PDF/Info)? Verranno azzerati per tutti i dispositivi. L'operazione puo' richiedere qualche minuto sui contatori con molte visualizzazioni.")) {{
+            if (confirm("Vuoi davvero azzerare tutti i contatori, incluse le visualizzazioni extra (Audio/PDF/Info)? Su questo dispositivo si azzerano subito. Il completamento per tutti gli altri dispositivi avviene in background e puo' richiedere qualche minuto in piu' sui contatori con molte visualizzazioni.")) {{
                 resetCounterGlobally();
             }}
         }} else {{

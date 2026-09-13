@@ -204,6 +204,25 @@ def main():
             def account_visible():
                 return page.get_by_role('button', name=re.compile(r'^(Il tuo profilo|Your profile|Account)$', re.I)).count() > 0
 
+            def story_is_recent():
+                """Vero se vicino alla storia compare un'indicazione di tempo
+                relativa (minuti/ore appena trascorsi), tipica di una storia
+                attiva nelle ultime 24 ore. Se non la trova - o se il
+                visualizzatore mostra qualcos'altro (es. una foto "in
+                evidenza" permanente, o una storia scaduta rimasta in
+                cache) - e' piu' sicuro trattarla come non valida piuttosto
+                che rischiare di importare una foto vecchia spacciata per il
+                menu di oggi. Nota: il testo esatto mostrato da Facebook puo'
+                cambiare; se questo controllo scarta storie che invece sono
+                effettivamente di oggi, va rivista la regex guardando cosa
+                appare davvero nella schermata diagnostica."""
+                recent = page.get_by_text(re.compile(r'^\s*(\d{1,2}\s*(m|min|h)|adesso|ora)\s*$', re.I))
+                try:
+                    recent.first.wait_for(state='visible', timeout=3000)
+                    return True
+                except PlaywrightTimeoutError:
+                    return False
+
             def complete_login():
                 input('Completa accesso e verifiche di Facebook in Chrome. Quando vedi il tuo account premi INVIO qui... ')
                 if needs_login():
@@ -270,6 +289,14 @@ def main():
                     raise RuntimeError('Nessuna immagine caricata nel visualizzatore. Schermata diagnostica: ' + str(diagnostic))
                 if args.url == KNOWN_STORY_URL and not urlparse(page.url).path.startswith(urlparse(KNOWN_STORY_URL).path):
                     raise RuntimeError('Facebook è passato alla storia di un altro profilo. Nessun file importato.')
+                if not story_is_recent():
+                    diagnostic = BASE / 'local_menus' / 'michela_diagnostica.png'
+                    diagnostic.parent.mkdir(parents=True, exist_ok=True)
+                    page.screenshot(path=str(diagnostic))
+                    print('Immagine trovata ma senza indicazione di storia recente (probabile foto vecchia o in '
+                          'evidenza): non la importo per sicurezza. Schermata: ' + str(diagnostic)
+                          + ' Nuovo controllo fra 10 minuti.')
+                    return None
                 src = candidate['src']
                 host = urlparse(src).hostname or ''
                 if urlparse(src).scheme != 'https' or not (host.endswith('.fbcdn.net') or host.endswith('.facebook.com')):
