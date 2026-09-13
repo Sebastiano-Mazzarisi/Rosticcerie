@@ -4609,11 +4609,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function continueAfterWaiting() {{
         clearTimeout(waitingUpdateTimer);
         waitingUpdateTimer = null;
-        const pid = waitingUpdatePid;
         waitingUpdatePid = null;
         const dialog = document.getElementById('waiting-update-dialog');
         if (dialog.open) dialog.close();
-        if (pid !== null) openDetail(order.indexOf(pid));
     }}
 
     function michelaNoticeFrom(text) {{
@@ -4653,10 +4651,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         if (reorderMode || cardOpening) return;
         refreshMenuDates();
         if (isWaitingForUpdate(PANELS[pid])) {{
+            // Mostra prima il menu del giorno precedente, poi l'avviso
+            // "In attesa di aggiornamento" per 2 secondi (si chiude da solo).
+            openDetail(order.indexOf(pid));
             waitingUpdatePid = pid;
             document.getElementById('waiting-update-dialog').showModal();
             clearTimeout(waitingUpdateTimer);
-            waitingUpdateTimer = setTimeout(continueAfterWaiting, 5000);
+            waitingUpdateTimer = setTimeout(continueAfterWaiting, 2000);
             return;
         }}
         cardOpening = true;
@@ -5417,7 +5418,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   </div>
 <dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
     <p id="waiting-update-text">In attesa di<br>aggiornamento</p>
-    <button type="button" autofocus onclick="continueAfterWaiting()">OK</button>
   </dialog>
 </body>
 </html>
