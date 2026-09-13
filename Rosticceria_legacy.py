@@ -3969,7 +3969,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       0%, 100% {{ transform: translateX(0); }}
       50% {{ transform: translateX(6px); }}
     }}
-    .audio-hint-text {{ display: none; line-height: 1.05; font-size: 12px; font-weight: bold; color: #00c853; text-align: right; }}
+    .audio-hint-text {{ display: none; line-height: 1.05; font-size: 13px; font-weight: bold; color: #00c853; text-align: right; }}
     .home-identity:not(.audio-playing) .audio-hint-text.show-hint {{ display: inline-block; }}
     .sound-waves {{ display: none; width: clamp(28px, 10vw, 44px); height: 88px; pointer-events: none; color: #00c853; overflow: visible; }}
     .home-identity.audio-playing .sound-waves {{ display: block; }}
