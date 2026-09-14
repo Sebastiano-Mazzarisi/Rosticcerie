@@ -4407,22 +4407,32 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }}
 
         // Primo giro: leggo quante unita' mancano per ciascun contatore.
-        // In parallelo (non un contatore alla volta come i "colpi" veri e
-        // propri piu' sotto): qui conta la rapidita' percepita da chi ha
-        // appena cliccato, non ancora il limite di frequenza dell'API.
+        // Le richieste sono distanziate con lo stesso limitatore usato piu'
+        // sotto per i "colpi": lette tutte insieme senza limite (fino a
+        // ~20 richieste simultanee con 7 rosticcerie + 3 contatori extra),
+        // l'API gratuita di Abacus rispondeva 429 ad alcune di esse e,
+        // esauriti i tentativi, quel singolo contatore restava
+        // silenziosamente non azzerato (bug osservato su "Le delizie di
+        // Michela" il 14/09/2026: tutti gli altri a 0, lei ferma al valore
+        // precedente). Il limitatore e' condiviso con i "colpi" veri e
+        // propri qui sotto, cosi' il totale di richieste verso Abacus in
+        // ogni finestra di 10s resta sotto controllo in entrambe le fasi.
+        const rateGate = createRateGate(24, 10000);
         const jobs = [];
+        const failedTargets = [];
         await Promise.all(targets.map(async (t) => {{
             try {{
-                const [totalData, offsetData] = await Promise.all([
-                    fetchJsonWithRetry(counterGetUrlFor(t.key), 4),
-                    fetchJsonWithRetry(offsetGetUrlFor(t.key), 4, true),
-                ]);
+                await rateGate();
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(t.key), 4);
+                await rateGate();
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(t.key), 4, true);
                 const target = totalData.value;
                 const current = offsetData.value;
                 if (current > target) throw new Error('Azzeramento incoerente: impossibile ridurre il valore remoto');
                 jobs.push({{ ...t, target, current }});
             }} catch (e) {{
                 console.error('Lettura fallita per ' + t.key, e);
+                failedTargets.push(t.key);
             }}
         }}));
 
