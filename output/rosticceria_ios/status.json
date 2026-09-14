@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-14T09:19:46",
+  "updated_at": "2026-09-14T15:05:18",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 14/09/26",
-      "published_at": "14/09/2026 10:16 circa",
-      "published_at_raw": "1h",
+      "published_at": "14/09/2026 10:02 circa",
+      "published_at_raw": "7h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "14 Settembre 2026.\nMenù del giorno.",
-      "published_at": "14/09/2026 10:50 circa",
+      "published_at": "14/09/2026 11:02 circa",
       "published_at_raw": "14/09/2026",
       "error": null
     },
@@ -28,16 +28,16 @@
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "9m\n·",
-      "published_at": "14/09/2026 11:08 circa",
-      "published_at_raw": "9m",
+      "text": "5h\n·",
+      "published_at": "14/09/2026 12:03 circa",
+      "published_at_raw": "5h",
       "error": null
     },
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 14 Settembre",
-      "published_at": "14/09/2026 09:18 circa",
+      "published_at": "14/09/2026 09:04 circa",
       "published_at_raw": "14/09/2026",
       "error": null
     },
@@ -53,8 +53,8 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●PENNETTE ALLA CRUDAIOLA CON TONNO, CILIEGINO E JULIENNE DI ZUCCHINE 5,0\n●COUS COUS ALLE VERDURE\n●TIMBALLO DI SPINACI 5,0\n●CANNELLONI ALLA CARNE 5,5\n●MACCHERONCINO ALLA CRUDAIOLA CON CILIEGINO, SALMONE E PISELLI 5,5\n●SPAGHETTI ALLA CARBONARA 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●BISTECCA DI POLLO IN SALSA BBQ\n●SCALOPPINE DI VITELLO AL LIMONE\n●POLPETTE DI CARNE AL SUGO\n●COSCIA E SOVRAVOSCIA DI POLLO AL FORNO CON SCALOGNO E CAROTE\n●RUSTICO COPPA E GALBANINO\n●ZUCCHINE RIPIENE\n●FUNGHI PLEOS GRATINATI AL FORNO\n●FIORI DI ZUCCA FRITTI\n●INSALATA DI PATATE, ZUCCHINA, MELANZANA E CAROTE",
-      "published_at": "14/09/2026 10:19 circa",
-      "published_at_raw": "1h",
+      "published_at": "14/09/2026 11:05 circa",
+      "published_at_raw": "6h",
       "error": null
     }
   ]
