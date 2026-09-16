@@ -1,27 +1,27 @@
 {
-  "updated_at": "2026-09-15T17:47:08",
+  "updated_at": "2026-09-16T08:02:03",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 15/09/26",
-      "published_at": "15/09/2026 11:43 circa",
-      "published_at_raw": "8h",
+      "text": "MENÙ DEL GIORNO 16/09/26",
+      "published_at": "16/09/2026 09:56 circa",
+      "published_at_raw": "2m",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "15 Settembre 2026.\nMenù del giorno.",
-      "published_at": "15/09/2026 09:43 circa",
-      "published_at_raw": "15/09/2026",
+      "text": "16 Settembre 2026.\nMenù del giorno .",
+      "published_at": "16/09/2026 09:48 circa",
+      "published_at_raw": "16/09/2026",
       "error": null
     },
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
       "text": "2h\n·",
-      "published_at": "15/09/2026 08:06 circa",
+      "published_at": "16/09/2026 07:59 circa",
       "published_at_raw": "2h",
       "error": null
     },
@@ -36,25 +36,25 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 14 Settembre",
-      "published_at": "14/09/2026 09:04 circa",
-      "published_at_raw": "14/09/2026",
+      "text": "menù del giorno 16 Settembre",
+      "published_at": "16/09/2026 09:01 circa",
+      "published_at_raw": "16/09/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 15 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Risotto con radicchio e gorgonzola - €7.50\n- Cavatelli al grano arso con pesce spada e melanzane - €8.50\n- Tagliolino con pesto e fagiolini - €8.50\n- Minestra di piselli - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Spezzatino di capocollo all'ortolana - €7.50\n- Filetto di merluzzo gratinato con zucchina - €8.50\n  Con pomodorino",
-      "published_at": "15/09/2026",
-      "published_at_raw": "15 Settembre",
+      "text": "Menu 16 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Risotto con radicchio e gorgonzola - €7.50\n- Cavatelli al grano arso con pesce spada e melanzane - €8.50\n- Tagliolino con pesto e fagiolini - €8.50\n- Minestra di piselli - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Spezzatino di capocollo all'ortolana - €7.50\n- Filetto di merluzzo gratinato con zucchina - €8.50\n  Con pomodorino",
+      "published_at": "16/09/2026",
+      "published_at_raw": "16 Settembre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "PRIMI PIATTI\n●SEDANINI ALLA CRUDAIOLA CON PISELLI, CILIEGINO E SALMONE 5,0\n●COUS COUS ALLE VERDURE 5,5\n●FUSILLI ALLA CRUDAIOLA CON MELANZANA VIOLETTA, DATTERINO GIALLO E MANDORLE 5,5\n●PIZZA DI PATATE 5,0\n●PENNONI CON CREMA DI PATATE, SALSICCIA E SCAMORZA AFFUMICATA 5,5\n●LINGUINE ALLE VONGOLE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●FAGOTTO DI SOVRAVOSCIA DI POLLO PANCETTATO ARROSTO ALLE ERBE\n●ZAMPINA AL FORNO\n●TRIPPA IN UMIDO\n●PEPERONI RIPIENI AL TONNO\n●FILETTO DI MERLUZZO IMPANATO CON INSALATINA DI CAMPO E SALSA ROSA\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA",
-      "published_at": "15/09/2026 09:45 circa",
-      "published_at_raw": "10h",
+      "text": "PRIMI PIATTI\n●SPINACI ALL'OLIO 5,0\n●LASAGNA AL FORNO 5,0\n●TROFIE ALLA CRUDAIOLA CON GAMBERI E PESTO DI ZUCCHINA 5,5\n●RISOTTO AI PORCINI 5,5\n●MACCHERONCINO CON SUGO, PESTO DI BASILICO PANCETTA E MOZZARELLA 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●MAXI HAMBURGER DI VITELLO ALLA CAPRESE\n●PETTO DI POLLO AI FUNGHI\n●PARMIGIANA\n●TRANCIO DI PESCE SPADA ALLA MEDITERRANEA\n●POLPO A INSALATA\n●INSALATA DI POLLO TONNATA\n●INSALATA DI POLLO\n●FRITTATA CON TONNO OLIVE E CAPPERI",
+      "published_at": "16/09/2026 09:46 circa",
+      "published_at_raw": "15m",
       "error": null
     }
   ]
