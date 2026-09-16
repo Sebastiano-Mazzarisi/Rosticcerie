@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-16T13:05:49",
+  "updated_at": "2026-09-16T17:39:44",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 16/09/26",
-      "published_at": "16/09/2026 10:02 circa",
-      "published_at_raw": "5h",
+      "published_at": "16/09/2026 10:36 circa",
+      "published_at_raw": "9 h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "16 Settembre 2026.\nMenù del giorno .",
-      "published_at": "16/09/2026 10:02 circa",
+      "published_at": "16/09/2026 10:36 circa",
       "published_at_raw": "16/09/2026",
       "error": null
     },
@@ -28,16 +28,16 @@
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "8h\n·",
-      "published_at": "15/09/2026 11:44 circa",
-      "published_at_raw": "8h",
+      "text": "Me gusta\nComentar",
+      "published_at": "16/09/2026",
+      "published_at_raw": "",
       "error": null
     },
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 16 Settembre",
-      "published_at": "16/09/2026 09:05 circa",
+      "published_at": "16/09/2026 09:38 circa",
       "published_at_raw": "16/09/2026",
       "error": null
     },
@@ -52,9 +52,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "PRIMI PIATTI\n●SPINACI ALL'OLIO 5,0\n●LASAGNA AL FORNO 5,0\n●TROFIE ALLA CRUDAIOLA CON GAMBERI E PESTO DI ZUCCHINA 5,5\n●RISOTTO AI PORCINI 5,5\n●MACCHERONCINO CON SUGO, PESTO DI BASILICO PANCETTA E MOZZARELLA 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●MAXI HAMBURGER DI VITELLO ALLA CAPRESE\n●PETTO DI POLLO AI FUNGHI\n●PARMIGIANA\n●TRANCIO DI PESCE SPADA ALLA MEDITERRANEA\n●POLPO A INSALATA\n●INSALATA DI POLLO TONNATA\n●INSALATA DI POLLO\n●FRITTATA CON TONNO OLIVE E CAPPERI",
-      "published_at": "16/09/2026 10:05 circa",
-      "published_at_raw": "5h",
+      "text": "PRIMI PIATTI\n●SPINACI ALL'OLIO 5,0\n●LASAGNA AL FORNO 5,0\n●TROFIE ALLA CRUDAIOLA CON GAMBERI E PESTO DI ZUCCHINA 5,5\n●RISOTTO AI PORCINI 5,5\n●MACCHERONCINO CON SUGO, PESTO DI BASILICO PANCETTA E MOZZARELLA 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●MAXI HAMBURGER DI VITELLO ALLA CAPRESE\n●PETTO DI POLLO AI FUNGHI\n●PARMIGIANA\n●TRANCIO DI PESCE SPADA ALLA MEDITERRANEA\n●POLPO A INSALATA\n●INSALATA DI POLLO TONNATA\n●INSALATA DI POLLO\n●FRITTATA CON TONNO OLIVE E CAPPERI Ver menos",
+      "published_at": "16/09/2026 10:39 circa",
+      "published_at_raw": "9 h",
       "error": null
     }
   ]
