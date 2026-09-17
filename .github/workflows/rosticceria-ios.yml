@@ -93,6 +93,8 @@ jobs:
 
       - name: Estrai foto
         if: steps.timecheck.outputs.run == 'true'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python Rosticceria.py --once --no-git
 
       - name: Stampa diagnostica HTML Facebook (se presente)

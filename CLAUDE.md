@@ -86,6 +86,41 @@ giorno il file manca ancora, tenta come ripiego il vecchio scraping della
 storia (`story_url` in config.py), con lo stesso limite di affidabilita' di
 sempre.
 
+## Notifica push (beep sul cellulare) quando esce un nuovo menu
+
+Dal 17/09/2026, `save_publish_files()` in `Rosticceria_legacy.py` manda una
+notifica push (con suono) tramite [ntfy.sh](https://ntfy.sh) ogni volta che
+una rosticceria pubblica il menu del giorno — cioè quando l'immagine appena
+estratta è DIVERSA da quella già pubblicata (confronto byte per byte prima
+di sovrascrivere il file, non un semplice "il pannello è cambiato"): questo
+evita notifiche ripetute per Michela, il cui pannello viene rigenerato a
+ogni giro anche quando la foto locale importata è sempre la stessa.
+
+Come funziona:
+
+- Il "topic" ntfy (una stringa segreta che funziona come canale/password:
+  chi la conosce può ricevere le notifiche) NON è scritto nel codice, perché
+  questo repository è pubblico. Va letto dalla variabile d'ambiente
+  `NTFY_TOPIC`.
+- Su GitHub Actions è impostato come secret del repository (Settings →
+  Secrets and variables → Actions → `NTFY_TOPIC`) e passato allo step
+  "Estrai foto" in `.github/workflows/rosticceria-ios.yml` via `env:`.
+- Se `NTFY_TOPIC` non è impostata, `notify_new_menus()` non fa nulla (solo
+  un messaggio in log): la pubblicazione dei menu continua normalmente,
+  semplicemente senza notifiche.
+- Sul cellulare (iPhone di Nino): app **ntfy** dall'App Store, poi
+  "Iscriviti a un argomento" con lo stesso valore di `NTFY_TOPIC`.
+- La funzione è centralizzata in `save_publish_files()`, quindi copre TUTTE
+  le rosticcerie (incluso il menu di Michela, sia quando arriva
+  automaticamente da `ImportaStoriaMichela.py` sia quando viene importato a
+  mano con `Importa_Michela.py`) senza bisogno di duplicare la logica altrove:
+  qualunque strada porti a un nuovo file in `local_menus/`, la notifica parte
+  comunque al giro successivo della pipeline principale, quando quel file
+  viene letto e pubblicato come immagine finale.
+- Se in futuro serve cambiare argomento ntfy (es. sospetto che sia trapelato),
+  basta aggiornare il secret `NTFY_TOPIC` su GitHub e re-iscrivere l'app sul
+  telefono al nuovo nome: nessuna modifica di codice necessaria.
+
 ## Stile di lavoro
 
 - Messaggi di commit descrittivi, in italiano.

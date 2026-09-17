@@ -3216,6 +3216,7 @@ def existing_publish_panel_if_today(name: str, require_today: bool = True) -> Op
 def save_publish_files(panels: List[Dict]) -> str:
     output_dir = publish_dir()
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+    newly_published: List[str] = []
 
     for panel in panels:
         if "error" in panel:
@@ -3229,6 +3230,24 @@ def save_publish_files(panels: List[Dict]) -> str:
 
         if panel.get("reused"):
             continue
+
+        # Confronto con l'immagine gia' pubblicata (se presente) PRIMA di
+        # sovrascriverla: solo un contenuto realmente diverso conta come
+        # "nuovo menu pubblicato" ai fini della notifica push qui sotto. Senza
+        # questo controllo, pannelli come quello di Michela - che vengono
+        # rigenerati a ogni giro anche quando la foto e' sempre la stessa
+        # (import locale valido per l'intera giornata) - manderebbero una
+        # notifica ogni 10 minuti invece che una sola volta.
+        latest_path = os.path.join(output_dir, latest_name)
+        previous_bytes = None
+        if os.path.exists(latest_path):
+            try:
+                with open(latest_path, "rb") as previous_file:
+                    previous_bytes = previous_file.read()
+            except OSError:
+                previous_bytes = None
+        if previous_bytes != panel["image_bytes"]:
+            newly_published.append(panel["name"])
 
         for filename in (latest_name, archive_name):
             path = os.path.join(output_dir, filename)
@@ -3245,7 +3264,46 @@ def save_publish_files(panels: List[Dict]) -> str:
     write_publish_index(panels, output_dir)
     write_publish_status(panels, output_dir)
     write_menu_pdf(panels, output_dir)
+    if newly_published:
+        notify_new_menus(newly_published)
     return output_dir
+
+
+def notify_new_menus(names: List[str]) -> None:
+    """Manda una notifica push (con suono) al cellulare tramite ntfy.sh
+    quando una o piu' rosticcerie pubblicano il menu del giorno. L'argomento
+    'topic' di ntfy.sh funziona come una password: chi lo conosce puo'
+    ricevere (e mandare) notifiche su quel canale, quindi NON va scritto qui
+    nel codice (questo repository e' pubblico) ma letto dalla variabile
+    d'ambiente NTFY_TOPIC - impostata come secret di GitHub Actions per le
+    esecuzioni automatiche, ed eventualmente come variabile d'ambiente locale
+    per le esecuzioni manuali. Se la variabile non e' impostata, la funzione
+    non fa nulla: niente notifiche finche' non viene configurata, ma la
+    pubblicazione dei menu continua normalmente."""
+    topic = os.environ.get("NTFY_TOPIC", "").strip()
+    if not topic:
+        print("Notifica non inviata: variabile NTFY_TOPIC non impostata.")
+        return
+    if len(names) == 1:
+        title = f"{names[0]}: nuovo menu"
+        body = f"{names[0]} ha pubblicato il menu di oggi."
+    else:
+        title = "Nuovi menu pubblicati"
+        body = ", ".join(names) + " hanno pubblicato il menu di oggi."
+    try:
+        requests.post(
+            f"https://ntfy.sh/{topic}",
+            data=body.encode("utf-8"),
+            headers={
+                "Title": title.encode("utf-8"),
+                "Tags": "bell,fork_and_knife",
+                "Priority": "default",
+            },
+            timeout=10,
+        )
+    except Exception as exc:
+        # Una notifica fallita non deve mai interrompere la pubblicazione.
+        print(f"Notifica push non inviata: {exc}")
 
 
 def write_publish_status(panels: List[Dict], output_dir: str) -> None:
