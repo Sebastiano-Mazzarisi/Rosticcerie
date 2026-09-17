@@ -17,6 +17,13 @@ scritta in local_menus/michela_<data>.jpg: il resto della pipeline
 (local_menu.local_panel, la voce "Le delizie di Michela" in config.py, una
 volta riattivata) la legge esattamente come un'importazione manuale.
 
+Ogni storia Facebook ha un proprio URL che scade con lei (circa 24h) e non e'
+riutilizzabile il giorno dopo: lo script non salva quindi nessun ID fisso,
+ma riscopre la storia corrente passando dal profilo di Michela ogni volta
+che serve (primo controllo della giornata, o se la storia trovata prima
+smette di funzionare), tenendola poi in cache solo per il resto della
+giornata (vedi STORY_CACHE piu' sotto).
+
 Va eseguito da dentro questa cartella (Progetto), perche' importa i moduli
 rosticcerie_clean e Rosticceria_legacy usati anche da Rosticceria.py.
 
@@ -41,12 +48,29 @@ import time
 BASE = Path(__file__).resolve().parent  # cartella Progetto: qui vivono i moduli rosticcerie_clean
 
 PROFILE_URL = "https://www.facebook.com/profile.php?id=100045208848338"
-# Collegamento diretto, gia' verificato, alla storia di Michela. Facebook puo'
-# farlo scadere o cambiarlo: se succede, aggiornare questa costante oppure
-# lasciarla vuota (''). In entrambi i casi lo script prova comunque, come
-# ripiego, il collegamento "Clicca per visualizzare la storia" trovato
-# aprendo il profilo, quindi non serve intervenire con urgenza.
-KNOWN_STORY_URL = "https://www.facebook.com/stories/186699229513704/"
+# CORRETTO IL 17/09/2026 - l'ipotesi precedente era sbagliata: si pensava che
+# l'URL di una storia specifica (es. ".../stories/186699229513704/") fosse un
+# identificativo stabile del "vassoio storie" di Michela, sempre risolto
+# nella storia attualmente attiva. In realta' quell'ID e' legato a UNA
+# storia precisa e scade con lei (~24h). Il 16/09/2026 lo script sembrava
+# confermarlo solo per coincidenza (verificato a ridosso della pubblicazione
+# di quel giorno). Il 17/09/2026 Michela aveva gia' pubblicato il menu
+# (confermato da una foto reale della lavagna), ma lo script continuava a
+# fallire: quell'ID ormai scaduto mostra permanentemente "Questa storia non
+# e' piu' disponibile", indipendentemente da eventuali NUOVE storie con un
+# ID diverso pubblicate nel frattempo - ogni storia ha con ogni probabilita'
+# un proprio ID che cambia ad ogni pubblicazione e non e' riusabile il
+# giorno dopo.
+#
+# Per questo lo script non naviga piu' direttamente a un ID salvato qui:
+# ogni volta che serve la storia corrente (primo controllo della giornata,
+# o se l'URL in cache smette di funzionare) riparte dal profilo di Michela
+# e clicca sul collegamento alla storia attiva (discover_current_story()
+# piu' sotto), che porta sempre a quella REALMENTE corrente. L'URL cosi'
+# scoperto resta in STORY_CACHE solo per il resto della giornata/esecuzione,
+# cosi' i controlli successivi ogni 10 minuti non devono ripassare dal
+# profilo ogni volta.
+STORY_CACHE = {'date': None, 'url': None}
 
 # Profilo Chrome dedicato: lo stesso usato da Stato.py. E' condiviso di
 # proposito, cosi' non serve un secondo login manuale se quello di Stato.py e'
@@ -166,8 +190,10 @@ def main():
         return 1
 
     profile_url = args.url
-    if KNOWN_STORY_URL and args.url.rstrip('/') == PROFILE_URL:
-        args.url = KNOWN_STORY_URL
+    # Non si sostituisce piu' args.url con un ID di storia salvato (vedi nota
+    # su STORY_CACHE sopra): si riparte dal profilo, o dall'URL esplicito
+    # passato da riga di comando, e la storia corrente viene scoperta e
+    # tenuta in cache per la giornata dentro check_once()/extract_story_image().
 
     try:
         from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
@@ -218,7 +244,21 @@ def main():
                 appare davvero nella schermata diagnostica."""
                 recent = page.get_by_text(re.compile(r'^\s*(\d{1,2}\s*(m|min|h)|adesso|ora)\s*$', re.I))
                 try:
-                    recent.first.wait_for(state='visible', timeout=3000)
+                    recent.first.wait_for(state='visible', timeout=5000)
+                    return True
+                except PlaywrightTimeoutError:
+                    return False
+
+            def story_unavailable():
+                """Vero se il visualizzatore mostra il placeholder di storia scaduta/
+                assente ("Questa storia non e' piu' disponibile"), tipico di quando
+                Michela non ha ancora pubblicato il menu del giorno (l'ultima storia
+                e' scaduta dopo 24h) oppure l'ha rimossa. Non e' un errore: va
+                trattato come "nessuna storia ancora", da ricontrollare piu' tardi,
+                non come un link rotto da riparare."""
+                marker = page.get_by_text(re.compile(r"non è più disponibile|is no longer available", re.I))
+                try:
+                    marker.first.wait_for(state='visible', timeout=5000)
                     return True
                 except PlaywrightTimeoutError:
                     return False
@@ -233,33 +273,65 @@ def main():
                 except PlaywrightTimeoutError:
                     raise RuntimeError('Non riesco a confermare il login. Completa il controllo Facebook nella finestra Chrome e riprova con --login.')
 
-            def extract_story_image():
-                """Ritorna (body, mime) dell'immagine trovata nella storia, o None se
-                al momento non c'e' nessuna storia attiva (non e' un errore)."""
+            def discover_current_story():
+                """Riparte dal profilo di Michela e clicca sul collegamento alla
+                storia attualmente attiva. Ritorna True se si e' arrivati su un
+                URL /stories/, False se in questo momento non risulta nessuna
+                storia attiva (non e' un errore, va solo ricontrollato piu' tardi)."""
+                if urlparse(page.url).path != urlparse(PROFILE_URL).path:
+                    page.goto(PROFILE_URL, wait_until='domcontentloaded')
                 if needs_login():
                     print('Facebook richiede di completare l’accesso.')
                     complete_login()
+                labelled = page.get_by_role('link', name=re.compile(r'visualizza storia|view story', re.I))
+                generic = page.locator('a[href*="/stories/"]:not([href*="/stories/create"])')
+                story = labelled.or_(generic).filter(visible=True).first
+                try:
+                    story.wait_for(state='visible', timeout=30000)
+                    story.click()
+                    page.wait_for_url(re.compile(r'https://(?:www\.)?facebook\.com/stories/'), timeout=15000)
+                    return True
+                except PlaywrightTimeoutError:
+                    if needs_login():
+                        reason = 'Facebook mostra ancora la schermata di accesso o un controllo di sicurezza.'
+                    elif account_visible():
+                        reason = 'Account riconosciuto, ma nessuna storia attiva sul profilo di Michela.'
+                    else:
+                        reason = 'La pagina non espone il collegamento alla storia; non posso confermare lo stato del login.'
+                    if needs_login() or not account_visible():
+                        raise RuntimeError(reason + ' Interrompi con Ctrl+C e completa --login.')
+                    print(reason + ' Nuovo controllo fra 10 minuti.')
+                    return False
+
+            def extract_story_image(day):
+                """Ritorna il contenuto dell'immagine trovata nella storia, o None se
+                al momento non c'e' nessuna storia attiva (non e' un errore). `day` e'
+                la data (locale, Europe/Rome) per cui si sta cercando il menu, usata
+                solo per etichettare la cache."""
+                if needs_login():
+                    print('Facebook richiede di completare l’accesso.')
+                    complete_login()
+                used_cache = bool(STORY_CACHE['url']) and page.url.rstrip('/') == STORY_CACHE['url'].rstrip('/')
                 if '/stories/' not in urlparse(page.url).path:
-                    labelled = page.get_by_role('link', name=re.compile(r'visualizza storia|view story', re.I))
-                    generic = page.locator('a[href*="/stories/"]:not([href*="/stories/create"])')
-                    story = labelled.or_(generic).filter(visible=True).first
-                    try:
-                        story.wait_for(state='visible', timeout=30000)
-                        story.click()
-                        page.wait_for_url(re.compile(r'https://(?:www\.)?facebook\.com/stories/'), timeout=15000)
-                    except PlaywrightTimeoutError:
-                        if needs_login():
-                            reason = 'Facebook mostra ancora la schermata di accesso o un controllo di sicurezza.'
-                        elif account_visible():
-                            reason = 'Account riconosciuto, ma nessuna storia attiva sul profilo di Michela.'
-                        else:
-                            reason = 'La pagina non espone il collegamento alla storia; non posso confermare lo stato del login.'
-                        if needs_login() or not account_visible():
-                            raise RuntimeError(reason + ' Interrompi con Ctrl+C e completa --login.')
-                        print(reason + ' Nuovo controllo fra 10 minuti.')
+                    if not discover_current_story():
                         return None
-                if '/stories/' not in urlparse(page.url).path:
-                    raise RuntimeError('Non è aperto il visualizzatore delle storie. Nessun file importato.')
+                    used_cache = False
+                if story_unavailable():
+                    if used_cache:
+                        # L'URL scoperto in precedenza oggi non funziona piu'
+                        # (storia rimossa/sostituita): niente panico, si scarta
+                        # la cache e si riparte SUBITO dal profilo invece di
+                        # aspettare altri 10 minuti pensando che Michela non
+                        # abbia ancora pubblicato nulla.
+                        STORY_CACHE['url'] = None
+                        if not discover_current_story() or story_unavailable():
+                            print('Nessuna storia attiva al momento (Michela probabilmente non ha ancora '
+                                  'pubblicato il menu di oggi). Nuovo controllo fra 10 minuti.')
+                            return None
+                    else:
+                        print('Nessuna storia attiva al momento (Michela probabilmente non ha ancora '
+                              'pubblicato il menu di oggi). Nuovo controllo fra 10 minuti.')
+                        return None
                 open_story = page.get_by_text(re.compile(r'^(Clicca per visualizzare la storia|Click to view story)$', re.I)).first
                 pause = page.get_by_role('button', name=re.compile(r'^(Metti in pausa|Pause)$')).first
                 deadline = time.monotonic() + 25
@@ -267,8 +339,6 @@ def main():
                 clicked = False
                 paused = False
                 while time.monotonic() < deadline:
-                    if args.url == KNOWN_STORY_URL and not urlparse(page.url).path.startswith(urlparse(KNOWN_STORY_URL).path):
-                        raise RuntimeError('Il visualizzatore è uscito dalla storia di Michela. Nessun file importato.')
                     if not clicked and open_story.is_visible():
                         open_story.click(timeout=3000)
                         clicked = True
@@ -287,8 +357,6 @@ def main():
                     diagnostic.parent.mkdir(parents=True, exist_ok=True)
                     page.screenshot(path=str(diagnostic))
                     raise RuntimeError('Nessuna immagine caricata nel visualizzatore. Schermata diagnostica: ' + str(diagnostic))
-                if args.url == KNOWN_STORY_URL and not urlparse(page.url).path.startswith(urlparse(KNOWN_STORY_URL).path):
-                    raise RuntimeError('Facebook è passato alla storia di un altro profilo. Nessun file importato.')
                 if not story_is_recent():
                     diagnostic = BASE / 'local_menus' / 'michela_diagnostica.png'
                     diagnostic.parent.mkdir(parents=True, exist_ok=True)
@@ -297,6 +365,11 @@ def main():
                           'evidenza): non la importo per sicurezza. Schermata: ' + str(diagnostic)
                           + ' Nuovo controllo fra 10 minuti.')
                     return None
+                # Storia valida e recente: la teniamo in cache per il resto della
+                # giornata (STORY_CACHE['date'] e' gia' impostato da check_once),
+                # cosi' i prossimi controlli non devono ripassare dal profilo ogni
+                # volta.
+                STORY_CACHE['url'] = page.url
                 src = candidate['src']
                 host = urlparse(src).hostname or ''
                 if urlparse(src).scheme != 'https' or not (host.endswith('.fbcdn.net') or host.endswith('.facebook.com')):
@@ -312,8 +385,14 @@ def main():
 
             def check_once():
                 day = args.date or legacy.rome_now().date()
-                page.goto(args.url, wait_until='domcontentloaded')
-                body = extract_story_image()
+                if STORY_CACHE['date'] != day:
+                    # Nuovo giorno (o primo controllo): scarta un eventuale URL di
+                    # ieri, che ormai sarebbe comunque scaduto.
+                    STORY_CACHE['date'] = day
+                    STORY_CACHE['url'] = None
+                target = STORY_CACHE['url'] or args.url
+                page.goto(target, wait_until='domcontentloaded')
+                body = extract_story_image(day)
                 if body is None:
                     return
                 tmp = BASE / f'.michela_story_{day.isoformat()}.tmp'
