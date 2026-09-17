@@ -76,6 +76,10 @@ Vale tutto quanto già osservato per `Stato.py`: controlli anti-automazione se i
 
 **Diagnosi del fallimento dell'11:21 del 16/09/2026** (per riferimento storico): la schermata diagnostica mostrava "Questa storia non è più disponibile" — non un link rotto, ma il fatto che a quell'ora Michela non aveva ancora pubblicato il menu (l'ultima storia era scaduta dopo le 24h). Lo script riconosce esplicitamente questo messaggio (funzione `story_unavailable()`) e lo tratta come "nessuna storia ancora", non come errore: registra un messaggio e riprova al controllo successivo, invece di fermarsi con un'eccezione e scrivere `michela_diagnostica.png`. Il fallimento del 17/09/2026 era invece il bug del link fisso descritto sopra, ora corretto.
 
+**Correzione del 17/09/2026 (seconda) — controllo "è recente?" troppo rigido.** Dopo la correzione del link fisso sopra, un `--once` di prova ha trovato la storia giusta (confermato dalla schermata diagnostica: intestazione "Le Delizie di Michela · 1 h" con il menu corretto del 17/09/2026), ma lo script l'ha comunque scartata con il messaggio "Immagine trovata ma senza indicazione di storia recente (probabile foto vecchia o in evidenza): non la importo per sicurezza." Causa: `story_is_recent()` cercava un nodo di testo isolato che contenesse SOLO l'orario (es. "1 h") tramite corrispondenza esatta; ma Facebook raggruppa nome e orario nello stesso elemento, separati da un puntino ("Le Delizie di Michela · 1 h"), quindi quel testo non corrisponde mai a un match esatto.
+
+**Correzione applicata**: la ricerca ora e' basata sulla posizione sullo schermo (funzione `RECENT_JS`, stessa tecnica gia' usata per trovare l'immagine con `IMAGE_JS`): accetta qualunque elemento piccolo, in alto a destra nel visualizzatore, il cui testo CONTIENE un'indicazione di tempo relativa (minuti/ore/"adesso"), invece di pretendere che sia l'unico contenuto dell'elemento. Non ancora riverificata dal vivo con una nuova esecuzione.
+
 Se il download dell'immagine fallisce per un motivo diverso (es. nessuna immagine trovata pur con la storia aperta), lo script crea comunque `local_menus/michela_diagnostica.png` per capire quale schermata Facebook ha restituito (esclusa dal repository via `.gitignore`).
 
 Se `git pull --rebase` trova un conflitto reale, lo script si ferma con un errore invece di tentare una risoluzione automatica: va risolto a mano nella cartella `Progetto`.
@@ -98,9 +102,10 @@ Nota: l'attività pianificata apre comunque una finestra di Chrome visibile (lo 
 
 ## Cosa resta da fare
 
-Verificata il 16/09/2026 la cattura end-to-end con una storia realmente attiva (immagine del menu trovata, indicatore "1 h" riconosciuto come recente), ma con il bug del link fisso descritto sopra (corretto il 17/09/2026, non ancora riverificato dal vivo). Al prossimo `--once` (o al prossimo giro del monitor continuo) con una storia di Michela attiva, controllare che:
+Verificata il 16/09/2026 la cattura end-to-end con una storia realmente attiva (immagine del menu trovata, indicatore "1 h" riconosciuto come recente), poi emersi e corretti il 17/09/2026 due bug in sequenza: il link fisso alla storia, e il controllo "è recente?" troppo rigido (entrambi descritti sopra). Nessuno dei due e' stato ancora riverificato dal vivo dopo l'ultima correzione. Al prossimo `--once` (o al prossimo giro del monitor continuo) con una storia di Michela attiva, controllare che:
 
 * lo script trovi la storia passando dal profilo (nessun riferimento a un ID salvato);
+* la storia trovata venga riconosciuta come recente (niente più "non la importo per sicurezza" con una storia in realtà valida);
 * l'immagine venga importata e pubblicata correttamente;
 * i controlli successivi nello stesso giorno restino rapidi (uso della cache, senza ripassare dal profilo ogni volta) — visibile nel log solo indirettamente: se non compare più "Account riconosciuto, ma nessuna storia attiva" a ogni giro dopo la prima pubblicazione, la cache sta funzionando.
 

@@ -96,6 +96,25 @@ IMAGE_JS = """() => {
  return imgs.length ? {src:imgs[0].currentSrc || imgs[0].src, alt:imgs[0].alt} : null;
 }"""
 
+# Indicazione di tempo relativa (es. "1 h", "5 min", "adesso") vicino al nome
+# in alto nel visualizzatore. Cerca in base alla POSIZIONE sullo schermo
+# (angolo in alto a destra del visualizzatore, sopra il nome/avatar) invece
+# che a un nodo di testo isolato con match esatto: Facebook spesso raggruppa
+# nome + separatore + orario nello stesso elemento (icone, puntini), quindi
+# un testo tipo "Le Delizie di Michela · 1 h" non combacia con una regex
+# ancorata "^...$" cercata da get_by_text(). Qui invece si accetta qualsiasi
+# elemento piccolo, in alto, il cui testo CONTIENE l'indicazione di tempo.
+RECENT_JS = """() => {
+ const re = /(^|[^\\p{L}\\p{N}])(\\d{1,2}\\s*(m|min|h)|adesso|ora)(?![\\p{L}\\p{N}])/iu;
+ return [...document.querySelectorAll('*')].some(el => {
+   const t = (el.innerText || el.textContent || '').trim();
+   if (!t || t.length > 24 || !re.test(t)) return false;
+   const r = el.getBoundingClientRect();
+   return r.width > 0 && r.height > 0 && r.height < 40 && r.top >= 0 && r.top < 140
+     && r.left > innerWidth * .35 && r.left < innerWidth;
+ });
+}"""
+
 
 def facebook_url(value):
     p = urlparse(value)
@@ -231,23 +250,30 @@ def main():
                 return page.get_by_role('button', name=re.compile(r'^(Il tuo profilo|Your profile|Account)$', re.I)).count() > 0
 
             def story_is_recent():
-                """Vero se vicino alla storia compare un'indicazione di tempo
-                relativa (minuti/ore appena trascorsi), tipica di una storia
-                attiva nelle ultime 24 ore. Se non la trova - o se il
-                visualizzatore mostra qualcos'altro (es. una foto "in
-                evidenza" permanente, o una storia scaduta rimasta in
-                cache) - e' piu' sicuro trattarla come non valida piuttosto
-                che rischiare di importare una foto vecchia spacciata per il
-                menu di oggi. Nota: il testo esatto mostrato da Facebook puo'
-                cambiare; se questo controllo scarta storie che invece sono
-                effettivamente di oggi, va rivista la regex guardando cosa
-                appare davvero nella schermata diagnostica."""
-                recent = page.get_by_text(re.compile(r'^\s*(\d{1,2}\s*(m|min|h)|adesso|ora)\s*$', re.I))
-                try:
-                    recent.first.wait_for(state='visible', timeout=5000)
-                    return True
-                except PlaywrightTimeoutError:
-                    return False
+                """Vero se, vicino al nome della storia in cima al
+                visualizzatore (non nella lista storie a sinistra), compare
+                un'indicazione di tempo relativa (es. "1 h", "5 min",
+                "adesso"), tipica di una storia pubblicata nelle ultime 24
+                ore. La ricerca e' basata sulla POSIZIONE sullo schermo
+                (angolo in alto a destra del visualizzatore, RECENT_JS)
+                invece che su un nodo di testo isolato con corrispondenza
+                esatta: Facebook spesso raggruppa nome, separatore e orario
+                nello stesso elemento (es. "Le Delizie di Michela · 1 h"),
+                quindi un testo che CONTIENE l'indicazione basta. Se non la
+                trova - o se il visualizzatore mostra qualcos'altro (es. una
+                foto "in evidenza" permanente, o una storia scaduta rimasta
+                in cache) - e' piu' sicuro trattarla come non valida
+                piuttosto che rischiare di importare una foto vecchia
+                spacciata per il menu di oggi. Nota: se in futuro questo
+                controllo scarta storie che invece sono effettivamente di
+                oggi, va rivista la regex/l'area di ricerca in RECENT_JS
+                guardando cosa appare davvero nella schermata diagnostica."""
+                deadline = time.monotonic() + 6
+                while time.monotonic() < deadline:
+                    if page.evaluate(RECENT_JS):
+                        return True
+                    page.wait_for_timeout(300)
+                return False
 
             def story_unavailable():
                 """Vero se il visualizzatore mostra il placeholder di storia scaduta/
