@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-18T07:44:13",
+  "updated_at": "2026-09-18T09:35:48",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 18/09/26",
-      "published_at": "18/09/2026 09:18 circa",
-      "published_at_raw": "22m",
+      "published_at": "18/09/2026 10:32 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "18 Settembre 2026.\nMenù del giorno.",
-      "published_at": "18/09/2026 09:16 circa",
+      "published_at": "18/09/2026 09:32 circa",
       "published_at_raw": "18/09/2026",
       "error": null
     },
@@ -37,7 +37,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 18  Settembre",
-      "published_at": "18/09/2026 08:43 circa",
+      "published_at": "18/09/2026 09:35 circa",
       "published_at_raw": "18/09/2026",
       "error": null
     },
@@ -52,9 +52,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "PRIMI PIATTI\n●LASAGNA AL FORNO 5,0\n●FUSILLI ALLA CRUDAIOLA CON MELAZANA DORATA, PESTO DI PEPERONI ALLE NOCI E MORTADELLA 5,5\n●GNOCCHI CREMA DI FORMAGGIO, ZUCCHINA E PORCINI 5,5\n●TAGLIATELLE PAGLIA E FIENO ALLA BOLOGNESE 5,5\n●TRIVELLE ALLA PORTO VENERE CON PANCETTA E MOZZARELLA 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●QUADRATO DI CARNE MACINATA CON PROSCIUTTO GALBANINO E ZUCCHINA AL FORNO\n●SCALOPPA DI POLLO AI FUNGHI\n●HAMBURGER DI VITELLO ALLA CAPRESE\n●TRANCIO DI PESCE SPADA ALLA MEDITERRANEA\n●FILETTO DI MERLUZZO IMPANATO CON INSALATINA E PATATE\n●MELANZANE RIPIENE\n●INSALATA DI POLLO TONNATA\n●INSALATA DI POLLO\n●INSALATA DI PATATE, TONNO, COCOMERO E POMODORINO\n●RUSTICO PROSCIUTTO CRUDO E GALBANINO",
-      "published_at": "17/09/2026 circa",
-      "published_at_raw": "1d",
+      "text": "PRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●LASAGNA AL FORNO 5,0\n●FUSILLI CON PESTO DI PEPERONI, MORTADELLA PIASTRATA E MELANZANA 5,0\n●FARFALLE ALLA CRUDAIOLA CON PESTO DI PISELLI, E GAMBERI 5,5\n●SPAGHETTI ALLE COZZE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ARROSTICINI PANATI IN SALSA BBQ\n●COTOLETTE DI POLLO\n●BRACIOLETTE ALLA PIZZAIOLA IN BIANCO\n●RUSTICO TONNO, POMODORO E MOZZARELLA\n●CUORE DI MERLUZZO CON VELLUTATA DI PATATE E ZUCCHINE E ERBA CIPOLLINA\n●INSALATA DI POLLO\n●INSALATA DI POLPO TONNATA\n●PARMIGIANA",
+      "published_at": "18/09/2026 10:35 circa",
+      "published_at_raw": "1h",
       "error": null
     }
   ]
