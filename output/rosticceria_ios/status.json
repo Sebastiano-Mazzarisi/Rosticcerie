@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-18T09:35:48",
+  "updated_at": "2026-09-18T09:43:12",
   "pages": [
     {
       "name": "Fantasia",
@@ -27,11 +27,11 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "18/09/2026",
+      "published_at_raw": "Data del menu confermata all'importazione locale",
+      "error": null
     },
     {
       "name": "Santoro (Castellana)",
@@ -53,7 +53,7 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●LASAGNA AL FORNO 5,0\n●FUSILLI CON PESTO DI PEPERONI, MORTADELLA PIASTRATA E MELANZANA 5,0\n●FARFALLE ALLA CRUDAIOLA CON PESTO DI PISELLI, E GAMBERI 5,5\n●SPAGHETTI ALLE COZZE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ARROSTICINI PANATI IN SALSA BBQ\n●COTOLETTE DI POLLO\n●BRACIOLETTE ALLA PIZZAIOLA IN BIANCO\n●RUSTICO TONNO, POMODORO E MOZZARELLA\n●CUORE DI MERLUZZO CON VELLUTATA DI PATATE E ZUCCHINE E ERBA CIPOLLINA\n●INSALATA DI POLLO\n●INSALATA DI POLPO TONNATA\n●PARMIGIANA",
-      "published_at": "18/09/2026 10:35 circa",
+      "published_at": "18/09/2026 10:43 circa",
       "published_at_raw": "1h",
       "error": null
     }
