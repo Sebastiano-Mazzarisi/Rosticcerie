@@ -3931,6 +3931,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel || panel.card_border) return;
             panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
+            if (isAdmin && panel.name === 'Impastamò') {{
+                // Solo per collaudo in modalita' supervisore (?v=57):
+                // Impastamò viene sempre simulato come NON aggiornato oggi,
+                // qualunque sia il suo stato reale, cosi' si puo' testare il
+                // bottone bianco e il click che apre direttamente Facebook
+                // senza dover aspettare un giorno in cui non pubblica.
+                panel.updated = false;
+            }}
             card.classList.toggle('is-updated', panel.updated && Boolean((panel.card_reference || '').trim()));
             card.style.borderColor = panel.updated ? '#ffd641' : '#ffffff';
             card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
