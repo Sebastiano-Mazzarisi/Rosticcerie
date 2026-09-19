@@ -3655,10 +3655,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     /* Confetto "NEW" per le rosticcerie aggiunte di recente (vedi
        NEW_ARRIVALS in write_publish_index): rosso invece del verde usato
        per il confetto "aggiornato" qui sopra, cosi' si distingue bene, con
-       un lampeggio per farlo notare. */
+       un lampeggio per farlo notare. Il "background" e' ripetuto anche con
+       !important perche' ".card.is-updated .card-reference" (piu' classi,
+       quindi piu' specifico) altrimenti vince e lo ricolora di verde
+       quando la rosticceria e' anche aggiornata oggi. */
     .card-reference.badge-new {{
-      color: #fff;
-      background: #d32f2f;
+      color: #fff !important;
+      background: #d32f2f !important;
       border-radius: 999px;
       padding: 2px 8px;
       line-height: 18px;
