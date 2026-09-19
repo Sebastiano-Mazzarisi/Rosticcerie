@@ -1,6 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
+title Rosticcerie: commit e push
 
 echo.
 echo === Rosticcerie: commit e push ===
@@ -11,9 +12,9 @@ git add -A
 
 git diff --cached --quiet
 if errorlevel 1 (
-    set /p MSG="Messaggio di commit (invio per usarne uno automatico): "
-    if "!MSG!"=="" set "MSG=Aggiornamento"
-    git commit -m "!MSG!"
+    for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set OGGI=%%a-%%b-%%c
+    for /f "tokens=1-2 delims=: " %%a in ('time /t') do set ORA=%%a.%%b
+    git commit -m "Aggiornamento del !OGGI! !ORA!"
 ) else (
     echo Nessuna modifica da committare: procedo comunque con pull/push,
     echo nel caso ci siano commit gia' pronti ma non ancora pushati.
@@ -37,8 +38,14 @@ if errorlevel 1 (
     echo Il push e' fallito ^(probabile nuovo commit automatico nel frattempo^): riprovo...
     git pull --rebase origin main
     git push
+    if errorlevel 1 (
+        echo.
+        echo ATTENZIONE: il push continua a fallire. Controlla manualmente.
+        pause
+        exit /b 1
+    )
 )
 
 echo.
-echo Fatto.
-pause
+echo Fatto: tutto committato e pushato.
+timeout /t 4 >nul

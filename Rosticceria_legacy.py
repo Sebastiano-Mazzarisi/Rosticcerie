@@ -75,6 +75,11 @@ PANECO_PAGE = {
 SOURCE_URLS = {page["name"]: page["url"] for page in FACEBOOK_PAGES}
 SOURCE_URLS.update({page["name"]: page["url"] for page in TEXT_FACEBOOK_PAGES})
 SOURCE_URLS[PANECO_PAGE["name"]] = PANECO_PAGE["url"]
+# Aufer non ha uno scraping automatico (menu importato a mano, vedi
+# rosticcerie_clean/config.py), quindi non passa da FACEBOOK_PAGES: senza
+# questa riga il pannello restava con "url" vuoto e il click sul nome/logo
+# per aprire la pagina Instagram non faceva nulla.
+SOURCE_URLS["Aufer"] = "https://www.instagram.com/aufergastronomia/"
 COOKIE_FILE = "cookies.txt"
 PUBLISH_DIR = os.path.join("output", "rosticceria_ios")
 MIDNIGHT_REFRESH = datetime.time(0, 1)
