@@ -4444,7 +4444,20 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 seen.add(p.name);
             }}
         }});
-        return restored;
+        return pinInfoLast(restored);
+    }}
+
+    // Il riquadro "Info" (nome interno "Suggerimenti") deve restare sempre
+    // per ultimo, qualunque riordino l'utente faccia trascinando le altre
+    // caselle o con le frecce da tastiera: lo spostiamo in fondo ogni volta
+    // che l'ordine viene ricostruito da zero (ordine di default o salvato).
+    function pinInfoLast(arr) {{
+        const idx = arr.findIndex(i => PANELS[i] && PANELS[i].name === 'Suggerimenti');
+        if (idx !== -1 && idx !== arr.length - 1) {{
+            const [info] = arr.splice(idx, 1);
+            arr.push(info);
+        }}
+        return arr;
     }}
 
     let order = buildDefaultOrder();
@@ -4477,7 +4490,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 }}
             }});
             if (restored.length === PANELS.length) {{
-                order = restored;
+                order = pinInfoLast(restored);
             }}
         }} catch (e) {{
             console.error('Ordine personalizzato non leggibile, uso quello di default', e);
@@ -4614,7 +4627,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     function syncOrderFromDom() {{
         const grid = document.getElementById('grid-view');
-        order = Array.from(grid.querySelectorAll('.card')).map(c => parseInt(c.dataset.pid, 10));
+        order = pinInfoLast(Array.from(grid.querySelectorAll('.card')).map(c => parseInt(c.dataset.pid, 10)));
     }}
 
     function showReorderActions() {{
@@ -4728,6 +4741,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         let target = null;
         for (const c of cards) {{
             if (c === dragState.el) continue;
+            // "Info" non e' un bersaglio valido: niente puo' essere
+            // inserito prima o dopo di lui, cosi' resta sempre ultimo.
+            const cPanel = PANELS[parseInt(c.dataset.pid, 10)];
+            if (cPanel && cPanel.name === 'Suggerimenti') continue;
             const r = c.getBoundingClientRect();
             if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {{
                 target = c;
@@ -4822,6 +4839,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
             el.addEventListener('pointerdown', (e) => {{
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
+                // Il riquadro "Info" deve restare sempre per ultimo: non lo
+                // rendiamo trascinabile.
+                const panelForEl = PANELS[parseInt(el.dataset.pid, 10)];
+                if (panelForEl && panelForEl.name === 'Suggerimenti') return;
                 pressStartX = e.clientX;
                 pressStartY = e.clientY;
                 pressMoved = false;
@@ -4859,6 +4880,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
         const a = el;
         const b = cards[targetIdx];
+        // "Info" deve restare sempre per ultimo: niente si scambia con lui,
+        // ne' da tastiera ne' trascinando (vedi sopra).
+        const aPanel = PANELS[parseInt(a.dataset.pid, 10)];
+        const bPanel = PANELS[parseInt(b.dataset.pid, 10)];
+        if ((aPanel && aPanel.name === 'Suggerimenti') || (bPanel && bPanel.name === 'Suggerimenti')) return;
         const aNext = a.nextSibling;
         const bNext = b.nextSibling;
         if (aNext === b) {{
@@ -4991,8 +5017,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         img.style.height = 'auto';
     }}
 
+    let detailOpenedAt = 0;
     function openDetail(i) {{
         document.getElementById('grid-view').style.display = 'none';
+        detailOpenedAt = Date.now();
 
         renderDetail(i);
         document.getElementById('detail-view').style.display = 'block';
@@ -5166,6 +5194,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function handleTitleClick() {{
         const inDetail = document.getElementById('grid-view').style.display === 'none';
         if (inDetail) {{
+            // Su iPhone, subito dopo aver toccato una card (che apre questa
+            // scheda di dettaglio), a volte il telefono genera un secondo
+            // tocco "fantasma" sulla stessa posizione dello schermo: se li'
+            // e' appena comparso il logo/titolo, quel tocco fantasma
+            // apriva subito anche il sito esterno, dando l'impressione che
+            // un solo tocco sul confetto facesse sia le due cose insieme.
+            // Ignoriamo quindi i tocchi sul titolo/logo troppo vicini
+            // all'apertura della scheda.
+            if (Date.now() - detailOpenedAt < 400) return;
             const p = PANELS[order[currentIndex]];
             if (p && p.url) {{
                 window.open(p.url, '_blank', 'noopener');
