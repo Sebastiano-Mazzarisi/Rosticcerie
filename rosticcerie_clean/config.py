@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 
-SourceKind = Literal["facebook_image", "facebook_text", "paneeco"]
+SourceKind = Literal["facebook_image", "facebook_text", "paneeco", "local_menu"]
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,11 @@ class RosticceriaConfig:
     force_refresh_today: bool = False
     prefer_facebook_date: bool = False
     story_url: str = ""
+    # Slug fisso per il menu importato a mano in local_menus/<slug>_<data>.jpg
+    # (vedi rosticcerie_clean/local_menu.py). Usato sia da "Le delizie di
+    # Michela" (ripiego se lo scraping delle Storie Facebook fallisce) sia
+    # da rosticcerie con kind="local_menu" (nessuna fonte automatica).
+    local_slug: str = ""
 
     @property
     def label(self) -> str:
@@ -70,6 +75,21 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         force_refresh_today=True,
         prefer_active_closure=True,
         skip_closure_notices=True,
+        local_slug="michela",
+    ),
+    # Aufer pubblica il menu solo nelle Storie di Instagram (anche quelle "in
+    # evidenza", permanenti): Instagram le nasconde del tutto a chi non e'
+    # loggato, quindi non esiste una fonte automatica anonima come per le
+    # altre rosticcerie. Per ora il menu va importato a mano ogni giorno con
+    # Importa_Aufer.py (stesso meccanismo di Importa_Michela.py); in futuro
+    # si potra' automatizzare con una sessione Instagram autenticata dedicata,
+    # sullo stesso modello di ImportaStoriaMichela.py.
+    RosticceriaConfig(
+        name="Aufer",
+        url="https://www.instagram.com/aufergastronomia/",
+        kind="local_menu",
+        output_image="Rosticceria_Aufer.jpg",
+        local_slug="aufer",
     ),
     RosticceriaConfig(
         name="Santoro (Castellana)",

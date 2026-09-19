@@ -11,7 +11,7 @@ import Rosticceria_legacy as legacy
 from .config import ROSTICCERIE, RosticceriaConfig
 from .daily_posts import merge_today
 from . import quick_check
-from .local_menu import NAME as MICHELA_NAME, local_panel
+from .local_menu import local_panel
 
 
 def _existing(config: RosticceriaConfig, require_today: bool = True) -> Dict | None:
@@ -47,7 +47,7 @@ def _elapsed_hours(post: Dict) -> float:
 
 
 def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
-    if config.name == MICHELA_NAME and local_panel():
+    if config.local_slug and local_panel(config.local_slug, config.name):
         return _extract_facebook_image_full(config)
     saved = _existing(config, require_today=False)
     # Le storie hanno una sorgente separata: non inferirne lo stato dal feed.
@@ -62,8 +62,8 @@ def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
 
 
 def _extract_facebook_image_full(config: RosticceriaConfig) -> Dict:
-    if config.name == MICHELA_NAME:
-        supplied = local_panel()
+    if config.local_slug:
+        supplied = local_panel(config.local_slug, config.name)
         if supplied:
             print(f"{config.name}: uso il menu locale di oggi.")
             return supplied
@@ -169,6 +169,20 @@ def _extract_paneeco(config: RosticceriaConfig) -> Dict:
     return panel
 
 
+def _extract_local_menu(config: RosticceriaConfig) -> Dict:
+    """Rosticcerie senza alcuna fonte automatica (es. Aufer, il cui menu e'
+    solo nelle Storie di Instagram, illeggibili senza login): il pannello
+    viene esclusivamente dal file importato a mano in local_menus/. Se manca
+    quello di oggi, si solleva un errore cosi' _fallback_panel() tiene
+    l'ultimo menu salvato (stesso comportamento delle altre sorgenti)."""
+    panel = local_panel(config.local_slug, config.name)
+    if panel:
+        print(f"{config.name}: uso il menu locale di oggi.")
+        legacy.save_image(panel["image_bytes"], config.output_image)
+        return panel
+    raise RuntimeError(f"Nessun menu locale importato oggi per {config.name}.")
+
+
 def _extract_facebook_text(config: RosticceriaConfig) -> Dict:
     page_config = {
         "name": config.name,
@@ -210,6 +224,8 @@ def _extract_timed(config: RosticceriaConfig):
             panel = _extract_facebook_text(config)
         elif config.kind == "paneeco":
             panel = _extract_paneeco(config)
+        elif config.kind == "local_menu":
+            panel = _extract_local_menu(config)
         else:
             raise RuntimeError(f"Sorgente non gestita: {config.kind}")
     except Exception as exc:

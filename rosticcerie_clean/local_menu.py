@@ -1,16 +1,33 @@
-"""Menu di Michela fornito localmente, valido solo per la data dichiarata."""
+"""Menu forniti localmente (foto verificata a mano), validi solo per la
+data dichiarata. Usato sia per "Le delizie di Michela" (ripiego quando lo
+scraping delle Storie Facebook non riesce) sia per rosticcerie che non
+hanno affatto una fonte automatica, come Aufer, il cui menu e' pubblicato
+solo nelle Storie di Instagram: Instagram le nasconde a chiunque non sia
+loggato, quindi vanno importate a mano (Importa_Michela.py / Importa_Aufer.py)
+o da uno script con una sessione autenticata dedicata, sullo stesso modello
+di ImportaStoriaMichela.py.
+
+Ogni rosticceria gestita cosi' ha uno "slug" breve (es. "michela", "aufer")
+che identifica il file in local_menus/<slug>_<data>.jpg: e' fisso e non
+deriva dal nome visualizzato, cosi' i file gia' pubblicati restano validi
+anche se il nome cambia."""
 from datetime import date
 from pathlib import Path
 import io
 from PIL import Image, ImageOps
 import Rosticceria_legacy as legacy
 
+# Retro-compatibilita': alcuni punti del codice (es. Importa_Michela.py
+# prima di questa modifica) si aspettavano NAME/slug impliciti per Michela.
 NAME = "Le delizie di Michela"
+MICHELA_SLUG = "michela"
 
-def menu_path(day: date) -> Path:
-    return Path(legacy.script_dir()) / "local_menus" / f"michela_{day.isoformat()}.jpg"
 
-def import_image(source: Path, day: date) -> Path:
+def menu_path(slug: str, day: date) -> Path:
+    return Path(legacy.script_dir()) / "local_menus" / f"{slug}_{day.isoformat()}.jpg"
+
+
+def import_image(slug: str, name: str, source: Path, day: date) -> Path:
     if day > legacy.rome_now().date():
         raise ValueError("La data del menu non puo' essere futura.")
     with Image.open(source) as image:
@@ -19,16 +36,17 @@ def import_image(source: Path, day: date) -> Path:
             raise ValueError("Immagine troppo piccola: serve la foto leggibile del menu.")
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG", quality=95)
-    destination = menu_path(day)
+    destination = menu_path(slug, day)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_suffix(".tmp")
     temporary.write_bytes(buffer.getvalue())
     temporary.replace(destination)
     return destination
 
-def local_panel(day: date | None = None):
+
+def local_panel(slug: str, name: str, day: date | None = None):
     day = day or legacy.rome_now().date()
-    path = menu_path(day)
+    path = menu_path(slug, day)
     if not path.is_file():
         return None
     try:
@@ -36,10 +54,10 @@ def local_panel(day: date | None = None):
             image.verify()
         image_bytes = path.read_bytes()
     except (OSError, ValueError):
-        print("Michela: immagine locale non valida; controllo Facebook.")
+        print(f"{name}: immagine locale non valida.")
         return None
     return {
-        "name": NAME,
+        "name": name,
         "image_bytes": legacy.add_date_footer(image_bytes, day.strftime("%d/%m/%Y")),
         "text": "",
         "published_at": day.strftime("%d/%m/%Y"),

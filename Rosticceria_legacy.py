@@ -1,6 +1,6 @@
 # Nome.py: Rosticceria.py
 # Data e ora ultima modifica: 03/09/2026 23:19
-# Descrizione: Estrae e pubblica i menu delle rosticcerie Fantasia, Cibària, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela e Santoro da Facebook e web.
+# Descrizione: Estrae e pubblica i menu delle rosticcerie Fantasia, Cibària, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela, Santoro e Aufer da Facebook, web e menu importati a mano.
 # File di input: cookies.txt
 # File di output: status.json, Rosticcerie.html, immagini jpg
 # Parametri: --once, --show, --no-git
@@ -3380,6 +3380,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Santoro (Castellana)": "080-859.83.13",
         "Pane & Co": "080-405.49.00",
         "Bollenti piatti": "334-318.58.44",
+        "Aufer": "368-38.30.313",
     }
     logo_files = {
         "Fantasia": "Logo-Fantasia.jpg",
@@ -3389,6 +3390,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Santoro (Castellana)": "Logo-Santoro.jpg",
         "Pane & Co": "Logo-pane.jpg",
         "Bollenti piatti": "Logo-Bollent.jpg",
+        "Aufer": "Logo-Aufer.jpg",
     }
     today = rome_now().date()
     panels_data = []
@@ -4389,7 +4391,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     const ORDER_STORAGE_KEY = 'rosticcerie-order-v2';
     const DEFAULT_ORDER_NAMES = [
         'Fantasia', 'Bollenti piatti', 'Pane & Co', 'Cibària',
-        'Le delizie di Michela', 'Impastamò', 'Santoro (Castellana)', 'Suggerimenti',
+        'Le delizie di Michela', 'Impastamò', 'Santoro (Castellana)', 'Aufer', 'Suggerimenti',
     ];
 
     function buildDefaultOrder() {{
@@ -5529,7 +5531,7 @@ def monitor_loop(show: bool = False, publish_to_git: bool = True) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Estrae e pubblica Fantasia, Cibària, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela e Santoro.")
+    parser = argparse.ArgumentParser(description="Estrae e pubblica Fantasia, Cibària, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela, Santoro e Aufer.")
     parser.add_argument("--once", action="store_true", help="Esegue una sola estrazione e poi termina.")
     parser.add_argument("--show", action="store_true", help="Mostra anche le due foto a pieno schermo.")
     parser.add_argument("--no-git", action="store_true", help="Non prova a pubblicare con GitHub/git.")
