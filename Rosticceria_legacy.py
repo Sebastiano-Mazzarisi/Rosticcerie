@@ -3263,7 +3263,6 @@ def save_publish_files(panels: List[Dict]) -> str:
 
     write_publish_index(panels, output_dir)
     write_publish_status(panels, output_dir)
-    write_menu_pdf(panels, output_dir)
     if newly_published:
         notify_new_menus(newly_published)
     return output_dir
@@ -3324,116 +3323,6 @@ def write_publish_status(panels: List[Dict], output_dir: str) -> None:
     status_path = os.path.join(output_dir, "status.json")
     with open(status_path, "w", encoding="utf-8") as status_file:
         json.dump(status, status_file, ensure_ascii=False, indent=2)
-
-
-def write_menu_pdf(panels: List[Dict], output_dir: str) -> None:
-    """Genera Rosticcerie-Menu.pdf nella cartella di pubblicazione: un PDF
-    con il menu del giorno di tutte le rosticcerie attive, organizzato su
-    due colonne (colonna sinistra Fantasia / Pane & Co / Cibaria, destra
-    Bollenti piatti / Impastamo / Santoro). Ogni rosticceria mostra la
-    stessa immagine gia' salvata su disco per il riquadro del sito. Va
-    chiamata da save_publish_files() DOPO che le immagini sono gia' state
-    scritte in output_dir, cosi' da poterle leggere da li' se il pannello
-    non ha piu' "image_bytes" in memoria (es. dati riusati dal giorno
-    precedente). Il pulsante "PDF" del sito apre semplicemente questo file
-    gia' pronto: nessuna generazione avviene nel browser.
-    Un problema nella generazione del PDF (libreria mancante, immagine non
-    leggibile, ecc.) viene solo segnalato in console e non deve mai
-    interrompere la pubblicazione del resto del sito."""
-    try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.utils import ImageReader
-        from reportlab.pdfgen import canvas as pdf_canvas
-    except ImportError:
-        print("PDF menu non generato: manca reportlab (pip install reportlab).")
-        return
-
-    try:
-        by_name = {panel["name"]: panel for panel in panels}
-        left_names = ["Fantasia", "Pane & Co", "Cibària"]
-        right_names = ["Bollenti piatti", "Impastamò", "Santoro (Castellana)"]
-
-        def image_bytes_for(name: str) -> Optional[bytes]:
-            panel = by_name.get(name)
-            if not panel or panel.get("error"):
-                return None
-            data = panel.get("image_bytes")
-            if data:
-                return data
-            image_name = panel.get("publish_image") or f"{safe_file_name(name)}.jpg"
-            image_path = os.path.join(output_dir, image_name)
-            if os.path.exists(image_path):
-                with open(image_path, "rb") as image_file:
-                    return image_file.read()
-            return None
-
-        page_w, page_h = A4
-        margin = 16
-        gap = 12
-        header_h = 40
-        col_w = (page_w - margin * 2 - gap) / 2
-        body_top = page_h - margin - header_h
-        body_h = body_top - margin
-        row_gap = 10
-        cell_h = (body_h - row_gap * 2) / 3
-        label_h = 18
-
-        pdf_path = os.path.join(output_dir, "Rosticcerie-Menu.pdf")
-        c = pdf_canvas.Canvas(pdf_path, pagesize=A4)
-
-        c.setFont("Helvetica-Bold", 16)
-        c.drawCentredString(page_w / 2, page_h - margin - 16, "Menu del giorno")
-        c.setFont("Helvetica", 10)
-        c.drawCentredString(page_w / 2, page_h - margin - 32, italian_long_date(rome_now().date()))
-
-        for col_x, names in ((margin, left_names), (margin + col_w + gap, right_names)):
-            for row, name in enumerate(names):
-                cell_top = body_top - row * (cell_h + row_gap)
-                c.setFont("Helvetica-Bold", 12)
-                c.setFillColorRGB(0, 0, 0)
-                c.drawCentredString(col_x + col_w / 2, cell_top - 13, name)
-
-                area_top = cell_top - label_h
-                area_h = cell_h - label_h - 2
-                data = image_bytes_for(name)
-                if data:
-                    try:
-                        reader = ImageReader(io.BytesIO(data))
-                        iw, ih = reader.getSize()
-                        scale = min(col_w / iw, area_h / ih)
-                        draw_w, draw_h = iw * scale, ih * scale
-                        draw_x = col_x + (col_w - draw_w) / 2
-                        draw_y = area_top - area_h + (area_h - draw_h) / 2
-                        c.drawImage(
-                            reader, draw_x, draw_y, width=draw_w, height=draw_h,
-                            preserveAspectRatio=True, mask="auto",
-                        )
-                        continue
-                    except Exception as exc:
-                        print(f"PDF menu: immagine non incorporata per {name}: {exc}")
-                c.setFont("Helvetica-Oblique", 10)
-                c.drawCentredString(col_x + col_w / 2, area_top - area_h / 2, "Menu non disponibile")
-
-        c.showPage()
-        c.save()
-
-        try:
-            # Genera anche un PNG della pagina (usato dal sito per mostrare
-            # il menu come immagine, che si adatta sempre perfettamente
-            # allo schermo anche su iPhone: un PDF dentro un iframe, su
-            # alcuni browser mobili, non si ridimensiona bene e mostra solo
-            # una parte del foglio). Il PDF resta comunque disponibile per
-            # la stampa.
-            import pymupdf  # PyMuPDF
-
-            pdf_doc = pymupdf.open(pdf_path)
-            pix = pdf_doc[0].get_pixmap(matrix=pymupdf.Matrix(2.0, 2.0))
-            pix.save(os.path.join(output_dir, "Rosticcerie-Menu.png"))
-            pdf_doc.close()
-        except Exception as exc:
-            print(f"PDF menu: anteprima PNG non generata: {exc}")
-    except Exception as exc:
-        print(f"PDF menu non generato per un errore imprevisto: {exc}")
 
 
 def _load_bold_font(size: int):
@@ -3576,16 +3465,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             else ""
         )
         if p["name"] == "Suggerimenti":
-            # Pulsante verde diviso in due meta': "PDF" apre il PDF con
-            # tutti i menu del giorno (write_menu_pdf), "Info" fa esattamente
-            # quello che faceva prima il riquadro "Suggerimenti" (immagine +
-            # pulsante di condivisione del sito, gestiti da renderDetail()).
+            # Pulsante "Info": fa quello che faceva la meta' "Info" del
+            # vecchio pulsante diviso con il PDF (rimosso insieme a tutta
+            # la sua gestione) - immagine + pulsante di condivisione del
+            # sito, gestiti da renderDetail().
             cards.append(f"""
-            <div class="card is-suggestions" data-pid="{i}" tabindex="0" style="border-color:{border_color};background-color:{bg_color}">
-                <button type="button" class="split-half split-pdf" onclick="event.stopPropagation(); openMenuPdf();">PDF<span class="split-counter" id="extra-counter-pdf"></span></button>
-                <button type="button" class="split-half split-info" onclick="event.stopPropagation(); recordExtraHit('Info'); cardClicked({i});">Info<span class="split-counter" id="extra-counter-info"></span></button>
+            <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="recordExtraHit('Info'); cardClicked({i})">
+                <span class="card-name">Info<span class="split-counter" id="extra-counter-info"></span></span>
                 {reference_html}
-            </div>
+            </button>
             """)
             continue
         title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
@@ -3751,35 +3639,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       border-radius: 999px;
       padding: 2px 8px;
       line-height: 18px;
-    }}
-    .card.is-suggestions {{
-      flex-direction: row;
-      padding: 0;
-      overflow: hidden;
-      justify-content: stretch;
-      align-items: stretch;
-    }}
-    .split-half {{
-      position: relative;
-      appearance: none;
-      -webkit-appearance: none;
-      border: none;
-      background: transparent;
-      color: #111;
-      font: inherit;
-      font-size: clamp(16px, 5vw, 24px);
-      font-weight: bold;
-      flex: 1 1 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      cursor: pointer;
-      padding: 8px 4px;
-      touch-action: manipulation;
-    }}
-    .split-pdf {{
-      border-right: 2px solid rgba(0,0,0,0.18);
     }}
     .split-counter {{
       display: none;
@@ -3958,53 +3817,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       padding: 4px;
       display: flex;
       align-items: center;
-    }}
-    /* Vista a schermo intero con il menu del giorno di tutte le
-       rosticcerie (immagine, non il PDF direttamente: cosi' si adatta
-       sempre allo schermo, anche su iPhone) e una barra in basso divisa in
-       due: casetta per tornare alla griglia, stampante per stampare il
-       PDF originale. */
-    #pdf-view {{
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: #111;
-      flex-direction: column;
-      z-index: 200;
-    }}
-    #pdf-image {{
-      flex: 1 1 auto;
-      min-height: 0; /* senza questo un <img> dentro un flex a colonna puo' non ridursi ed eccedere lo schermo */
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #fff;
-    }}
-    #pdf-actions {{
-      flex: 0 0 auto;
-      display: flex;
-      border-top: 1px solid #333;
-    }}
-    #pdf-actions button {{
-      flex: 1 1 33.333%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      appearance: none;
-      -webkit-appearance: none;
-      border: none;
-      background: #00c853;
-      color: #111;
-      padding: 14px;
-      cursor: pointer;
-    }}
-    #pdf-actions button:not(:last-child) {{
-      border-right: 1px solid rgba(0, 0, 0, 0.18);
-    }}
-    #pdf-actions svg {{
-      width: 28px;
-      height: 28px;
-      display: block;
     }}
     #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }}
     #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
@@ -4278,7 +4090,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
-    // anche l'audio della Home, il PDF o la scheda Info): stessa logica di
+    // anche l'audio della Home o la scheda Info): stessa logica di
     // ritentativo/coda usata gia' per i menu, cosi' tutti i contatori sono
     // salvati allo stesso modo (persistenti e comuni a tutti i dispositivi,
     // non solo sul telefono di chi clicca).
@@ -4307,12 +4119,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     // Contatori "extra" (non legati a una rosticceria): riproduzioni audio
-    // della Home, apertura del PDF, apertura della scheda Info. Visibili
-    // solo in modalita' amministratore (?v=57), con lo stesso meccanismo
-    // (Abacus + offset di azzeramento) dei contatori dei menu.
+    // della Home, apertura della scheda Info. Visibili solo in modalita'
+    // amministratore (?v=57), con lo stesso meccanismo (Abacus + offset di
+    // azzeramento) dei contatori dei menu.
     const EXTRA_COUNTERS = [
         {{ name: 'Audio', elId: 'audio-play-counter', display: 'inline-block' }},
-        {{ name: 'PDF', elId: 'extra-counter-pdf', display: 'block' }},
         {{ name: 'Info', elId: 'extra-counter-info', display: 'block' }},
     ];
     let extraCounterState = {{}};
@@ -4446,7 +4257,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         const mainTitle = document.getElementById('main-title');
         mainTitle.innerText = 'Azzeramento: lettura contatori...';
 
-        // Sia le rosticcerie sia i contatori extra (Audio/PDF/Info) usano
+        // Sia le rosticcerie sia i contatori extra (Audio/Info) usano
         // lo stesso meccanismo totale+offset, quindi si azzerano allo
         // stesso modo: prima mancavano del tutto da questo elenco.
         const targets = [];
@@ -4747,73 +4558,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }} finally {{
             cardOpening = false;
         }}
-    }}
-
-    function openMenuPdf() {{
-        // Il menu del giorno di tutte le rosticcerie (due colonne) viene
-        // generato lato server ad ogni pubblicazione (write_menu_pdf in
-        // Python), sia come PDF (per la stampa) sia come PNG della stessa
-        // pagina. Qui mostriamo il PNG dentro la pagina stessa: un'immagine
-        // con "object-fit: contain" si adatta sempre per intero allo
-        // schermo, su qualunque telefono, cosa che un PDF dentro un iframe
-        // su alcuni browser mobili (Safari incluso) non garantisce.
-        recordExtraHit('PDF');
-        document.getElementById('pdf-image').src = 'Rosticcerie-Menu.png?v=' + Date.now();
-        document.getElementById('pdf-view').style.display = 'flex';
-        window.scrollTo(0, 0);
-    }}
-
-    function printMenuPdf() {{
-        // Stampa il menu su un foglio A4 verticale: un iframe nascosto con
-        // una pagina che forza esplicitamente formato e orientamento del
-        // foglio (CSS @page) garantisce che il risultato stampato sia
-        // sempre A4 verticale, indipendentemente dalle impostazioni
-        // predefinite di stampante/browser. Si torna subito alla Home: la
-        // stampa prosegue per conto suo nella finestra di dialogo del
-        // sistema operativo.
-        const frame = document.createElement('iframe');
-        frame.style.position = 'fixed';
-        frame.style.width = '0';
-        frame.style.height = '0';
-        frame.style.border = '0';
-        frame.style.right = '0';
-        frame.style.bottom = '0';
-        document.body.appendChild(frame);
-        frame.onload = () => {{
-            try {{
-                frame.contentWindow.focus();
-                frame.contentWindow.print();
-            }} catch (err) {{
-                console.error('Stampa non riuscita:', err);
-            }}
-            setTimeout(() => {{ frame.remove(); }}, 2000);
-        }};
-        const src = 'Rosticcerie-Menu.png?v=' + Date.now();
-        frame.srcdoc = '<!doctype html><html><head><style>' +
-            '@page {{ size: A4 portrait; margin: 0; }}' +
-            'html, body {{ margin: 0; padding: 0; }}' +
-            'img {{ width: 210mm; height: 297mm; object-fit: contain; display: block; }}' +
-            '</style></head><body><img src="' + src + '"></body></html>';
-        closePdfView();
-    }}
-
-    function saveMenuPdf() {{
-        // Salva il PDF vero e proprio (non il PNG) sul dispositivo: un link
-        // con l'attributo "download" attivato via JavaScript e' il modo
-        // standard per far scattare il salvataggio di un file dal browser,
-        // senza aprire una nuova scheda. Si torna alla Home subito dopo.
-        const link = document.createElement('a');
-        link.href = 'Rosticcerie-Menu.pdf?v=' + Date.now();
-        link.download = 'Rosticcerie-Menu.pdf';
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        closePdfView();
-    }}
-
-    function closePdfView() {{
-        document.getElementById('pdf-view').style.display = 'none';
-        document.getElementById('pdf-image').src = '';
     }}
 
     function syncOrderFromDom() {{
@@ -5120,7 +4864,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.querySelectorAll('.card[data-pid]').forEach(card => {{
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel) return;
-            card.classList.toggle('is-suggestions', panel.name === 'Suggerimenti');
             card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#555555');
             card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#ffffff');
             const cardNameEl = card.querySelector('.card-name');
@@ -5373,7 +5116,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             return;
         }}
         if (isAdmin) {{
-            if (confirm("Vuoi davvero azzerare tutti i contatori, incluse le visualizzazioni extra (Audio/PDF/Info)? Su questo dispositivo si azzerano subito. Il completamento per tutti gli altri dispositivi avviene in background e puo' richiedere qualche minuto in piu' sui contatori con molte visualizzazioni.")) {{
+            if (confirm("Vuoi davvero azzerare tutti i contatori, incluse le visualizzazioni extra (Audio/Info)? Su questo dispositivo si azzerano subito. Il completamento per tutti gli altri dispositivi avviene in background e puo' richiedere qualche minuto in piu' sui contatori con molte visualizzazioni.")) {{
                 resetCounterGlobally();
             }}
         }} else {{
@@ -5452,21 +5195,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <div id="detail-view">
     <div id="detail-content" onclick="closeDetail()"></div>
-  </div>
-
-  <div id="pdf-view">
-    <img id="pdf-image" alt="Menu del giorno di tutte le rosticcerie">
-    <div id="pdf-actions">
-      <button type="button" id="pdf-home-btn" onclick="closePdfView()" aria-label="Torna alla Home">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M4 11 L12 4 L20 11 M6 9.5 V20 H18 V9.5 M10 20 V14 H14 V20"/></svg>
-      </button>
-      <button type="button" id="pdf-print-btn" onclick="printMenuPdf()" aria-label="Stampa il menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3 H17 V8 H7 Z M4 8 H20 V17 H4 Z M8 17 H16 V21 H8 Z"/></svg>
-      </button>
-      <button type="button" id="pdf-save-btn" onclick="saveMenuPdf()" aria-label="Salva il PDF">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M4 4 H16 L20 8 V20 H4 Z M8 4 H14 V9 H8 Z M7 13 H17 V20 H7 Z"/></svg>
-      </button>
-    </div>
   </div>
 
   <div id="nav-bar">

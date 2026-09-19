@@ -1,0 +1,41 @@
+CARTELLA DI RIFERIMENTO - PROGETTO ROSTICCERIE
+================================================
+
+Questa e' ora L'UNICA cartella di riferimento per il progetto Rosticcerie,
+al posto della vecchia C:\Dropbox\Prog\Fantasia (piena di tentativi, backup
+e file sparsi accumulati nel tempo) e della sua sottocartella
+publish_rosticcerie_20260911.
+
+Struttura:
+  C:\Dropbox\Prog\Rosticcerie\
+    Progetto\   <- questa cartella: il progetto live, collegato a GitHub
+    Backup\     <- backup periodici a data/ora (es. 2026-09-13-10-23)
+
+Repository GitHub collegato: https://github.com/Sebastiano-Mazzarisi/Rosticcerie
+Il sito pubblicato (aggiornato ogni 10 min, 5:00-20:00 ora italiana, da
+GitHub Actions): https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/index.html
+
+Questa cartella e' un clone Git completo e funzionante: puoi usare
+normalmente "git status", "git add", "git commit", "git pull", "git push"
+esattamente come si faceva prima in publish_rosticcerie_20260911.
+
+Se in futuro rifai un "git clone" (o un altro download) dentro una cartella
+sincronizzata con Dropbox e Git da errori tipo "Permission denied" sui file
+.pack: e' Dropbox che blocca i file appena scritti. Soluzione: clona prima
+in una cartella fuori da Dropbox (es. C:\Temp\...) e poi sposta la cartella
+gia' completa dentro C:\Dropbox\Prog\Rosticcerie\, oppure metti in pausa la
+sincronizzazione di Dropbox durante il clone.
+
+COSA FARE DELLE VECCHIE CARTELLE
+----------------------------------
+Ora che questa cartella funziona, puoi cancellare con calma, quando vuoi:
+  - C:\Dropbox\Prog\Fantasia\publish_rosticcerie_20260911  (sostituita da questa cartella)
+  - Il resto di C:\Dropbox\Prog\Fantasia contiene vecchi tentativi, versioni
+    precedenti (Fantasia.py, Fantasia-vecchio.py, Rosticceria (old).py, le
+    varie cartelle BACKUP_*, backup_*), file di debug e documenti Word/PDF:
+    non serve piu' nulla di li' per far funzionare il progetto, ma se
+    contiene documenti personali (es. i .docx con le istruzioni per gli
+    utenti) valuta tu cosa conservare altrove prima di cancellare.
+
+Tutto lo storico completo (ogni versione, ogni commit) resta comunque
+conservato su GitHub, quindi non c'e' fretta ne' rischio nel cancellare.
