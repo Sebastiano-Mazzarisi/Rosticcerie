@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-19T07:27:19",
+  "updated_at": "2026-09-19T07:34:44",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,9 +12,9 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "18 Settembre 2026.\nMenù del giorno.",
-      "published_at": "18/09/2026 09:35 circa",
-      "published_at_raw": "18/09/2026",
+      "text": "19 Settembre 2026.\nMenù del giorno.",
+      "published_at": "19/09/2026 09:31 circa",
+      "published_at_raw": "19/09/2026",
       "error": null
     },
     {
@@ -44,7 +44,7 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 19 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Mezzi rigatoni con gorgonzola e noci - €7.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli con pesce spada e melanzane - €8.50\n- Minestra di piselli, zucchina e farro - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Bombette di capocollo alla boscaiola - €7.50\n  5 pezzi\n- Bocconcini di pollo con verdure - €7.50\n- Filetto di merluzzo gratinato con finocchi - €8.50",
+      "text": "Menu 19 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Mezzi rigatoni con gorgonzola e noci - €7.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli con pesce spada e melanzane - €8.50\n- Minestra di piselli, zucchina e farro - €6.00\n- Penne tricolore all'arrabbiata - €6.50\n- Rigatoni alla pastorella - €7.50\n  Con pomodoro fresco e ricotta\n- Risotto con asparagi e cernia - €8.50\n\nSECONDI PIATTI DEL GIORNO\n- Bombette di capocollo alla boscaiola - €7.50\n  5 pezzi\n- Bocconcini di pollo con verdure - €7.50\n- Filetto di merluzzo gratinato con finocchi - €8.50",
       "published_at": "19/09/2026",
       "published_at_raw": "19 Settembre",
       "error": null
@@ -54,7 +54,7 @@
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●ORECCHIETTE ALLA CRUDAIOLA 5,0\n●FARFALLE CON SALSA DI PISELLI E GAMBERI 5,5\n●TORTIGLIONI SALSICCIA E FUNGHI 5,0\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA AL SUGO DI PORCINI PROSCIUTTO COTTO E MOZZARELLA 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ARROSTICINI IMPANATI IN SALSA BBQ\n●PANZEROTTO DI VITELLO FARCITO CON CONTORNO DI PISELLI\n●SALSICCIA DI POLLO AL FORNO CON PATATE E SCALOGNO\n●COTOLETTE DI POLLO\n●MILLEFOGLIE DI VERDURE VEGETARIANO\n●MELANZANE RIPIENE",
       "published_at": "19/09/2026 09:11 circa",
-      "published_at_raw": "16m",
+      "published_at_raw": "23m",
       "error": null
     }
   ]
