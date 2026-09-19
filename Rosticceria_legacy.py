@@ -3487,7 +3487,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Fantasia": "080-405.41.39",
         "Cibària": "080-645.07.99",
         "Impastamò": "392-536.15.36",
-        "Le delizie di Michela": "080-521.22.33",
+        "Le delizie di Michela": "080-521.42.33",
         "Santoro (Castellana)": "080-859.83.13",
         "Pane & Co": "080-405.49.00",
         "Bollenti piatti": "334-318.58.44",
