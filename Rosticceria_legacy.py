@@ -3453,9 +3453,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     cards = []
     for i, p in enumerate(panels_data):
-        border_color = p.get("card_border") or ("#ffd641" if p["updated"] else "#555555")
+        border_color = p.get("card_border") or ("#ffd641" if p["updated"] else "#ffffff")
         bg_color = p.get("card_bg") or ("#fff7de" if p["updated"] else "#ffffff")
-        name_color = p.get("card_name_color") or ("#111" if p["updated"] else "#777777")
+        name_color = p.get("card_name_color") or "#111"
         counter_html = (
             f'<span class="card-counter" id="card-counter-{i}"></span>'
             if p.get("counter_enabled", True)
@@ -3480,7 +3480,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             continue
         title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
         cards.append(f"""
-        <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="cardClicked({i})">
+        <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="handleCardClick({i})">
             <span class="card-name" style="color:{name_color}">{title}</span>
             {reference_html}
             {counter_html}
@@ -3596,7 +3596,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       justify-content: center;
       text-align: center;
       padding: 32px 10px 12px;
-      border: 4px solid #555555; /* Giallo se aggiornata oggi, grigio scuro altrimenti */
+      border: 4px solid #ffffff; /* Giallo se aggiornata oggi, bianco altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
          caselle) selezioni il testo o apra il menu contestuale del
@@ -3932,9 +3932,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (!panel || panel.card_border) return;
             panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
             card.classList.toggle('is-updated', panel.updated && Boolean((panel.card_reference || '').trim()));
-            card.style.borderColor = panel.updated ? '#ffd641' : '#555555';
+            card.style.borderColor = panel.updated ? '#ffd641' : '#ffffff';
             card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
-            card.querySelector('.card-name').style.color = panel.updated ? '#111' : '#777777';
+            card.querySelector('.card-name').style.color = '#111';
             const reference = card.querySelector('.card-reference');
             if (reference && panel.menu_date) {{
                 // Se il menu e' di oggi ma non abbiamo un orario preciso (es.
@@ -4523,6 +4523,22 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     let cardOpening = false;
+    function handleCardClick(pid) {{
+        // Se il menu non e' aggiornato oggi (bottone bianco, non giallo) e
+        // non siamo nella fascia oraria di "attesa aggiornamento" della
+        // mattina (isWaitingForUpdate), non ha senso mostrare un menu
+        // vecchio: si va direttamente alla pagina Facebook/Instagram della
+        // rosticceria, come premendo il titolo/logo nella scheda di
+        // dettaglio (handleTitleClick).
+        const panel = PANELS[pid];
+        if (panel && !panel.updated && panel.url && !isWaitingForUpdate(panel)) {{
+            if (panel.counter_enabled !== false) recordExtraHit(panel.name);
+            window.open(panel.url, '_blank', 'noopener');
+            return;
+        }}
+        cardClicked(pid);
+    }}
+
     async function cardClicked(pid) {{
         // Non aprire il menu durante il riordino o una precedente apertura.
         if (reorderMode || cardOpening) return;
@@ -4866,11 +4882,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.querySelectorAll('.card[data-pid]').forEach(card => {{
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel) return;
-            card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#555555');
+            card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#ffffff');
             card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#ffffff');
             const cardNameEl = card.querySelector('.card-name');
             if (cardNameEl) {{
-                cardNameEl.style.color = panel.card_name_color || (panel.updated ? '#111' : '#777777');
+                cardNameEl.style.color = panel.card_name_color || '#111';
             }}
         }});
         loadSavedOrder();
