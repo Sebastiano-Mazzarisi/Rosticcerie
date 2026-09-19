@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-18T16:38:04",
+  "updated_at": "2026-09-19T07:27:19",
   "pages": [
     {
       "name": "Fantasia",
@@ -20,41 +20,41 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "1h\n·",
-      "published_at": "18/09/2026 08:41 circa",
-      "published_at_raw": "1h",
+      "text": "2h\n·",
+      "published_at": "19/09/2026 07:25 circa",
+      "published_at_raw": "2h",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
-      "image": "Le_delizie_di_Michela.jpg",
+      "image": null,
       "text": "",
-      "published_at": "18/09/2026",
-      "published_at_raw": "Data del menu confermata all'importazione locale",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Le delizie di Michela."
     },
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 18  Settembre",
-      "published_at": "18/09/2026 08:36 circa",
-      "published_at_raw": "18/09/2026",
+      "text": "menù del giorno 19  Settembre",
+      "published_at": "19/09/2026 08:37 circa",
+      "published_at_raw": "19/09/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 18 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Mezzi rigatoni con gorgonzola e noci - €7.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli con pesce spada e melanzane - €8.50\n- Minestra di piselli, zucchina e farro - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Bombette di capocollo alla boscaiola - €7.50\n  5 pezzi\n- Bocconcini di pollo con verdure - €7.50\n- Filetto di merluzzo gratinato con finocchi - €8.50",
-      "published_at": "18/09/2026",
-      "published_at_raw": "18 Settembre",
+      "text": "Menu 19 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Mezzi rigatoni con gorgonzola e noci - €7.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli con pesce spada e melanzane - €8.50\n- Minestra di piselli, zucchina e farro - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Bombette di capocollo alla boscaiola - €7.50\n  5 pezzi\n- Bocconcini di pollo con verdure - €7.50\n- Filetto di merluzzo gratinato con finocchi - €8.50",
+      "published_at": "19/09/2026",
+      "published_at_raw": "19 Settembre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "PRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●LASAGNA AL FORNO 5,0\n●FUSILLI CON PESTO DI PEPERONI, MORTADELLA PIASTRATA E MELANZANA 5,0\n●FARFALLE ALLA CRUDAIOLA CON PESTO DI PISELLI, E GAMBERI 5,5\n●SPAGHETTI ALLE COZZE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ARROSTICINI PANATI IN SALSA BBQ\n●COTOLETTE DI POLLO\n●BRACIOLETTE ALLA PIZZAIOLA IN BIANCO\n●RUSTICO TONNO, POMODORO E MOZZARELLA\n●CUORE DI MERLUZZO CON VELLUTATA DI PATATE E ZUCCHINE E ERBA CIPOLLINA\n●INSALATA DI POLLO\n●INSALATA DI POLPO TONNATA\n●PARMIGIANA",
-      "published_at": "18/09/2026 10:37 circa",
-      "published_at_raw": "8h",
+      "text": "PRIMI PIATTI\n●ORECCHIETTE ALLA CRUDAIOLA 5,0\n●FARFALLE CON SALSA DI PISELLI E GAMBERI 5,5\n●TORTIGLIONI SALSICCIA E FUNGHI 5,0\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA AL SUGO DI PORCINI PROSCIUTTO COTTO E MOZZARELLA 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ARROSTICINI IMPANATI IN SALSA BBQ\n●PANZEROTTO DI VITELLO FARCITO CON CONTORNO DI PISELLI\n●SALSICCIA DI POLLO AL FORNO CON PATATE E SCALOGNO\n●COTOLETTE DI POLLO\n●MILLEFOGLIE DI VERDURE VEGETARIANO\n●MELANZANE RIPIENE",
+      "published_at": "19/09/2026 09:11 circa",
+      "published_at_raw": "16m",
       "error": null
     }
   ]
