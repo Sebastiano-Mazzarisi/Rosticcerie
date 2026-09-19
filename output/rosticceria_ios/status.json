@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-19T10:38:15",
+  "updated_at": "2026-09-19T12:04:45",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 19/09/26",
-      "published_at": "19/09/2026 10:38 circa",
-      "published_at_raw": "1h",
+      "published_at": "19/09/2026 11:02 circa",
+      "published_at_raw": "3h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "19 Settembre 2026.\nMenù del giorno.",
-      "published_at": "19/09/2026 10:04 circa",
+      "published_at": "19/09/2026 10:02 circa",
       "published_at_raw": "19/09/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 19  Settembre",
-      "published_at": "19/09/2026 08:38 circa",
+      "published_at": "19/09/2026 09:03 circa",
       "published_at_raw": "19/09/2026",
       "error": null
     },
@@ -61,8 +61,8 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●ORECCHIETTE ALLA CRUDAIOLA 5,0\n●FARFALLE CON SALSA DI PISELLI E GAMBERI 5,5\n●TORTIGLIONI SALSICCIA E FUNGHI 5,0\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA AL SUGO DI PORCINI PROSCIUTTO COTTO E MOZZARELLA 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ARROSTICINI IMPANATI IN SALSA BBQ\n●PANZEROTTO DI VITELLO FARCITO CON CONTORNO DI PISELLI\n●SALSICCIA DI POLLO AL FORNO CON PATATE E SCALOGNO\n●COTOLETTE DI POLLO\n●MILLEFOGLIE DI VERDURE VEGETARIANO\n●MELANZANE RIPIENE",
-      "published_at": "19/09/2026 09:38 circa",
-      "published_at_raw": "3h",
+      "published_at": "19/09/2026 10:04 circa",
+      "published_at_raw": "4h",
       "error": null
     }
   ]
