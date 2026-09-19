@@ -3931,14 +3931,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const panel = PANELS[Number(card.dataset.pid)];
             if (!panel || panel.card_border) return;
             panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
-            if (isAdmin && panel.name === 'Impastamò') {{
-                // Solo per collaudo in modalita' supervisore (?v=57):
-                // Impastamò viene sempre simulato come NON aggiornato oggi,
-                // qualunque sia il suo stato reale, cosi' si puo' testare il
-                // bottone bianco e il click che apre direttamente Facebook
-                // senza dover aspettare un giorno in cui non pubblica.
-                panel.updated = false;
-            }}
             card.classList.toggle('is-updated', panel.updated && Boolean((panel.card_reference || '').trim()));
             card.style.borderColor = panel.updated ? '#ffd641' : '#ffffff';
             card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
@@ -4148,7 +4140,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (!el) return;
             if (!isAdmin) {{ el.style.display = 'none'; return; }}
             const val = extraVisibleCounter(name);
-            el.innerText = val === null ? '…' : formatCounter(val);
+            el.innerText = val === null ? '0' : formatCounter(val);
             el.style.display = display;
         }});
     }}
@@ -4385,7 +4377,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 continue;
             }}
             const val = visibleCounter(i);
-            el.innerText = val === null ? '…' : formatCounter(val);
+            el.innerText = val === null ? '0' : formatCounter(val);
             el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (!counterFreshByPanel[i] ? (counterLoadRunning ? 'Ultimo valore disponibile: aggiornamento in corso' : 'Ultimo valore disponibile: aggiornamento non riuscito') : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate'));
             el.style.display = 'block';
         }}
