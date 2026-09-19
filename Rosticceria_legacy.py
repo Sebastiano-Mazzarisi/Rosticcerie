@@ -3395,6 +3395,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     today = rome_now().date()
     panels_data = []
 
+    # Rosticcerie aggiunte di recente: al posto della data/ora sul bottone
+    # mostrano un confetto verde con scritta "NEW" che lampeggia piano, per
+    # farle notare. Quando non sono piu' una novita', basta togliere il nome
+    # da questo insieme (o svuotarlo) per tornare al badge normale.
+    NEW_ARRIVALS = {"Aufer"}
+
     for panel in panels:
         name = panel["name"]
         phone_number = phone_numbers.get(name, "")
@@ -3430,6 +3436,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             "menu_date": parse_status_date(published_at).isoformat() if parse_status_date(published_at) else "",
             "url": SOURCE_URLS.get(name, ""),
             "counter_enabled": True,
+            "badge_new": name in NEW_ARRIVALS,
         })
 
     panels_data.append({
@@ -3461,11 +3468,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if p.get("counter_enabled", True)
             else ""
         )
-        reference_html = (
-            f'<span class="card-reference">{html.escape(p.get("card_reference", ""))}</span>'
-            if p.get("card_reference")
-            else ""
-        )
+        if p.get("badge_new"):
+            reference_html = '<span class="card-reference badge-new">NEW</span>'
+        else:
+            reference_html = (
+                f'<span class="card-reference">{html.escape(p.get("card_reference", ""))}</span>'
+                if p.get("card_reference")
+                else ""
+            )
         if p["name"] == "Suggerimenti":
             # Pulsante "Info": fa quello che faceva la meta' "Info" del
             # vecchio pulsante diviso con il PDF (rimosso insieme a tutta
@@ -3641,6 +3651,21 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       border-radius: 999px;
       padding: 2px 8px;
       line-height: 18px;
+    }}
+    /* Confetto "NEW" per le rosticcerie aggiunte di recente (vedi
+       NEW_ARRIVALS in write_publish_index): stessi colori del confetto
+       verde qui sopra, ma con un lampeggio lento per farlo notare. */
+    .card-reference.badge-new {{
+      color: #fff;
+      background: #00863b;
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 18px;
+      animation: badgeNewBlink 2.4s ease-in-out infinite;
+    }}
+    @keyframes badgeNewBlink {{
+      0%, 100% {{ opacity: 1; }}
+      50% {{ opacity: 0.35; }}
     }}
     .split-counter {{
       display: none;
@@ -3936,7 +3961,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
             card.querySelector('.card-name').style.color = '#111';
             const reference = card.querySelector('.card-reference');
-            if (reference && panel.menu_date) {{
+            if (reference && panel.menu_date && !panel.badge_new) {{
                 // Se il menu e' di oggi ma non abbiamo un orario preciso (es.
                 // Pane & Co, che sul sito riporta solo la data), mostriamo
                 // comunque la data invece di svuotare il confetto verde:
