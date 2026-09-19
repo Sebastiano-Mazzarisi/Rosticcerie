@@ -3653,11 +3653,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       line-height: 18px;
     }}
     /* Confetto "NEW" per le rosticcerie aggiunte di recente (vedi
-       NEW_ARRIVALS in write_publish_index): stessi colori del confetto
-       verde qui sopra, con un lampeggio per farlo notare. */
+       NEW_ARRIVALS in write_publish_index): rosso invece del verde usato
+       per il confetto "aggiornato" qui sopra, cosi' si distingue bene, con
+       un lampeggio per farlo notare. */
     .card-reference.badge-new {{
       color: #fff;
-      background: #00863b;
+      background: #d32f2f;
       border-radius: 999px;
       padding: 2px 8px;
       line-height: 18px;
@@ -5090,7 +5091,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                     const ref = document.createElement('span');
                     ref.className = 'card-reference'; card.appendChild(ref);
                 }}
-                if (card) card.querySelector('.card-reference').innerText = panel.card_reference;
+                // Le rosticcerie "nuove" (badge_new) mostrano sempre il
+                // confetto "NEW" lampeggiante al posto della data: questo
+                // aggiornamento periodico dei dati non deve sovrascriverlo
+                // con l'orario/data appena ricevuti da status.json, altrimenti
+                // il confetto sparisce pochi istanti dopo il caricamento.
+                if (card && !panel.badge_new) card.querySelector('.card-reference').innerText = panel.card_reference;
             }});
             refreshMenuDates();
             refreshReferenceDate();
