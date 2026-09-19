@@ -3654,14 +3654,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     /* Confetto "NEW" per le rosticcerie aggiunte di recente (vedi
        NEW_ARRIVALS in write_publish_index): stessi colori del confetto
-       verde qui sopra, ma con un lampeggio lento per farlo notare. */
+       verde qui sopra, con un lampeggio per farlo notare. */
     .card-reference.badge-new {{
       color: #fff;
       background: #00863b;
       border-radius: 999px;
       padding: 2px 8px;
       line-height: 18px;
-      animation: badgeNewBlink 2.4s ease-in-out infinite;
+      animation: badgeNewBlink 1.2s ease-in-out infinite;
     }}
     @keyframes badgeNewBlink {{
       0%, 100% {{ opacity: 1; }}
