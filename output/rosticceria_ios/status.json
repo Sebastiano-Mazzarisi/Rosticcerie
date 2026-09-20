@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-20T08:02:03",
+  "updated_at": "2026-09-20T08:48:36",
   "pages": [
     {
       "name": "Fantasia",
@@ -35,11 +35,11 @@
     },
     {
       "name": "Aufer",
-      "image": null,
+      "image": "Aufer.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun menu locale importato oggi per Aufer."
+      "published_at": "20/09/2026",
+      "published_at_raw": "Data del menu confermata all'importazione locale",
+      "error": null
     },
     {
       "name": "Santoro (Castellana)",
