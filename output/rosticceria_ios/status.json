@@ -1,13 +1,13 @@
 {
-  "updated_at": "2026-09-20T21:01:21",
+  "updated_at": "2026-09-20T21:09:27",
   "pages": [
     {
       "name": "Fantasia",
-      "image": "Fantasia.jpg",
+      "image": null,
       "text": "",
-      "published_at": "20/09/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Fantasia."
     },
     {
       "name": "Cibària",
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 20  Settembre",
-      "published_at": "20/09/2026 08:59 circa",
+      "published_at": "20/09/2026 09:08 circa",
       "published_at_raw": "20/09/2026",
       "error": null
     },
