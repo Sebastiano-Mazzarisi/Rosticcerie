@@ -11,7 +11,7 @@ import Rosticceria_legacy as legacy
 from .config import ROSTICCERIE, RosticceriaConfig
 from .daily_posts import merge_today
 from . import quick_check
-from .local_menu import local_panel
+from .local_menu import local_panel, parent_menu_panel
 
 
 def _existing(config: RosticceriaConfig, require_today: bool = True) -> Dict | None:
@@ -46,13 +46,14 @@ def _elapsed_hours(post: Dict) -> float:
     return hours if hours is not None else float("inf")
 
 
-def _extract_facebook_image(config: RosticceriaConfig) -> Dict:
+def _extract_facebook_image(config: RosticceriaConfig, force: bool = False) -> Dict:
     if config.local_slug and local_panel(config.local_slug, config.name):
         return _extract_facebook_image_full(config)
     saved = _existing(config, require_today=False)
     # Le storie hanno una sorgente separata: non inferirne lo stato dal feed.
+    # Con force=True si salta la verifica rapida e si esegue sempre la scansione completa.
     signature = None if config.story_url else quick_check.probe(config)
-    if saved and quick_check.unchanged(config.name, signature):
+    if not force and saved and quick_check.unchanged(config.name, signature):
         print(f"{config.name}: verifica rapida, nessuna variazione; riuso i dati salvati.")
         return saved
     panel = _extract_facebook_image_full(config)
@@ -157,9 +158,9 @@ def _extract_facebook_image_full(config: RosticceriaConfig) -> Dict:
     }
 
 
-def _extract_paneeco(config: RosticceriaConfig) -> Dict:
+def _extract_paneeco(config: RosticceriaConfig, force: bool = False) -> Dict:
     existing = _existing(config)
-    if existing and legacy.format_card_reference(existing.get("published_at", ""), True):
+    if not force and existing and legacy.format_card_reference(existing.get("published_at", ""), True):
         print("Pane&Co: menu di oggi gia' presente, salto la verifica.")
         return existing
 
@@ -214,16 +215,23 @@ def _fallback_panel(config: RosticceriaConfig, exc: Exception) -> Dict:
     return {"name": config.name, "error": str(exc)}
 
 
-def _extract_timed(config: RosticceriaConfig):
+def _extract_timed(config: RosticceriaConfig, force: bool = False):
     started = time.perf_counter()
     outcome = "ok"
     try:
-        if config.kind == "facebook_image":
-            panel = _extract_facebook_image(config)
+        # Priorita' 1: immagine manuale nella cartella Menu/ (AAAA-MM-GG-Nome.jpg).
+        # Se presente, sovrascrive qualsiasi sorgente automatica.
+        manual = parent_menu_panel(config.menu_slug, config.name) if config.menu_slug else None
+        if manual:
+            if config.output_image:
+                legacy.save_image(manual["image_bytes"], config.output_image)
+            panel = manual
+        elif config.kind == "facebook_image":
+            panel = _extract_facebook_image(config, force=force)
         elif config.kind == "facebook_text":
             panel = _extract_facebook_text(config)
         elif config.kind == "paneeco":
-            panel = _extract_paneeco(config)
+            panel = _extract_paneeco(config, force=force)
         elif config.kind == "local_menu":
             panel = _extract_local_menu(config)
         else:
@@ -236,12 +244,12 @@ def _extract_timed(config: RosticceriaConfig):
     return panel, {"name": config.name, "seconds": round(elapsed, 2), "outcome": outcome}
 
 
-def extract_all() -> List[Dict]:
+def extract_all(force: bool = False) -> List[Dict]:
     started = time.perf_counter()
     # Ogni estrazione crea e chiude Playwright nel proprio thread.
     # Due sessioni al massimo, senza condividere browser, context o page.
     with ThreadPoolExecutor(max_workers=2, thread_name_prefix="rosticceria") as pool:
-        results = list(pool.map(_extract_timed, ROSTICCERIE))
+        results = list(pool.map(lambda c: _extract_timed(c, force=force), ROSTICCERIE))
     elapsed = time.perf_counter() - started
     timings = [timing for _, timing in results]
     report = {

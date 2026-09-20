@@ -25,6 +25,11 @@ class RosticceriaConfig:
     # Michela" (ripiego se lo scraping delle Storie Facebook fallisce) sia
     # da rosticcerie con kind="local_menu" (nessuna fonte automatica).
     local_slug: str = ""
+    # Nome usato nella cartella Menu/ affiancata a Progetto/ per i file
+    # AAAA-MM-GG-{menu_slug}.jpg salvati manualmente dall'utente.
+    # Se il file e' presente, viene usato con priorita' assoluta su qualsiasi
+    # sorgente automatica (Facebook, Instagram, sito).
+    menu_slug: str = ""
 
     @property
     def label(self) -> str:
@@ -39,6 +44,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         output_image="Rosticceria_Fantasia.jpg",
         skip_closure_notices=True,
         prefer_facebook_date=True,
+        menu_slug="Fantasia",
     ),
     RosticceriaConfig(
         name="Cibària",
@@ -46,6 +52,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         kind="facebook_image",
         output_image="Rosticceria_Cibaria.jpg",
         skip_closure_notices=True,
+        menu_slug="Cibaria",
     ),
     RosticceriaConfig(
         name="Impastamò",
@@ -55,6 +62,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         skip_closure_notices=True,
         photo_grid_first=False,
         force_refresh_today=True,
+        menu_slug="Impastamo",
     ),
     # Michela pubblica il menu solo nelle Storie di Facebook, che
     # l'automazione headless della pipeline non riesce ad aprire in modo
@@ -76,6 +84,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         prefer_active_closure=True,
         skip_closure_notices=True,
         local_slug="michela",
+        menu_slug="Michela",
     ),
     # Aufer pubblica il menu solo nelle Storie di Instagram (anche quelle "in
     # evidenza", permanenti): Instagram le nasconde del tutto a chi non e'
@@ -90,6 +99,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         kind="local_menu",
         output_image="Rosticceria_Aufer.jpg",
         local_slug="aufer",
+        menu_slug="Aufer",
     ),
     RosticceriaConfig(
         name="Santoro (Castellana)",
@@ -97,6 +107,7 @@ ROSTICCERIE: list[RosticceriaConfig] = [
         kind="facebook_image",
         output_image="Rosticceria_Santoro.jpg",
         skip_closure_notices=True,
+        menu_slug="Santoro",
     ),
     RosticceriaConfig(
         name="Pane & Co",

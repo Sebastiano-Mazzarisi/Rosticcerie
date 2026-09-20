@@ -10,7 +10,14 @@ di ImportaStoriaMichela.py.
 Ogni rosticceria gestita cosi' ha uno "slug" breve (es. "michela", "aufer")
 che identifica il file in local_menus/<slug>_<data>.jpg: e' fisso e non
 deriva dal nome visualizzato, cosi' i file gia' pubblicati restano validi
-anche se il nome cambia."""
+anche se il nome cambia.
+
+In alternativa (e con priorita' massima), si puo' salvare manualmente
+l'immagine del menu nella cartella Menu/ accanto a Progetto/, con il nome
+AAAA-MM-GG-NomeRosticceria.jpg  (es. 2026-09-20-Fantasia.jpg).
+Il campo menu_slug in config.py definisce il nome atteso per ciascuna
+rosticceria. Se il file e' presente oggi, viene usato prima di qualsiasi
+sorgente automatica (Facebook, Instagram, sito)."""
 from datetime import date
 from pathlib import Path
 import io
@@ -21,6 +28,45 @@ import Rosticceria_legacy as legacy
 # prima di questa modifica) si aspettavano NAME/slug impliciti per Michela.
 NAME = "Le delizie di Michela"
 MICHELA_SLUG = "michela"
+
+
+def parent_menu_path(menu_slug: str, day: date) -> Path | None:
+    """Cerca nella cartella Menu/ (affiancata a Progetto/) un file
+    AAAA-MM-GG-{menu_slug}.jpg/jpeg/png salvato manualmente dall'utente.
+    Restituisce il Path se trovato, None altrimenti."""
+    if not menu_slug:
+        return None
+    # Progetto/ e' script_dir(); Menu/ e' una sorella di Progetto/ sotto Rosticcerie/
+    folder = Path(legacy.script_dir()).parent / "Menu"
+    for ext in ("jpg", "jpeg", "png", "JPG", "JPEG", "PNG"):
+        p = folder / f"{day.isoformat()}-{menu_slug}.{ext}"
+        if p.is_file():
+            return p
+    return None
+
+
+def parent_menu_panel(menu_slug: str, name: str, day: date | None = None):
+    """Restituisce un pannello dall'immagine manuale in Menu/, se presente per oggi.
+    Ha priorita' massima su qualsiasi sorgente automatica."""
+    day = day or legacy.rome_now().date()
+    path = parent_menu_path(menu_slug, day)
+    if path is None:
+        return None
+    try:
+        with Image.open(path) as image:
+            image.verify()
+        image_bytes = path.read_bytes()
+    except (OSError, ValueError):
+        print(f"{name}: immagine in Menu/ non valida ({path.name}).")
+        return None
+    print(f"{name}: trovata immagine manuale Menu/{path.name}.")
+    return {
+        "name": name,
+        "image_bytes": legacy.add_date_footer(image_bytes, day.strftime("%d/%m/%Y")),
+        "text": "",
+        "published_at": day.strftime("%d/%m/%Y"),
+        "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+    }
 
 
 def menu_path(slug: str, day: date) -> Path:
