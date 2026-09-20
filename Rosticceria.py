@@ -3,7 +3,7 @@
 # Descrizione: Entry point pulito per estrarre e pubblicare i menu delle rosticcerie.
 # File di input: cookies.txt
 # File di output: output/rosticceria_ios/status.json, Rosticcerie.html, immagini jpg
-# Parametri: --once, --show, --no-git
+# Parametri: --once, --show, --no-git, --force
 
 import argparse
 
@@ -15,10 +15,16 @@ def main() -> None:
     parser.add_argument("--once", action="store_true", help="Esegue una sola estrazione e poi termina.")
     parser.add_argument("--show", action="store_true", help="Mostra anche la finestra locale a schermo intero.")
     parser.add_argument("--no-git", action="store_true", help="Non prova a pubblicare con GitHub/git.")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Forza il riesame completo ignorando i controlli di aggiornamento rapido "
+             "(quick_check, Pane&Co gia' aggiornato). Utile per test manuali.",
+    )
     args = parser.parse_args()
 
     if args.once:
-        run_once(show=args.show, publish_to_git=not args.no_git)
+        run_once(show=args.show, publish_to_git=not args.no_git, force=args.force)
     else:
         run_loop(show=args.show, publish_to_git=not args.no_git)
 
