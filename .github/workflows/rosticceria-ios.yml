@@ -22,6 +22,15 @@ on:
     # 05:00-20:00 Italia: rilettura ogni 10 minuti (estate e inverno).
     - cron: '*/10 3-19 * * *'
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Forza riesame completo ignorando i cache (quick_check, Pane&Co già aggiornato)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 concurrency:
   group: rosticcerie-ios
@@ -95,7 +104,13 @@ jobs:
         if: steps.timecheck.outputs.run == 'true'
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-        run: python Rosticceria.py --once --no-git
+        run: |
+          FORCE_FLAG=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            FORCE_FLAG="--force"
+            echo "Modalita' --force attivata dall'utente."
+          fi
+          python Rosticceria.py --once --no-git $FORCE_FLAG
 
       - name: Stampa diagnostica HTML Facebook (se presente)
         if: steps.timecheck.outputs.run == 'true'
