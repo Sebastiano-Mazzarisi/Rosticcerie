@@ -8,7 +8,11 @@ echo === Rosticcerie: commit e push ===
 echo Cartella: %cd%
 echo.
 
-git add -A
+git add Rosticceria.py Rosticceria_legacy.py requirements.txt commit_e_push.bat
+git add rosticcerie_clean/
+git add local_menus/
+git add Menu/ 2>nul
+git add .github/workflows/rosticceria-ios.yml 2>nul
 
 git diff --cached --quiet
 if errorlevel 1 (
