@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-19T15:51:35",
+  "updated_at": "2026-09-20T08:02:03",
   "pages": [
     {
       "name": "Fantasia",
@@ -21,48 +21,48 @@
       "name": "Impastamò",
       "image": "Impastamo.jpg",
       "text": "2h\n·",
-      "published_at": "19/09/2026 07:25 circa",
+      "published_at": "20/09/2026 08:00 circa",
       "published_at_raw": "2h",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
-      "image": "Le_delizie_di_Michela.jpg",
+      "image": null,
       "text": "",
-      "published_at": "19/09/2026",
-      "published_at_raw": "Data del menu confermata all'importazione locale",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Le delizie di Michela."
     },
     {
       "name": "Aufer",
-      "image": "Aufer.jpg",
+      "image": null,
       "text": "",
-      "published_at": "19/09/2026",
-      "published_at_raw": "Data del menu confermata all'importazione locale",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun menu locale importato oggi per Aufer."
     },
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 19  Settembre",
-      "published_at": "19/09/2026 08:50 circa",
-      "published_at_raw": "19/09/2026",
+      "text": "menù del giorno 20  Settembre",
+      "published_at": "20/09/2026 09:01 circa",
+      "published_at_raw": "20/09/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 19 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Penne tricolore all'arrabbiata - €6.50\n- Rigatoni alla pastorella - €7.50\n  Con pomodoro fresco e ricotta\n- Risotto con asparagi e cernia - €8.50\n- Foglie d'ulivo con ragù bianco e porcini - €8.50\n- Minestra di verdure con farro - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Bocconcini di fesa di tacchino con curry e verdurine - €7.50\n- Trancio di pesce spada con olive e pomodorini - €8.50",
-      "published_at": "19/09/2026",
-      "published_at_raw": "19 Settembre",
+      "text": "Menu 20 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Penne tricolore all'arrabbiata - €6.50\n- Rigatoni alla pastorella - €7.50\n  Con pomodoro fresco e ricotta\n- Risotto con asparagi e cernia - €8.50\n- Foglie d'ulivo con ragù bianco e porcini - €8.50\n- Minestra di verdure con farro - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Bocconcini di fesa di tacchino con curry e verdurine - €7.50\n- Trancio di pesce spada con olive e pomodorini - €8.50",
+      "published_at": "20/09/2026",
+      "published_at_raw": "20 Settembre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●ORECCHIETTE ALLA CRUDAIOLA 5,0\n●FARFALLE CON SALSA DI PISELLI E GAMBERI 5,5\n●TORTIGLIONI SALSICCIA E FUNGHI 5,0\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA AL SUGO DI PORCINI PROSCIUTTO COTTO E MOZZARELLA 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ARROSTICINI IMPANATI IN SALSA BBQ\n●PANZEROTTO DI VITELLO FARCITO CON CONTORNO DI PISELLI\n●SALSICCIA DI POLLO AL FORNO CON PATATE E SCALOGNO\n●COTOLETTE DI POLLO\n●MILLEFOGLIE DI VERDURE VEGETARIANO\n●MELANZANE RIPIENE",
-      "published_at": "19/09/2026 09:51 circa",
-      "published_at_raw": "8h",
+      "published_at": "19/09/2026 circa",
+      "published_at_raw": "1d",
       "error": null
     }
   ]
