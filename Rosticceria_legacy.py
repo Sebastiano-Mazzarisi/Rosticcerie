@@ -3821,7 +3821,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     .weekday-chart-title {{
       font-size: 16px;
       font-weight: bold;
-      color: #111;
+      color: #fff;
       margin-bottom: 12px;
       text-align: center;
     }}
@@ -4237,7 +4237,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 if (!el || !Array.isArray(data.percentages)) return;
                 const labels = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',
                     '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'];
-                const SCALA_MASSIMA = 50;
+                const SCALA_MASSIMA = 30;
                 el.innerHTML = labels.map((label, idx) => {{
                     const pct = data.percentages[idx] || 0;
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
