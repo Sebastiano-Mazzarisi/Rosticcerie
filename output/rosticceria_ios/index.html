@@ -295,6 +295,49 @@
       color: #111;
       font-size: 16px;
     }
+    .weekday-chart {
+      width: min(100%, 520px);
+      margin: 20px auto 0;
+      padding: 0 12px 20px;
+      box-sizing: border-box;
+    }
+    .weekday-chart-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #111;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .weekday-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .weekday-label {
+      flex: 0 0 34px;
+      font-size: 14px;
+      color: #111;
+      text-align: right;
+    }
+    .weekday-bar-track {
+      flex: 1 1 auto;
+      background: #f0f0f0;
+      border-radius: 4px;
+      height: 18px;
+      overflow: hidden;
+    }
+    .weekday-bar-fill {
+      height: 100%;
+      background: #49a95c;
+      border-radius: 4px;
+    }
+    .weekday-percent {
+      flex: 0 0 40px;
+      font-size: 13px;
+      color: #555;
+      text-align: left;
+    }
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {
@@ -390,7 +433,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1790001581", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1790001581", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "21 set", "menu_date": "2026-09-21", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true, "badge_new": false}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1790001581", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1790001581", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "10:53", "menu_date": "2026-09-21", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true, "badge_new": false}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1790001581", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1790001581", "error": "", "updated": false, "updated_label": "Domenica 20 settembre", "card_reference": "20 set", "menu_date": "2026-09-20", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true, "badge_new": false}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1790001581", "phone_display": "080-521.42.33", "phone_tel": "0805214233", "image": "Le_delizie_di_Michela.jpg?v=1790001581", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "21 set", "menu_date": "2026-09-21", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true, "badge_new": false}, {"name": "Aufer", "card_label": "Aufer Gastronomia", "detail_title": "Aufer Gastronomia", "logo": "../../Logo-Aufer.jpg?v=1790001581", "phone_display": "368-38.30.313", "phone_tel": "3683830313", "image": "Aufer.jpg?v=1790001581", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "21 set", "menu_date": "2026-09-21", "url": "https://www.instagram.com/aufergastronomia/", "counter_enabled": true, "badge_new": false}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1790001581", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1790001581", "error": "", "updated": false, "updated_label": "Domenica 20 settembre", "card_reference": "20 set", "menu_date": "2026-09-20", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true, "badge_new": false}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1790001581", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1790001581", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "21 set", "menu_date": "2026-09-21", "url": "https://www.paneeco.it/menu", "counter_enabled": true, "badge_new": false}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1790001581", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1790001581", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "09:39", "menu_date": "2026-09-21", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true, "badge_new": false}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1790001581", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1790001888", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1790001888", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "21 set", "menu_date": "2026-09-21", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true, "badge_new": false}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1790001888", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1790001888", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "10:53", "menu_date": "2026-09-21", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true, "badge_new": false}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1790001888", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1790001888", "error": "", "updated": false, "updated_label": "Domenica 20 settembre", "card_reference": "20 set", "menu_date": "2026-09-20", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true, "badge_new": false}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1790001888", "phone_display": "080-521.42.33", "phone_tel": "0805214233", "image": "Le_delizie_di_Michela.jpg?v=1790001888", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "21 set", "menu_date": "2026-09-21", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true, "badge_new": false}, {"name": "Aufer", "card_label": "Aufer Gastronomia", "detail_title": "Aufer Gastronomia", "logo": "../../Logo-Aufer.jpg?v=1790001888", "phone_display": "368-38.30.313", "phone_tel": "3683830313", "image": "Aufer.jpg?v=1790001888", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "21 set", "menu_date": "2026-09-21", "url": "https://www.instagram.com/aufergastronomia/", "counter_enabled": true, "badge_new": false}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1790001888", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1790001888", "error": "", "updated": false, "updated_label": "Domenica 20 settembre", "card_reference": "20 set", "menu_date": "2026-09-20", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true, "badge_new": false}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1790001888", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1790001888", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "21 set", "menu_date": "2026-09-21", "url": "https://www.paneeco.it/menu", "counter_enabled": true, "badge_new": false}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1790001888", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1790001888", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "card_reference": "08:44", "menu_date": "2026-09-21", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true, "badge_new": false}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Suggerimenti", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1790001888", "error": "", "updated": true, "updated_label": "Lunedì 21 settembre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -631,6 +674,30 @@
                 if (el && Number.isFinite(data.count)) el.textContent = ' (' + data.count + ')';
             })
             .catch(err => console.error('Conteggio accessi di oggi non disponibile', err));
+    }
+
+    // Istogramma "accessi per giorno della settimana" mostrato nella scheda
+    // Info, sotto le istruzioni per aggiungere il sito alla Home: usa lo
+    // stesso storico e lo stesso criterio (cambio di localita') del
+    // conteggio "Info (N)", ma aggregato su tutte le date per giorno della
+    // settimana invece che solo su oggi. Ricalcolato ogni volta che si apre
+    // la scheda Info o che la pagina fa un refresh (vedi forceFreshReload,
+    // che richiama renderDetail se la scheda Info e' quella aperta).
+    function loadWeekdayChart() {
+        fetch(SHEET_LOG_URL + '?action=weekdayStats', {cache: 'no-store'})
+            .then(r => r.json())
+            .then(data => {
+                const el = document.getElementById('weekday-bars');
+                if (!el || !Array.isArray(data.percentages)) return;
+                const labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+                el.innerHTML = labels.map((label, idx) => {
+                    const pct = data.percentages[idx] || 0;
+                    return '<div class="weekday-row"><span class="weekday-label">' + label + '.</span>'
+                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + pct + '%"></div></div>'
+                        + '<span class="weekday-percent">' + pct + '%</span></div>';
+                }).join('');
+            })
+            .catch(err => console.error('Statistiche settimanali non disponibili', err));
     }
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
@@ -1508,8 +1575,12 @@
             const sharePanel = p.name === 'Suggerimenti'
                 ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
                 : '';
-            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">';
+            const weekdayChart = p.name === 'Suggerimenti'
+                ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per giorno della settimana</div><div class="weekday-bars" id="weekday-bars"></div></div>'
+                : '';
+            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
             applyDetailImageFit();
+            if (p.name === 'Suggerimenti') loadWeekdayChart();
         } else {
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
         }
@@ -1838,7 +1909,7 @@
         
         <button type="button" class="card" data-pid="7" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(7)">
             <span class="card-name" style="color:#111">Bollenti piatti</span>
-            <span class="card-reference">09:39</span>
+            <span class="card-reference">08:44</span>
             <span class="card-counter" id="card-counter-7"></span>
         </button>
         
