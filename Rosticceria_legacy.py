@@ -3812,6 +3812,49 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       color: #111;
       font-size: 16px;
     }}
+    .weekday-chart {{
+      width: min(100%, 520px);
+      margin: 20px auto 0;
+      padding: 0 12px 20px;
+      box-sizing: border-box;
+    }}
+    .weekday-chart-title {{
+      font-size: 16px;
+      font-weight: bold;
+      color: #111;
+      margin-bottom: 12px;
+      text-align: center;
+    }}
+    .weekday-row {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }}
+    .weekday-label {{
+      flex: 0 0 34px;
+      font-size: 14px;
+      color: #111;
+      text-align: right;
+    }}
+    .weekday-bar-track {{
+      flex: 1 1 auto;
+      background: #f0f0f0;
+      border-radius: 4px;
+      height: 18px;
+      overflow: hidden;
+    }}
+    .weekday-bar-fill {{
+      height: 100%;
+      background: #49a95c;
+      border-radius: 4px;
+    }}
+    .weekday-percent {{
+      flex: 0 0 40px;
+      font-size: 13px;
+      color: #555;
+      text-align: left;
+    }}
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {{
@@ -4148,6 +4191,30 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 if (el && Number.isFinite(data.count)) el.textContent = ' (' + data.count + ')';
             }})
             .catch(err => console.error('Conteggio accessi di oggi non disponibile', err));
+    }}
+
+    // Istogramma "accessi per giorno della settimana" mostrato nella scheda
+    // Info, sotto le istruzioni per aggiungere il sito alla Home: usa lo
+    // stesso storico e lo stesso criterio (cambio di localita') del
+    // conteggio "Info (N)", ma aggregato su tutte le date per giorno della
+    // settimana invece che solo su oggi. Ricalcolato ogni volta che si apre
+    // la scheda Info o che la pagina fa un refresh (vedi forceFreshReload,
+    // che richiama renderDetail se la scheda Info e' quella aperta).
+    function loadWeekdayChart() {{
+        fetch(SHEET_LOG_URL + '?action=weekdayStats', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('weekday-bars');
+                if (!el || !Array.isArray(data.percentages)) return;
+                const labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+                el.innerHTML = labels.map((label, idx) => {{
+                    const pct = data.percentages[idx] || 0;
+                    return '<div class="weekday-row"><span class="weekday-label">' + label + '.</span>'
+                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + pct + '%"></div></div>'
+                        + '<span class="weekday-percent">' + pct + '%</span></div>';
+                }}).join('');
+            }})
+            .catch(err => console.error('Statistiche settimanali non disponibili', err));
     }}
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
@@ -5025,8 +5092,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const sharePanel = p.name === 'Suggerimenti'
                 ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
                 : '';
-            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">';
+            const weekdayChart = p.name === 'Suggerimenti'
+                ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per giorno della settimana</div><div class="weekday-bars" id="weekday-bars"></div></div>'
+                : '';
+            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
             applyDetailImageFit();
+            if (p.name === 'Suggerimenti') loadWeekdayChart();
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
         }}
