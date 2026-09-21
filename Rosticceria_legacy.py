@@ -3458,7 +3458,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     panels_data.append({
         "name": "Suggerimenti",
         "card_label": "Suggerimenti",
-        "detail_title": "Suggerimenti",
+        "detail_title": "Info",
         "phone_display": "",
         "phone_tel": "",
         "image": f"Rosticcerie-Home.jpg?v={int(time.time())}",
@@ -4207,11 +4207,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 const el = document.getElementById('weekday-bars');
                 if (!el || !Array.isArray(data.percentages)) return;
                 const labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-                // La barra e' scalata su un massimo del 60% (non del 100%):
+                // La barra e' scalata su un massimo del 50% (non del 100%):
                 // cosi' anche i valori piu' comuni, che raramente superano il
                 // 40-50%, si vedono ben distinti invece di restare tutti
                 // schiacciati sulla sinistra di una scala 0-100%.
-                const SCALA_MASSIMA = 60;
+                const SCALA_MASSIMA = 50;
                 el.innerHTML = labels.map((label, idx) => {{
                     const pct = data.percentages[idx] || 0;
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
@@ -4221,6 +4221,32 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 }}).join('');
             }})
             .catch(err => console.error('Statistiche settimanali non disponibili', err));
+    }}
+
+    // Istogramma "accessi per ora del giorno" mostrato subito sotto quello
+    // settimanale, nella stessa scheda Info: stesso storico e stesso
+    // criterio (cambio di localita'), ma aggregato per ora anziche' per
+    // giorno della settimana. Le ore vanno etichettate da 01 a 24 (l'ora
+    // "24" corrisponde alla fascia 00:00-00:59, secondo la convenzione
+    // italiana di contare le ore da 1 a 24 invece che da 0 a 23).
+    function loadHourlyChart() {{
+        fetch(SHEET_LOG_URL + '?action=hourlyStats', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('hourly-bars');
+                if (!el || !Array.isArray(data.percentages)) return;
+                const labels = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',
+                    '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'];
+                const SCALA_MASSIMA = 50;
+                el.innerHTML = labels.map((label, idx) => {{
+                    const pct = data.percentages[idx] || 0;
+                    const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
+                    return '<div class="weekday-row"><span class="weekday-label">' + label + '</span>'
+                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
+                        + '<span class="weekday-percent">' + pct + '%</span></div>';
+                }}).join('');
+            }})
+            .catch(err => console.error('Statistiche orarie non disponibili', err));
     }}
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
@@ -5099,11 +5125,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
                 : '';
             const weekdayChart = p.name === 'Suggerimenti'
-                ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per giorno della settimana</div><div class="weekday-bars" id="weekday-bars"></div></div>'
+                ? '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
+                    + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione oraria</div><div class="weekday-bars" id="hourly-bars"></div></div>'
                 : '';
             content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
             applyDetailImageFit();
-            if (p.name === 'Suggerimenti') loadWeekdayChart();
+            if (p.name === 'Suggerimenti') {{
+                loadWeekdayChart();
+                loadHourlyChart();
+            }}
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
         }}
