@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-21T07:31:38",
+  "updated_at": "2026-09-21T08:21:10",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,9 +12,9 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "19 Settembre 2026.\nMenù del giorno.",
-      "published_at": "19/09/2026 09:49 circa",
-      "published_at_raw": "19/09/2026",
+      "text": "21 Settembre 2026.\nMenù del giorno.",
+      "published_at": "21/09/2026",
+      "published_at_raw": "21/09/2026",
       "error": null
     },
     {
@@ -52,7 +52,7 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 21 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Penne tricolore all'arrabbiata - €6.50\n- Rigatoni alla pastorella - €7.50\n  Con pomodoro fresco e ricotta\n- Risotto con asparagi e cernia - €8.50\n- Foglie d'ulivo con ragù bianco e porcini - €8.50\n- Minestra di verdure con farro - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Bocconcini di fesa di tacchino con curry e verdurine - €7.50\n- Trancio di pesce spada con olive e pomodorini - €8.50",
+      "text": "Menu 21 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla carbonara - €6.50\n- Mezzi rigatoni alla pastorella con pomodoro fresco e ricotta - €7.50\n- Risotto con vellutata di zucca e salsiccia - €8.50\n- Cavatelli al grano arso con pesce spada, pomodorini, olive e capperi - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con zucchina - €8.50\n  Con pomodorino\n- Spezzatino di pollo al forno con patate - €7.50\n  5 pezzi",
       "published_at": "21/09/2026",
       "published_at_raw": "21 Settembre",
       "error": null
@@ -61,8 +61,8 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●CICORIE CON POLPETTINE 5,5\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA SUGO DI PORCINI PROSCIUTTO COTTO E MOZZARELLA 5,0\n●CANNELLONI ALLA CARNE 5,5\n●ORECCHIETTE CON CREMA DI PORCINI, SPECK CROCCANTE CILIEGINO E CACIORICOTTA 5,5\n●TAGLIATELLE PAGLIA E FIENO CON TONNO, VELLUTATA DI DATTERINO GIALLO E PISTACCHIO  5,5\nSECONDI PIATTI\n●PANZEROTTO DI POLLO FARCITO E GRATINATO AL FORNO\n●POLPETTONE DI VITELLO CON PROSCIUTTO E GALBANINO\n●ZAMPINA ARROSTO CON PISELLI\n●BRACIOLE AL SUGO\n●POLPETTE DI CARNE AL SUGO\n●ZUCCHINE RIPIENE\n●INVOLTINI DI ZUCCHINE AL SALMONE GRATINATI AL FORNO\n●RUSTICO CON COPPA E GALBANINO",
-      "published_at": "21/09/2026 08:44 circa",
-      "published_at_raw": "16m",
+      "published_at": "21/09/2026 09:20 circa",
+      "published_at_raw": "1h",
       "error": null
     }
   ]
