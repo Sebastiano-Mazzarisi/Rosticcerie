@@ -3621,7 +3621,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 32px 10px 12px;
+      padding: 12px 10px;
       border: 4px solid #ffffff; /* Giallo se aggiornata oggi, bianco altrimenti */
       border-radius: 12px;
       /* Evita che una pressione prolungata (usata per riordinare le
@@ -3835,14 +3835,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       margin-bottom: 6px;
     }}
     .weekday-label {{
-      flex: 0 0 34px;
+      flex: 0 0 64px;
       font-size: 14px;
       color: #fff;
       text-align: right;
     }}
     .weekday-bar-track {{
       flex: 1 1 auto;
-      background: #ffd400;
+      background: #fef3c7;
       border-radius: 4px;
       height: 18px;
       overflow: hidden;
@@ -4257,8 +4257,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // qui si conta OGNI riga della tabella (nessuna deduplicazione per
     // sessione/nuovo accesso), perche' l'obiettivo e' sapere da quali
     // sistemi operativi arrivano tutte le richieste registrate. La scala va
-    // da 0 a 100% perche' i tre valori (iOS, Android, Windows) si spartiscono
-    // l'intero totale.
+    // da 0 a 70% (non da 0 a 100%): cosi' anche i valori piu' comuni restano
+    // ben distinti invece di schiacciarsi tutti sulla sinistra.
     function loadDeviceChart() {{
         fetch(SHEET_LOG_URL + '?action=deviceStats', {{cache: 'no-store'}})
             .then(r => r.json())
@@ -4266,7 +4266,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 const el = document.getElementById('device-bars');
                 if (!el || !Array.isArray(data.percentages)) return;
                 const labels = data.labels || ['iOS', 'Android', 'Windows', 'Altro'];
-                const SCALA_MASSIMA = 100;
+                const SCALA_MASSIMA = 70;
                 el.innerHTML = labels.map((label, idx) => {{
                     const pct = data.percentages[idx] || 0;
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
@@ -5449,7 +5449,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
   <main id="grid-view">
     {"".join(cards)}
-    <p class="site-note"><span style="color:#ffd641">Nota</span>: è possibile aggiungere altre rosticcerie ma devono avere un menu che cambia giornalmente e che viene pubblicato su un sito web, oppure nei post di Facebook</p>
   </main>
 
   <div id="detail-view">
