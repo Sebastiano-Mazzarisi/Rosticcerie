@@ -3834,7 +3834,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     .weekday-label {{
       flex: 0 0 34px;
       font-size: 14px;
-      color: #111;
+      color: #fff;
       text-align: right;
     }}
     .weekday-bar-track {{
@@ -3852,7 +3852,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     .weekday-percent {{
       flex: 0 0 40px;
       font-size: 13px;
-      color: #555;
+      color: #fff;
       text-align: left;
     }}
 
@@ -4207,10 +4207,16 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 const el = document.getElementById('weekday-bars');
                 if (!el || !Array.isArray(data.percentages)) return;
                 const labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+                // La barra e' scalata su un massimo del 60% (non del 100%):
+                // cosi' anche i valori piu' comuni, che raramente superano il
+                // 40-50%, si vedono ben distinti invece di restare tutti
+                // schiacciati sulla sinistra di una scala 0-100%.
+                const SCALA_MASSIMA = 60;
                 el.innerHTML = labels.map((label, idx) => {{
                     const pct = data.percentages[idx] || 0;
+                    const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
                     return '<div class="weekday-row"><span class="weekday-label">' + label + '.</span>'
-                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + pct + '%"></div></div>'
+                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
                         + '<span class="weekday-percent">' + pct + '%</span></div>';
                 }}).join('');
             }})
