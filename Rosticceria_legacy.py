@@ -4136,17 +4136,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }});
     }}
 
-    // Numero di "utenti" di oggi mostrato accanto al pulsante Info, es.
-    // "Info (13)": lo stesso Apps Script che registra i click (sopra)
-    // calcola lato server, leggendo lo storico del foglio, quante volte
-    // cambia la localita' approssimativa tra una riga e la successiva
-    // registrata oggi - un cambio di localita' e' un'approssimazione
-    // ragionevole di "nuovo visitatore" (piu' click consecutivi dalla
-    // stessa zona sono quasi sempre la stessa persona). Richiamata a ogni
-    // refresh della pagina (vedi forceFreshReload), 24 ore su 24: il
-    // numero quindi cresce nel corso della giornata e si azzera da solo a
-    // mezzanotte perche' il calcolo lato server considera solo la data
-    // odierna.
+    // Numero di "cambi di localita'" registrati oggi nello storico degli
+    // accessi (vedi contaCambiLocalitaOggi in Apps Script): mostrato accanto
+    // al pulsante Info come "Info (N)", visibile a tutti i visitatori e
+    // ricalcolato ad ogni refresh della pagina (vedi forceFreshReload).
     function loadInfoAccessCount() {{
         fetch(SHEET_LOG_URL + '?action=infoCount', {{cache: 'no-store'}})
             .then(r => r.json())
@@ -5169,7 +5162,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             }});
             refreshMenuDates();
             refreshReferenceDate();
-            loadInfoAccessCount();
             if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
             lastMenuRefreshDay = italianDay();
             lastMenuRefreshAt = Date.now();
@@ -5184,6 +5176,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }} finally {{
             clearTimeout(timeout);
             menuRefreshRunning = false;
+            loadInfoAccessCount();
         }}
     }}
     function refreshWhenNeeded() {{
