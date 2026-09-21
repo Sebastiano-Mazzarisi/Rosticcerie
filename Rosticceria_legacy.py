@@ -3397,6 +3397,13 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Bollenti piatti": "Logo-Bollent.jpg",
         "Aufer": "Logo-Aufer.jpg",
     }
+    # Nome mostrato nell'interfaccia (card, titolo dettaglio) quando diverso
+    # dal nome interno usato sopra/sotto per contatori, stato salvato,
+    # ordine personalizzato, ecc.: aggiungere una voce qui non richiede di
+    # toccare nient'altro, perche' il nome interno resta invariato ovunque.
+    display_names = {
+        "Aufer": "Aufer Gastronomia",
+    }
     today = rome_now().date()
     panels_data = []
 
@@ -3404,10 +3411,14 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     # mostrano un confetto verde con scritta "NEW" che lampeggia piano, per
     # farle notare. Quando non sono piu' una novita', basta togliere il nome
     # da questo insieme (o svuotarlo) per tornare al badge normale.
-    NEW_ARRIVALS = {"Aufer"}
+    # Aufer non e' piu' una novita', quindi il meccanismo resta disattivato
+    # (insieme vuoto); si riattiva per una futura rosticceria cosi':
+    # NEW_ARRIVALS = {"NomeInterno"}
+    NEW_ARRIVALS = set()
 
     for panel in panels:
         name = panel["name"]
+        display_name = display_names.get(name, name)
         phone_number = phone_numbers.get(name, "")
         phone_tel = re.sub(r"[^0-9+]", "", phone_number) if phone_number else ""
         error = panel.get("error")
@@ -3428,8 +3439,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
         panels_data.append({
             "name": name,
-            "card_label": name,
-            "detail_title": name,
+            "card_label": display_name,
+            "detail_title": display_name,
             "logo": f"../../{html.escape(logo_files[name])}?v={int(time.time())}" if name in logo_files else "",
             "phone_display": phone_number,
             "phone_tel": phone_tel,
@@ -4656,14 +4667,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         try {{
             const response = await fetch(p.image);
             const blob = await response.blob();
+            const shareLabel = p.detail_title || p.name;
             const fileName = (p.name || 'menu').replace(/[\\/:*?"<>|]+/g, '_') + '.jpg';
             const file = new File([blob], fileName, {{ type: blob.type || 'image/jpeg' }});
             if (navigator.canShare && navigator.canShare({{ files: [file] }})) {{
-                await navigator.share({{ files: [file], title: p.name, text: 'Menu di ' + p.name }});
+                await navigator.share({{ files: [file], title: shareLabel, text: 'Menu di ' + shareLabel }});
                 return;
             }}
             if (navigator.share) {{
-                await navigator.share({{ title: p.name, text: 'Menu di ' + p.name, url: menuUrl }});
+                await navigator.share({{ title: shareLabel, text: 'Menu di ' + shareLabel, url: menuUrl }});
                 return;
             }}
             // Nessuna Web Share API disponibile (tipico dei browser desktop):
@@ -4973,7 +4985,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         identityLogo.style.display = p.logo ? 'block' : 'none';
         if (p.logo) {{
             identityLogo.src = p.logo;
-            identityLogo.alt = 'Logo ' + p.name;
+            identityLogo.alt = 'Logo ' + (p.detail_title || p.name);
         }} else {{
             identityLogo.removeAttribute('src');
             identityLogo.alt = '';
@@ -4999,7 +5011,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const sharePanel = p.name === 'Suggerimenti'
                 ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
                 : '';
-            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + p.name + '">';
+            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">';
             applyDetailImageFit();
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
