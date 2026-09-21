@@ -3818,6 +3818,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       padding: 0 12px 20px;
       box-sizing: border-box;
     }}
+    .weekday-chart-first {{
+      margin-top: 40px;
+    }}
     .weekday-chart-title {{
       font-size: 16px;
       font-weight: bold;
@@ -3839,7 +3842,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     .weekday-bar-track {{
       flex: 1 1 auto;
-      background: #f0f0f0;
+      background: #ffd400;
       border-radius: 4px;
       height: 18px;
       overflow: hidden;
@@ -4247,6 +4250,32 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 }}).join('');
             }})
             .catch(err => console.error('Statistiche orarie non disponibili', err));
+    }}
+
+    // Istogramma "distribuzione per dispositivo" mostrato subito sotto
+    // quello orario, nella stessa scheda Info: a differenza degli altri due,
+    // qui si conta OGNI riga della tabella (nessuna deduplicazione per
+    // sessione/nuovo accesso), perche' l'obiettivo e' sapere da quali
+    // sistemi operativi arrivano tutte le richieste registrate. La scala va
+    // da 0 a 100% perche' i tre valori (iOS, Android, Windows) si spartiscono
+    // l'intero totale.
+    function loadDeviceChart() {{
+        fetch(SHEET_LOG_URL + '?action=deviceStats', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('device-bars');
+                if (!el || !Array.isArray(data.percentages)) return;
+                const labels = data.labels || ['iOS', 'Android', 'Windows', 'Altro'];
+                const SCALA_MASSIMA = 100;
+                el.innerHTML = labels.map((label, idx) => {{
+                    const pct = data.percentages[idx] || 0;
+                    const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
+                    return '<div class="weekday-row"><span class="weekday-label">' + label + '</span>'
+                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
+                        + '<span class="weekday-percent">' + pct + '%</span></div>';
+                }}).join('');
+            }})
+            .catch(err => console.error('Statistiche per dispositivo non disponibili', err));
     }}
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
@@ -5125,14 +5154,16 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
                 : '';
             const weekdayChart = p.name === 'Suggerimenti'
-                ? '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
+                ? '<div class="weekday-chart weekday-chart-first"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione oraria</div><div class="weekday-bars" id="hourly-bars"></div></div>'
+                    + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione per dispositivi</div><div class="weekday-bars" id="device-bars"></div></div>'
                 : '';
             content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
             applyDetailImageFit();
             if (p.name === 'Suggerimenti') {{
                 loadWeekdayChart();
                 loadHourlyChart();
+                loadDeviceChart();
             }}
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
