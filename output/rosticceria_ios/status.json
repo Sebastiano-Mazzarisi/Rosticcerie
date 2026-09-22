@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-22T08:03:57",
+  "updated_at": "2026-09-22T13:11:20",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 22/09/26",
-      "published_at": "22/09/2026 09:31 circa",
-      "published_at_raw": "29m",
+      "published_at": "22/09/2026 10:08 circa",
+      "published_at_raw": "5h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "22 Settembre.\nMenù del giorno.",
-      "published_at": "22/09/2026 09:33 circa",
+      "published_at": "22/09/2026 10:08 circa",
       "published_at_raw": "22/09/2026",
       "error": null
     },
@@ -27,11 +27,11 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "22/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Aufer",
