@@ -3850,6 +3850,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       text-align: left;
     }}
 
+    .date-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      color: #fff;
+    }}
+    .date-table td {{
+      padding: 4px 2px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }}
+
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {{
       #detail-content img {{
@@ -4215,20 +4226,34 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // settimana invece che solo su oggi. Ricalcolato ogni volta che si apre
     // la scheda Info o che la pagina fa un refresh (vedi forceFreshReload,
     // che richiama renderDetail se la scheda Info e' quella aperta).
+    // Converte un array di conteggi grezzi in percentuali arrotondate
+    // all'intero piu' vicino (la somma puo' non fare esattamente 100 per via
+    // degli arrotondamenti, ma e' abbastanza precisa per le barre).
+    function conteggioAPercentuali(counts) {{
+        const totale = counts.reduce((a, b) => a + b, 0);
+        if (totale === 0) return counts.map(() => 0);
+        return counts.map(c => Math.round((c / totale) * 100));
+    }}
+
     function loadWeekdayChart() {{
         fetch(SHEET_LOG_URL + '?action=weekdayStats', {{cache: 'no-store'}})
             .then(r => r.json())
             .then(data => {{
                 const el = document.getElementById('weekday-bars');
-                if (!el || !Array.isArray(data.percentages)) return;
+                if (!el) return;
+                // Il backend restituisce {{ "weekday": [c0, c1, ..., c6] }}
+                // dove c0=lunedi', c6=domenica (conteggi grezzi).
+                const raw = Array.isArray(data.weekday) ? data.weekday : (Array.isArray(data.percentages) ? data.percentages : null);
+                if (!raw) return;
                 const labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
                 // La barra e' scalata su un massimo del 50% (non del 100%):
                 // cosi' anche i valori piu' comuni, che raramente superano il
                 // 40-50%, si vedono ben distinti invece di restare tutti
                 // schiacciati sulla sinistra di una scala 0-100%.
                 const SCALA_MASSIMA = 50;
+                const pcts = conteggioAPercentuali(raw);
                 el.innerHTML = labels.map((label, idx) => {{
-                    const pct = data.percentages[idx] || 0;
+                    const pct = pcts[idx] || 0;
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
                     return '<div class="weekday-row"><span class="weekday-label">' + label + '.</span>'
                         + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
@@ -4249,12 +4274,28 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             .then(r => r.json())
             .then(data => {{
                 const el = document.getElementById('hourly-bars');
-                if (!el || !Array.isArray(data.percentages)) return;
-                const labels = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',
-                    '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'];
+                if (!el) return;
+                // Il backend restituisce {{ "hourly": {{"0": c, "1": c, ..., "23": c}} }}
+                // dove la chiave e' l'ora 0-23 (0 = mezzanotte, 23 = 23:00).
+                // L'etichetta italiana va da 01 a 24 (24 = 00:xx = chiave "0").
+                let raw;
+                if (data.hourly && typeof data.hourly === 'object' && !Array.isArray(data.hourly)) {{
+                    // Formato oggetto {{ "0": c, ..., "23": c }}: riordiniamo in
+                    // array di 24 elementi [c_ora0, c_ora1, ..., c_ora23]
+                    raw = Array.from({{length: 24}}, (_, i) => Number(data.hourly[String(i)] || 0));
+                }} else if (Array.isArray(data.percentages)) {{
+                    raw = data.percentages;
+                }} else {{
+                    return;
+                }}
+                // Ruotiamo: etichetta '01' = ora 1, ..., '23' = ora 23, '24' = ora 0.
+                const rawRotated = raw.slice(1).concat(raw.slice(0, 1));
+                const labels = ['01','02','03','04','05','06','07','08','09','10','11','12',
+                    '13','14','15','16','17','18','19','20','21','22','23','24'];
                 const SCALA_MASSIMA = 30;
+                const pcts = conteggioAPercentuali(rawRotated);
                 el.innerHTML = labels.map((label, idx) => {{
-                    const pct = data.percentages[idx] || 0;
+                    const pct = pcts[idx] || 0;
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
                     return '<div class="weekday-row"><span class="weekday-label">' + label + '</span>'
                         + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
@@ -4276,11 +4317,26 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             .then(r => r.json())
             .then(data => {{
                 const el = document.getElementById('device-bars');
-                if (!el || !Array.isArray(data.percentages)) return;
-                const labels = data.labels || ['iOS', 'Android', 'Windows', 'Altro'];
+                if (!el) return;
+                let labels, raw;
+                if (data.devices && typeof data.devices === 'object' && !Array.isArray(data.devices)) {{
+                    // Formato oggetto {{ "NomeDispositivo": conteggio, ... }}: ordiniamo
+                    // per conteggio decrescente ed escludiamo la voce "debug".
+                    const entries = Object.entries(data.devices)
+                        .filter(([k]) => k !== 'debug')
+                        .sort((a, b) => b[1] - a[1]);
+                    labels = entries.map(([k]) => k);
+                    raw = entries.map(([, v]) => Number(v));
+                }} else if (Array.isArray(data.percentages)) {{
+                    labels = data.labels || ['iOS', 'Android', 'Windows', 'Altro'];
+                    raw = data.percentages;
+                }} else {{
+                    return;
+                }}
                 const SCALA_MASSIMA = 70;
+                const pcts = conteggioAPercentuali(raw);
                 el.innerHTML = labels.map((label, idx) => {{
-                    const pct = data.percentages[idx] || 0;
+                    const pct = pcts[idx] || 0;
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
                     return '<div class="weekday-row"><span class="weekday-label">' + label + '</span>'
                         + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
@@ -4288,6 +4344,32 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 }}).join('');
             }})
             .catch(err => console.error('Statistiche per dispositivo non disponibili', err));
+    }}
+
+    // Tabella "accessi per data" (giorno/mese/anno) mostrata nella scheda
+    // Info sotto i tre istogrammi: elenca gli ultimi 30 giorni con almeno
+    // un click, dal piu' recente al piu' vecchio. Visibile solo in
+    // modalita' amministratore (?v=57).
+    function loadDateTable() {{
+        if (!isAdmin) return;
+        fetch(SHEET_LOG_URL + '?action=dateStats', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('date-table-body');
+                if (!el || !Array.isArray(data.dates)) return;
+                const mesiIt = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+                const giorniIt = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+                el.innerHTML = data.dates.map(entry => {{
+                    const d = new Date(entry.date + 'T12:00:00');
+                    const giorno = String(d.getDate()).padStart(2, '0');
+                    const mese = mesiIt[d.getMonth()];
+                    const anno = d.getFullYear();
+                    const nomeDow = giorniIt[d.getDay()];
+                    return '<tr><td>' + nomeDow + ' ' + giorno + ' ' + mese + ' ' + anno + '</td>'
+                        + '<td style="text-align:right;padding-left:12px">' + entry.count + '</td></tr>';
+                }}).join('');
+            }})
+            .catch(err => console.error('Tabella date non disponibile', err));
     }}
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
@@ -4590,7 +4672,8 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         let val = 0;
         for (let i = 0; i < PANELS.length; i++) {{
             if (PANELS[i].counter_enabled === false) continue;
-            val += visibleCounter(i) ?? 0;
+            const today = todayCountByPanel[i];
+            if (typeof today === 'number') val += today;
         }}
         document.getElementById('main-title').innerText = 'Rosticcerie';
         document.getElementById('main-signature').innerText = 'by Mazzarisi' + (isAdmin ? ' ' + formatCounter(val) : '');
@@ -5222,6 +5305,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 ? '<div class="weekday-chart weekday-chart-first"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione oraria</div><div class="weekday-bars" id="hourly-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione per dispositivi</div><div class="weekday-bars" id="device-bars"></div></div>'
+                    + (isAdmin ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per data</div><table class="date-table"><tbody id="date-table-body"></tbody></table></div>' : '')
                 : '';
             content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
             applyDetailImageFit();
@@ -5229,6 +5313,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 loadWeekdayChart();
                 loadHourlyChart();
                 loadDeviceChart();
+                loadDateTable();
             }}
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
