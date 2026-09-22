@@ -3499,7 +3499,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             # sito, gestiti da renderDetail().
             cards.append(f"""
             <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="recordExtraHit('Info'); cardClicked({i})">
-                <span class="card-name">Info<span class="info-access-count" id="info-access-count"></span><span class="split-counter" id="extra-counter-info"></span></span>
+                <span class="card-name">Info<span class="info-access-count" id="info-access-count"></span></span><span class="card-counter" id="extra-counter-info"></span>
                 {reference_html}
             </button>
             """)
@@ -3686,15 +3686,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     @keyframes badgeNewBlink {{
       0%, 100% {{ opacity: 1; }}
       50% {{ opacity: 0.35; }}
-    }}
-    .split-counter {{
-      display: none;
-      position: absolute;
-      top: 2px;
-      right: 6px;
-      font-size: 12px;
-      font-weight: normal;
-      color: #333;
     }}
     .site-note {{
       grid-column: 1 / -1;
@@ -4795,12 +4786,12 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         refreshMenuDates();
         if (isWaitingForUpdate(PANELS[pid])) {{
             // Mostra prima il menu del giorno precedente, poi l'avviso
-            // "In attesa di aggiornamento" per 2 secondi (si chiude da solo).
+            // "In attesa di aggiornamento" per 1 secondo (si chiude da solo).
             openDetail(order.indexOf(pid));
             waitingUpdatePid = pid;
             document.getElementById('waiting-update-dialog').showModal();
             clearTimeout(waitingUpdateTimer);
-            waitingUpdateTimer = setTimeout(continueAfterWaiting, 2000);
+            waitingUpdateTimer = setTimeout(continueAfterWaiting, 1000);
             return;
         }}
         cardOpening = true;
