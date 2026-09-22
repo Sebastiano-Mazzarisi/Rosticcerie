@@ -8,11 +8,14 @@ echo === Rosticcerie: commit e push ===
 echo Cartella: %cd%
 echo.
 
-git add Rosticceria.py Rosticceria_legacy.py requirements.txt commit_e_push.bat
-git add rosticcerie_clean/
-git add local_menus/
-git add Menu/ 2>nul
-git add .github/workflows/rosticceria-ios.yml 2>nul
+rem "git add -A" (invece del vecchio elenco file per file) include anche le
+rem CANCELLAZIONI di file gia' tracciati (es. quelle fatte da
+rem Pulisci_Repository.bat): senza questo, un file cancellato restava
+rem "modifica non in stage" e faceva fallire il pull --rebase qui sotto con
+rem "You have unstaged changes" (successo il 22/09/2026 con i file rimossi
+rem dalla pulizia). Il .gitignore continua a valere: cookies.txt, __pycache__
+rem eccetera non vengono comunque aggiunti.
+git add -A
 
 git diff --cached --quiet
 if errorlevel 1 (
