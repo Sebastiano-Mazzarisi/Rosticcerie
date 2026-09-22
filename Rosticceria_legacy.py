@@ -3856,9 +3856,25 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 14px;
       color: #fff;
     }}
-    .date-table td {{
+    .date-table td, .date-table th {{
       padding: 4px 2px;
       border-bottom: 1px solid rgba(255,255,255,0.15);
+    }}
+    .bst-name {{
+      text-align: left;
+      font-weight: normal;
+    }}
+    .bst-num {{
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      min-width: 44px;
+    }}
+    .date-table thead th {{
+      font-weight: 600;
+      opacity: 0.7;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }}
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
@@ -4306,33 +4322,33 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     // Istogramma "distribuzione per dispositivo" mostrato subito sotto
-    // quello orario, nella stessa scheda Info: a differenza degli altri due,
-    // qui si conta OGNI riga della tabella (nessuna deduplicazione per
-    // sessione/nuovo accesso), perche' l'obiettivo e' sapere da quali
-    // sistemi operativi arrivano tutte le richieste registrate. La scala va
-    // da 0 a 70% (non da 0 a 100%): cosi' anche i valori piu' comuni restano
-    // ben distinti invece di schiacciarsi tutti sulla sinistra.
+    // quello orario, nella stessa scheda Info: i dispositivi vengono
+    // accorpati in 4 categorie (iPhone, Android, Windows, Altro) per
+    // leggibilita'. La scala va da 0 a 70%.
     function loadDeviceChart() {{
         fetch(SHEET_LOG_URL + '?action=deviceStats', {{cache: 'no-store'}})
             .then(r => r.json())
             .then(data => {{
                 const el = document.getElementById('device-bars');
                 if (!el) return;
-                let labels, raw;
+                // Accorpa le voci raw in 4 categorie.
+                const gruppi = {{ 'iPhone': 0, 'Android': 0, 'Windows': 0, 'Altro': 0 }};
+                let rawMap = {{}};
                 if (data.devices && typeof data.devices === 'object' && !Array.isArray(data.devices)) {{
-                    // Formato oggetto {{ "NomeDispositivo": conteggio, ... }}: ordiniamo
-                    // per conteggio decrescente ed escludiamo la voce "debug".
-                    const entries = Object.entries(data.devices)
-                        .filter(([k]) => k !== 'debug')
-                        .sort((a, b) => b[1] - a[1]);
-                    labels = entries.map(([k]) => k);
-                    raw = entries.map(([, v]) => Number(v));
-                }} else if (Array.isArray(data.percentages)) {{
-                    labels = data.labels || ['iOS', 'Android', 'Windows', 'Altro'];
-                    raw = data.percentages;
-                }} else {{
-                    return;
-                }}
+                    rawMap = data.devices;
+                }} else if (Array.isArray(data.percentages) && data.labels) {{
+                    data.labels.forEach((l, i) => {{ rawMap[l] = data.percentages[i]; }});
+                }} else {{ return; }}
+                Object.entries(rawMap).forEach(([k, v]) => {{
+                    if (k === 'debug') return;
+                    const n = Number(v) || 0;
+                    if (k.startsWith('iPhone')) gruppi['iPhone'] += n;
+                    else if (k.startsWith('Android')) gruppi['Android'] += n;
+                    else if (k.startsWith('Windows')) gruppi['Windows'] += n;
+                    else gruppi['Altro'] += n;
+                }});
+                const labels = ['iPhone', 'Android', 'Windows', 'Altro'];
+                const raw = labels.map(l => gruppi[l]);
                 const SCALA_MASSIMA = 70;
                 const pcts = conteggioAPercentuali(raw);
                 el.innerHTML = labels.map((label, idx) => {{
@@ -4346,30 +4362,30 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             .catch(err => console.error('Statistiche per dispositivo non disponibili', err));
     }}
 
-    // Tabella "accessi per data" (giorno/mese/anno) mostrata nella scheda
-    // Info sotto i tre istogrammi: elenca gli ultimi 30 giorni con almeno
-    // un click, dal piu' recente al piu' vecchio. Visibile solo in
-    // modalita' amministratore (?v=57).
-    function loadDateTable() {{
+    // Tabella per-bottone visibile solo in admin: una riga per ogni
+    // rosticceria con i click di oggi, del mese in corso e dell'anno
+    // in corso. Dati da ?action=buttonStats dell'Apps Script.
+    function loadButtonStatsTable() {{
         if (!isAdmin) return;
-        fetch(SHEET_LOG_URL + '?action=dateStats', {{cache: 'no-store'}})
+        fetch(SHEET_LOG_URL + '?action=buttonStats', {{cache: 'no-store'}})
             .then(r => r.json())
             .then(data => {{
-                const el = document.getElementById('date-table-body');
-                if (!el || !Array.isArray(data.dates)) return;
-                const mesiIt = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
-                const giorniIt = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
-                el.innerHTML = data.dates.map(entry => {{
-                    const d = new Date(entry.date + 'T12:00:00');
-                    const giorno = String(d.getDate()).padStart(2, '0');
-                    const mese = mesiIt[d.getMonth()];
-                    const anno = d.getFullYear();
-                    const nomeDow = giorniIt[d.getDay()];
-                    return '<tr><td>' + nomeDow + ' ' + giorno + ' ' + mese + ' ' + anno + '</td>'
-                        + '<td style="text-align:right;padding-left:12px">' + entry.count + '</td></tr>';
+                const el = document.getElementById('button-stats-body');
+                if (!el || !data.buttons) return;
+                const panelNames = PANELS
+                    .filter(p => p.counter_enabled !== false)
+                    .map(p => p.name);
+                el.innerHTML = panelNames.map(name => {{
+                    const s = data.buttons[name] || {{ today: 0, month: 0, year: 0 }};
+                    return '<tr>'
+                        + '<td class="bst-name">' + name + '</td>'
+                        + '<td class="bst-num">' + (s.today || 0) + '</td>'
+                        + '<td class="bst-num">' + (s.month || 0) + '</td>'
+                        + '<td class="bst-num">' + (s.year  || 0) + '</td>'
+                        + '</tr>';
                 }}).join('');
             }})
-            .catch(err => console.error('Tabella date non disponibile', err));
+            .catch(err => console.error('Tabella per bottone non disponibile', err));
     }}
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
@@ -4716,6 +4732,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             PANELS.forEach((_, i) => {{ if (todayCountByPanel[i] === undefined) todayCountByPanel[i] = '?'; }});
         }}
         updateCardCounters();
+        updateAdminTitle();
     }}
 
     // --- Riordino personalizzato delle caselle iniziali (tenere premuto
@@ -5305,7 +5322,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 ? '<div class="weekday-chart weekday-chart-first"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione oraria</div><div class="weekday-bars" id="hourly-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione per dispositivi</div><div class="weekday-bars" id="device-bars"></div></div>'
-                    + (isAdmin ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per data</div><table class="date-table"><tbody id="date-table-body"></tbody></table></div>' : '')
+                    + (isAdmin ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per bottone</div><table class="date-table"><thead><tr><th class="bst-name">Bottone</th><th class="bst-num">Oggi</th><th class="bst-num">Mese</th><th class="bst-num">Anno</th></tr></thead><tbody id="button-stats-body"></tbody></table></div>' : '')
                 : '';
             content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
             applyDetailImageFit();
@@ -5313,7 +5330,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 loadWeekdayChart();
                 loadHourlyChart();
                 loadDeviceChart();
-                loadDateTable();
+                loadButtonStatsTable();
             }}
         }} else {{
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
