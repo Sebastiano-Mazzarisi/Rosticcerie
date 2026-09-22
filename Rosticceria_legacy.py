@@ -3978,16 +3978,36 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     }}
     function counterKeyFor(name) {{ return 'menu-views-' + slugify(name); }}
-    // La chiave di azzeramento (offset) di "Pane & Co" e' rimasta quasi
-    // allineata al totale (offset molto vicino al totale reale) per via di
-    // prove fatte in passato direttamente sulla chiave in produzione: dato
-    // che l'API del contatore permette solo di FAR CRESCERE l'offset (mai
-    // di farlo scendere), non e' possibile "correggerlo" con un nuovo
-    // azzeramento. Usiamo quindi per questa sola rosticceria una chiave di
-    // azzeramento diversa e mai usata prima (che l'API legge come 0), cosi'
-    // il numero mostrato torna a riflettere il totale reale delle
-    // aperture invece di restare bloccato vicino a zero.
-    const OFFSET_KEY_OVERRIDES = {{ 'Pane & Co': 'pane-co-r2' }};
+    // La chiave di azzeramento (offset) puo' restare "avvelenata" (offset
+    // superiore al totale reale) se un azzeramento globale viene lanciato
+    // una seconda volta mentre il primo sta ancora completando i suoi
+    // "colpi" in background (vedi il guardiano "resetInProgress" piu'
+    // sotto, aggiunto apposta per evitare che questo si ripeta): i due
+    // azzeramenti sovrapposti incrementano la STESSA chiave sul server,
+    // che supera cosi' il totale vero. Dato che l'API del contatore
+    // permette solo di FAR CRESCERE l'offset (mai di farlo scendere), non
+    // e' possibile "correggerlo" con un nuovo azzeramento una volta
+    // avvenuto. L'unico modo per farlo tornare a funzionare e' passare,
+    // per la rosticceria/contatore colpito, a una chiave di azzeramento
+    // mai usata prima (che l'API legge come 0 tramite il 404 gestito da
+    // missingIsZero), cosi' il numero mostrato torna a riflettere il
+    // totale reale delle aperture invece di restare bloccato.
+    // Il 22/09/2026 questo e' successo a TUTTI i contatori tranne "Audio"
+    // (Fantasia, Cibaria, Impastamo, Le delizie di Michela, Aufer,
+    // Santoro, Bollenti piatti, Pane & Co e anche l'extra "Info"): da qui
+    // le chiavi "-r2" (e "-r3" per Pane & Co, che aveva gia' una "-r2"
+    // anch'essa avvelenata dallo stesso problema).
+    const OFFSET_KEY_OVERRIDES = {{
+        'Fantasia': 'fantasia-r2',
+        'Cibària': 'cibaria-r2',
+        'Impastamò': 'impastamo-r2',
+        'Le delizie di Michela': 'le-delizie-di-michela-r2',
+        'Aufer': 'aufer-r2',
+        'Santoro (Castellana)': 'santoro-castellana-r2',
+        'Bollenti piatti': 'bollenti-piatti-r2',
+        'Pane & Co': 'pane-co-r3',
+        'Info': 'info-r2',
+    }};
     function offsetKeyFor(name) {{ return 'menu-views-offset-' + (OFFSET_KEY_OVERRIDES[name] || slugify(name)); }}
     function counterGetUrlFor(name) {{ return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }}
     function counterHitUrlFor(name) {{ return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }}
@@ -4442,7 +4462,29 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         }};
     }}
 
+    // Evita che due azzeramenti restino attivi insieme: se il secondo
+    // partisse mentre i "colpi" del primo stanno ancora completando in
+    // background (puo' richiedere alcuni minuti), entrambi
+    // incrementerebbero la stessa chiave di azzeramento sul server, che
+    // supererebbe il totale vero e resterebbe "avvelenata" per sempre
+    // (l'API non permette di farla scendere). E' esattamente cosi' che si
+    // sono rovinati tutti i contatori il 22/09/2026.
+    let resetInProgress = false;
+
     async function resetCounterGlobally() {{
+        if (resetInProgress) {{
+            alert("Azzeramento gia' in corso su questo dispositivo: attendi il completamento (puo' richiedere qualche minuto) prima di ripeterlo, altrimenti i contatori restano bloccati.");
+            return;
+        }}
+        resetInProgress = true;
+        try {{
+            await resetCounterGloballyImpl();
+        }} finally {{
+            resetInProgress = false;
+        }}
+    }}
+
+    async function resetCounterGloballyImpl() {{
         const mainTitle = document.getElementById('main-title');
         mainTitle.innerText = 'Azzeramento: lettura contatori...';
 
@@ -4534,9 +4576,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 }}
             }}
         }}
-        Promise.all([worker(), worker(), worker(), worker()]).catch((e) => {{
+        // Chi ha cliccato vede gia' 0 da subito (impostato piu' sopra) e
+        // handleTitleClick non aspetta il ritorno di resetCounterGlobally:
+        // l'"await" qui sotto serve solo a tenere alto il guardiano
+        // "resetInProgress" fino al vero completamento in background, cosi'
+        // un secondo azzeramento lanciato troppo presto viene bloccato
+        // invece di sovrapporsi al primo.
+        try {{
+            await Promise.all([worker(), worker(), worker(), worker()]);
+        }} catch (e) {{
             console.error('Azzeramento in background non completato', e);
-        }});
+        }}
     }}
 
     function formatCounter(value) {{
