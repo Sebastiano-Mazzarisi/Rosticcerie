@@ -339,9 +339,25 @@
       font-size: 14px;
       color: #fff;
     }
-    .date-table td {
+    .date-table td, .date-table th {
       padding: 4px 2px;
       border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+    .bst-name {
+      text-align: left;
+      font-weight: normal;
+    }
+    .bst-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      min-width: 44px;
+    }
+    .date-table thead th {
+      font-weight: 600;
+      opacity: 0.7;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
@@ -438,7 +454,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1790098820", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1790098820", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "09:37", "menu_date": "2026-09-22", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true, "badge_new": false}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1790098820", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1790098820", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "09:37", "menu_date": "2026-09-22", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true, "badge_new": false}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1790098820", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1790098820", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "07:07", "menu_date": "2026-09-22", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true, "badge_new": false}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1790098820", "phone_display": "080-521.42.33", "phone_tel": "0805214233", "image": "Le_delizie_di_Michela.jpg?v=1790098820", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "22 set", "menu_date": "2026-09-22", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true, "badge_new": false}, {"name": "Aufer", "card_label": "Aufer Gastronomia", "detail_title": "Aufer Gastronomia", "logo": "../../Logo-Aufer.jpg?v=1790098820", "phone_display": "368-38.30.313", "phone_tel": "3683830313", "image": "Aufer.jpg?v=1790098820", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "22 set", "menu_date": "2026-09-22", "url": "https://www.instagram.com/aufergastronomia/", "counter_enabled": true, "badge_new": false}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1790098820", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1790098820", "error": "", "updated": false, "updated_label": "Domenica 20 settembre", "card_reference": "20 set", "menu_date": "2026-09-20", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true, "badge_new": false}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1790098820", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1790098820", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "22 set", "menu_date": "2026-09-22", "url": "https://www.paneeco.it/menu", "counter_enabled": true, "badge_new": false}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1790098820", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1790098820", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "09:40", "menu_date": "2026-09-22", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true, "badge_new": false}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Info", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1790098820", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1790101076", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1790101076", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "09:37", "menu_date": "2026-09-22", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true, "badge_new": false}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1790101076", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1790101076", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "09:37", "menu_date": "2026-09-22", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true, "badge_new": false}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1790101076", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1790101076", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "07:07", "menu_date": "2026-09-22", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true, "badge_new": false}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1790101076", "phone_display": "080-521.42.33", "phone_tel": "0805214233", "image": "Le_delizie_di_Michela.jpg?v=1790101076", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "22 set", "menu_date": "2026-09-22", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true, "badge_new": false}, {"name": "Aufer", "card_label": "Aufer Gastronomia", "detail_title": "Aufer Gastronomia", "logo": "../../Logo-Aufer.jpg?v=1790101076", "phone_display": "368-38.30.313", "phone_tel": "3683830313", "image": "Aufer.jpg?v=1790101076", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "22 set", "menu_date": "2026-09-22", "url": "https://www.instagram.com/aufergastronomia/", "counter_enabled": true, "badge_new": false}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1790101076", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1790101076", "error": "", "updated": false, "updated_label": "Domenica 20 settembre", "card_reference": "20 set", "menu_date": "2026-09-20", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true, "badge_new": false}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1790101076", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1790101076", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "22 set", "menu_date": "2026-09-22", "url": "https://www.paneeco.it/menu", "counter_enabled": true, "badge_new": false}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1790101076", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1790101076", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "card_reference": "09:17", "menu_date": "2026-09-22", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true, "badge_new": false}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Info", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1790101076", "error": "", "updated": true, "updated_label": "Martedì 22 settembre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -789,33 +805,33 @@
     }
 
     // Istogramma "distribuzione per dispositivo" mostrato subito sotto
-    // quello orario, nella stessa scheda Info: a differenza degli altri due,
-    // qui si conta OGNI riga della tabella (nessuna deduplicazione per
-    // sessione/nuovo accesso), perche' l'obiettivo e' sapere da quali
-    // sistemi operativi arrivano tutte le richieste registrate. La scala va
-    // da 0 a 70% (non da 0 a 100%): cosi' anche i valori piu' comuni restano
-    // ben distinti invece di schiacciarsi tutti sulla sinistra.
+    // quello orario, nella stessa scheda Info: i dispositivi vengono
+    // accorpati in 4 categorie (iPhone, Android, Windows, Altro) per
+    // leggibilita'. La scala va da 0 a 70%.
     function loadDeviceChart() {
         fetch(SHEET_LOG_URL + '?action=deviceStats', {cache: 'no-store'})
             .then(r => r.json())
             .then(data => {
                 const el = document.getElementById('device-bars');
                 if (!el) return;
-                let labels, raw;
+                // Accorpa le voci raw in 4 categorie.
+                const gruppi = { 'iPhone': 0, 'Android': 0, 'Windows': 0, 'Altro': 0 };
+                let rawMap = {};
                 if (data.devices && typeof data.devices === 'object' && !Array.isArray(data.devices)) {
-                    // Formato oggetto { "NomeDispositivo": conteggio, ... }: ordiniamo
-                    // per conteggio decrescente ed escludiamo la voce "debug".
-                    const entries = Object.entries(data.devices)
-                        .filter(([k]) => k !== 'debug')
-                        .sort((a, b) => b[1] - a[1]);
-                    labels = entries.map(([k]) => k);
-                    raw = entries.map(([, v]) => Number(v));
-                } else if (Array.isArray(data.percentages)) {
-                    labels = data.labels || ['iOS', 'Android', 'Windows', 'Altro'];
-                    raw = data.percentages;
-                } else {
-                    return;
-                }
+                    rawMap = data.devices;
+                } else if (Array.isArray(data.percentages) && data.labels) {
+                    data.labels.forEach((l, i) => { rawMap[l] = data.percentages[i]; });
+                } else { return; }
+                Object.entries(rawMap).forEach(([k, v]) => {
+                    if (k === 'debug') return;
+                    const n = Number(v) || 0;
+                    if (k.startsWith('iPhone')) gruppi['iPhone'] += n;
+                    else if (k.startsWith('Android')) gruppi['Android'] += n;
+                    else if (k.startsWith('Windows')) gruppi['Windows'] += n;
+                    else gruppi['Altro'] += n;
+                });
+                const labels = ['iPhone', 'Android', 'Windows', 'Altro'];
+                const raw = labels.map(l => gruppi[l]);
                 const SCALA_MASSIMA = 70;
                 const pcts = conteggioAPercentuali(raw);
                 el.innerHTML = labels.map((label, idx) => {
@@ -829,30 +845,30 @@
             .catch(err => console.error('Statistiche per dispositivo non disponibili', err));
     }
 
-    // Tabella "accessi per data" (giorno/mese/anno) mostrata nella scheda
-    // Info sotto i tre istogrammi: elenca gli ultimi 30 giorni con almeno
-    // un click, dal piu' recente al piu' vecchio. Visibile solo in
-    // modalita' amministratore (?v=57).
-    function loadDateTable() {
+    // Tabella per-bottone visibile solo in admin: una riga per ogni
+    // rosticceria con i click di oggi, del mese in corso e dell'anno
+    // in corso. Dati da ?action=buttonStats dell'Apps Script.
+    function loadButtonStatsTable() {
         if (!isAdmin) return;
-        fetch(SHEET_LOG_URL + '?action=dateStats', {cache: 'no-store'})
+        fetch(SHEET_LOG_URL + '?action=buttonStats', {cache: 'no-store'})
             .then(r => r.json())
             .then(data => {
-                const el = document.getElementById('date-table-body');
-                if (!el || !Array.isArray(data.dates)) return;
-                const mesiIt = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
-                const giorniIt = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
-                el.innerHTML = data.dates.map(entry => {
-                    const d = new Date(entry.date + 'T12:00:00');
-                    const giorno = String(d.getDate()).padStart(2, '0');
-                    const mese = mesiIt[d.getMonth()];
-                    const anno = d.getFullYear();
-                    const nomeDow = giorniIt[d.getDay()];
-                    return '<tr><td>' + nomeDow + ' ' + giorno + ' ' + mese + ' ' + anno + '</td>'
-                        + '<td style="text-align:right;padding-left:12px">' + entry.count + '</td></tr>';
+                const el = document.getElementById('button-stats-body');
+                if (!el || !data.buttons) return;
+                const panelNames = PANELS
+                    .filter(p => p.counter_enabled !== false)
+                    .map(p => p.name);
+                el.innerHTML = panelNames.map(name => {
+                    const s = data.buttons[name] || { today: 0, month: 0, year: 0 };
+                    return '<tr>'
+                        + '<td class="bst-name">' + name + '</td>'
+                        + '<td class="bst-num">' + (s.today || 0) + '</td>'
+                        + '<td class="bst-num">' + (s.month || 0) + '</td>'
+                        + '<td class="bst-num">' + (s.year  || 0) + '</td>'
+                        + '</tr>';
                 }).join('');
             })
-            .catch(err => console.error('Tabella date non disponibile', err));
+            .catch(err => console.error('Tabella per bottone non disponibile', err));
     }
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
@@ -1199,6 +1215,7 @@
             PANELS.forEach((_, i) => { if (todayCountByPanel[i] === undefined) todayCountByPanel[i] = '?'; });
         }
         updateCardCounters();
+        updateAdminTitle();
     }
 
     // --- Riordino personalizzato delle caselle iniziali (tenere premuto
@@ -1788,7 +1805,7 @@
                 ? '<div class="weekday-chart weekday-chart-first"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione oraria</div><div class="weekday-bars" id="hourly-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione per dispositivi</div><div class="weekday-bars" id="device-bars"></div></div>'
-                    + (isAdmin ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per data</div><table class="date-table"><tbody id="date-table-body"></tbody></table></div>' : '')
+                    + (isAdmin ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per bottone</div><table class="date-table"><thead><tr><th class="bst-name">Bottone</th><th class="bst-num">Oggi</th><th class="bst-num">Mese</th><th class="bst-num">Anno</th></tr></thead><tbody id="button-stats-body"></tbody></table></div>' : '')
                 : '';
             content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
             applyDetailImageFit();
@@ -1796,7 +1813,7 @@
                 loadWeekdayChart();
                 loadHourlyChart();
                 loadDeviceChart();
-                loadDateTable();
+                loadButtonStatsTable();
             }
         } else {
             content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
@@ -2126,7 +2143,7 @@
         
         <button type="button" class="card" data-pid="7" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(7)">
             <span class="card-name" style="color:#111">Bollenti piatti</span>
-            <span class="card-reference">09:40</span>
+            <span class="card-reference">09:17</span>
             <span class="card-counter" id="card-counter-7"></span>
         </button>
         
