@@ -4125,6 +4125,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     let totalClicksByPanel = [];
     let offsetClicksByPanel = [];
+    let todayCountByPanel = [];  // Accessi di oggi per riquadro (solo admin, da Google Sheet)
 
     function visibleCounter(i) {{
         const total = totalClicksByPanel[i];
@@ -4604,11 +4605,34 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 el.style.display = 'none';
                 continue;
             }}
-            const val = visibleCounter(i);
-            el.innerText = val === null ? '0' : formatCounter(val);
-            el.title = val === null ? 'Dato non disponibile: riprovare il refresh' : (!counterFreshByPanel[i] ? (counterLoadRunning ? 'Ultimo valore disponibile: aggiornamento in corso' : 'Ultimo valore disponibile: aggiornamento non riuscito') : (offsetClicksByPanel[i] > totalClicksByPanel[i] ? 'Totale registrato: valore di azzeramento incoerente' : 'Aperture registrate'));
+            const today = todayCountByPanel[i];
+            if (today === undefined) {{
+                el.style.display = 'none';
+                continue;
+            }}
+            el.innerText = today;
+            el.title = 'Accessi oggi';
             el.style.display = 'block';
         }}
+    }}
+
+    // Carica dal foglio Google il conteggio degli accessi di oggi per ogni
+    // riquadro e aggiorna i badge visibili solo al supervisore.
+    async function loadTodayCardStats() {{
+        if (!isAdmin) return;
+        try {{
+            const url = SHEET_LOG_URL + '?action=todayStats&t=' + Date.now();
+            const resp = await fetch(url, {{cache: 'no-store'}});
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();  // {{ "Fantasia": 3, "Bollenti piatti": 1, ... }}
+            PANELS.forEach((p, i) => {{
+                todayCountByPanel[i] = data[p.name] ?? 0;
+            }});
+        }} catch (err) {{
+            console.warn('Statistiche oggi non disponibili', err);
+            PANELS.forEach((_, i) => {{ if (todayCountByPanel[i] === undefined) todayCountByPanel[i] = '?'; }});
+        }}
+        updateCardCounters();
     }}
 
     // --- Riordino personalizzato delle caselle iniziali (tenere premuto
@@ -5344,7 +5368,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
             lastMenuRefreshDay = italianDay();
             lastMenuRefreshAt = Date.now();
-            if (isAdmin) {{ loadCounter(); loadExtraCounters(); }}
+            if (isAdmin) {{ loadCounter(); loadExtraCounters(); loadTodayCardStats(); }}
             if (showFeedback) signature.innerText = 'by Mazzarisi';
             if (isAdmin) updateAdminTitle();
         }} catch (error) {{
@@ -5443,7 +5467,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     window.addEventListener('resize', fitCardNames);
     document.addEventListener('DOMContentLoaded', fitCardNames);
-    window.onload = () => {{ loadCounter(); loadExtraCounters(); updateAudioHintArrow(); }};
+    window.onload = () => {{ loadCounter(); loadExtraCounters(); loadTodayCardStats(); updateAudioHintArrow(); }};
     window.addEventListener('resize', applyDetailImageFit);
     document.addEventListener('DOMContentLoaded', () => {{
         refreshReferenceDate();
