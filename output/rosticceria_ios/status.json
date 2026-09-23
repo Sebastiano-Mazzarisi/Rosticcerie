@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-23T06:30:49",
+  "updated_at": "2026-09-23T06:41:45",
   "pages": [
     {
       "name": "Fantasia",
@@ -35,18 +35,18 @@
     },
     {
       "name": "Aufer",
-      "image": null,
+      "image": "Aufer.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun menu locale importato oggi per Aufer."
+      "published_at": "23/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 20  Settembre",
-      "published_at": "20/09/2026 09:08 circa",
-      "published_at_raw": "20/09/2026",
+      "text": "menù del giorno 23  Settembre",
+      "published_at": "23/09/2026 08:39 circa",
+      "published_at_raw": "23/09/2026",
       "error": null
     },
     {
@@ -61,7 +61,7 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●PEPERONI RIPIENI ALL'ARANCINO DI RISO\n●SEDANINI ALLA CRUDAIOLA CON GAMBERI, DATTERINO GIALLO E ZUCCHINA 5,5\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●SPAGHETTI ALL'AMATRICIANA 5,0\n●RIGATONCELLO CON SALSICCIA E STRACCHINO 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●POLPETTONE DI VITELLO FARCITO CON PATATE\n●HAMBURGER DI VITELLO ALLA BIS MAS\n●PARMIGIANA\n●TRIANGOLO DI MERLUZZO CON IMPANATURA DI PATATE CON SALSA ROSA\n●SPIEDINO DI ZUCCHINE AL SALMONE E GALBANINO GRATINATO AL FORNO\n●RUSTICO COPPA E GALBANINO\n●TRAMEZZINO DI PANCARRÉ CON PROSCIUTTO E GALBANINO CON IMPANATURA PROFUMATA",
-      "published_at": "22/09/2026 09:30 circa",
+      "published_at": "22/09/2026 09:41 circa",
       "published_at_raw": "23h",
       "error": null
     }
