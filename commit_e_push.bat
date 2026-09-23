@@ -1,6 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
+if errorlevel 1 exit /b 1
 title Rosticcerie: commit e push
 
 echo.
@@ -16,12 +17,15 @@ rem "You have unstaged changes" (successo il 22/09/2026 con i file rimossi
 rem dalla pulizia). Il .gitignore continua a valere: cookies.txt, __pycache__
 rem eccetera non vengono comunque aggiunti.
 git add -A
+if errorlevel 1 goto :failed
 
 git diff --cached --quiet
+if errorlevel 2 goto :failed
 if errorlevel 1 (
     for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set OGGI=%%a-%%b-%%c
     for /f "tokens=1-2 delims=: " %%a in ('time /t') do set ORA=%%a.%%b
     git commit -m "Aggiornamento del !OGGI! !ORA!"
+    if errorlevel 1 goto :failed
 ) else (
     echo Nessuna modifica da committare: procedo comunque con pull/push,
     echo nel caso ci siano commit gia' pronti ma non ancora pushati.
@@ -44,6 +48,7 @@ git push
 if errorlevel 1 (
     echo Il push e' fallito ^(probabile nuovo commit automatico nel frattempo^): riprovo...
     git pull --rebase origin main
+    if errorlevel 1 goto :failed
     git push
     if errorlevel 1 (
         echo.
@@ -56,3 +61,10 @@ if errorlevel 1 (
 echo.
 echo Fatto: tutto committato e pushato.
 timeout /t 4 >nul
+
+exit /b 0
+
+:failed
+echo ERRORE: operazione Git fallita. Pubblicazione interrotta; controlla il messaggio precedente.
+pause
+exit /b 1

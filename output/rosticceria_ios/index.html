@@ -491,7 +491,10 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get('v') === '57';
-    if (isAdmin) document.body.classList.add('is-admin');
+    // Lo script e' nell'head: body esiste solo dopo il parsing del DOM.
+    document.addEventListener('DOMContentLoaded', () => {
+        document.body.classList.toggle('is-admin', isAdmin);
+    });
     // Uso un'API globale gratuita per il contatore, un contatore separato per ogni rosticceria
     const ABACUS_BASE = 'https://abacus.jasoncameron.dev';
     const COUNTER_NAMESPACE = 'rosticcerie-fantasia';
