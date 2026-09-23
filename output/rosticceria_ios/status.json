@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-23T14:16:40",
+  "updated_at": "2026-09-23T17:59:27",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 23/09/26",
-      "published_at": "23/09/2026 09:19 circa",
-      "published_at_raw": "6h",
+      "published_at": "23/09/2026 09:57 circa",
+      "published_at_raw": "10h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "23 Settembre.\nMenù del giorno.",
-      "published_at": "23/09/2026 10:19 circa",
+      "published_at": "23/09/2026 09:57 circa",
       "published_at_raw": "23/09/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 23  Settembre",
-      "published_at": "23/09/2026 09:20 circa",
+      "published_at": "23/09/2026 08:58 circa",
       "published_at_raw": "23/09/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "PRIMI PIATTI\n●RISO A INSALATA\n●CASERECCIA ALLA CRUDAIOLA CON PESTO, POMODORO SPECK E FIORDILATTE 5,0\n●PENNETTE CON SPINACI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●MACCHERONI SALSICCIA E CREMA DI FORMAGGIO 5,0\n●FARFALLE CON SALMONE E PISELLI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●MAXI HAMBURGER DI VITELLO CON UOMO IN CAMICIA\n●SPIEDINO DI BOMBETTE CON IMPANATURA GIALLA AL PROFUMO DI PEPERONI\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●PEPERONI RIPIENI CON RISO PISELLI E PROSCIUTTO COTTO\n●PESCE SPADA ALLA SICILIANA\nCONTORNI: OLIVE FRITTE, VERDURE GRATINATE, VERDURE GRIGLIATE",
-      "published_at": "23/09/2026 10:16 circa",
-      "published_at_raw": "6h",
+      "text": "10 hours ago\nPRIMI PIATTI\n●RISO A INSALATA\n●CASERECCIA ALLA CRUDAIOLA CON PESTO, POMODORO SPECK E FIORDILATTE 5,0\n●PENNETTE CON SPINACI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●MACCHERONI SALSICCIA E CREMA DI FORMAGGIO 5,0\n●FARFALLE CON SALMONE E PISELLI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●MAXI HAMBURGER DI VITELLO CON UOMO IN CAMICIA\n●SPIEDINO DI BOMBETTE CON IMPANATURA GIALLA AL PROFUMO DI PEPERONI\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●PEPERONI RIPIENI CON RISO PISELLI E PROSCIUTTO COTTO\n●PESCE SPADA ALLA SICILIANA\nCONTORNI: OLIVE FRITTE, VERDURE GRATINATE, VERDURE GRIGLIATE",
+      "published_at": "23/09/2026 09:59 circa",
+      "published_at_raw": "10h",
       "error": null
     }
   ]
