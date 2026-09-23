@@ -4445,6 +4445,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             el.innerText = val === null ? '0' : formatCounter(val);
             el.style.display = display;
         }});
+        updateAdminTitle();
     }}
     async function loadExtraCounters() {{
         if (!isAdmin) return;
@@ -4692,9 +4693,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         if (document.getElementById('detail-view').style.display === 'block') return;
         let val = 0;
         for (let i = 0; i < PANELS.length; i++) {{
-            if (PANELS[i].counter_enabled === false) continue;
+            // Info ha un badge giornaliero anche se non usa il contatore menu.
+            if (PANELS[i].counter_enabled === false && PANELS[i].name !== 'Suggerimenti') continue;
             const today = todayCountByPanel[i];
-            if (typeof today === 'number') val += today;
+            if (Number.isFinite(today)) val += today;
+        }}
+        // Somma gli stessi valori mostrati dai badge extra (Audio).
+        for (const {{name}} of EXTRA_COUNTERS) {{
+            const extra = extraVisibleCounter(name);
+            if (Number.isFinite(extra)) val += extra;
         }}
         document.getElementById('main-title').innerText = 'Rosticcerie';
         document.getElementById('main-signature').innerText = 'by Mazzarisi' + (isAdmin ? ' ' + formatCounter(val) : '');
