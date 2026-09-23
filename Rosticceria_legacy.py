@@ -3501,7 +3501,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color};position:relative" onclick="recordExtraHit('Info'); cardClicked({i})">
                 <span class="card-name">Info<span class="info-access-count" id="info-access-count"></span></span><span class="card-counter" id="extra-counter-info"></span>
                 {reference_html}
-                <a class="db-badge" href="javascript:void(0)" onclick="event.stopPropagation(); window.open(SHEET_ARCHIVE_URL,'_blank','noopener')">DB</a>
+                <span class="db-badge" onclick="event.stopPropagation(); window.open('https://docs.google.com/spreadsheets/d/19CecVlwBvdE1KBkTY-lvZe2A3poQ5icc-vhC3Y6D6I4/edit?gid=2108863093#gid=2108863093','_blank','noopener')">DB</span>
             </button>
             """)
             continue
