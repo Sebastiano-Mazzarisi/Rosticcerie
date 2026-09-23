@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-22T18:17:56",
+  "updated_at": "2026-09-23T06:30:49",
   "pages": [
     {
       "name": "Fantasia",
@@ -21,25 +21,25 @@
       "name": "Impastamò",
       "image": "Impastamo.jpg",
       "text": "1h\n·",
-      "published_at": "22/09/2026 07:07 circa",
+      "published_at": "23/09/2026 07:28 circa",
       "published_at_raw": "1h",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
-      "image": "Le_delizie_di_Michela.jpg",
+      "image": null,
       "text": "",
-      "published_at": "22/09/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Le delizie di Michela."
     },
     {
       "name": "Aufer",
-      "image": "Aufer.jpg",
+      "image": null,
       "text": "",
-      "published_at": "22/09/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun menu locale importato oggi per Aufer."
     },
     {
       "name": "Santoro (Castellana)",
@@ -52,17 +52,17 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 22 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Risotto con funghi champignon e zafferano - €7.50\n- Rigatoni con cavolfiore e pancetta - €8.50\n- Foglie d'ulivo con datterino giallo, gamberetti e rucola - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa gratinato con verdurine - €8.50\n- Alette di pollo al forno con patate - €7.50\n  4 pezzi\n- Scaloppe di lonza al limone - €7.50",
-      "published_at": "22/09/2026",
-      "published_at_raw": "22 Settembre",
+      "text": "Menu 23 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Risotto con funghi champignon e zafferano - €7.50\n- Rigatoni con cavolfiore e pancetta - €8.50\n- Foglie d'ulivo con datterino giallo, gamberetti e rucola - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa gratinato con verdurine - €8.50\n- Alette di pollo al forno con patate - €7.50\n  4 pezzi\n- Scaloppe di lonza al limone - €7.50",
+      "published_at": "23/09/2026",
+      "published_at_raw": "23 Settembre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●PEPERONI RIPIENI ALL'ARANCINO DI RISO\n●SEDANINI ALLA CRUDAIOLA CON GAMBERI, DATTERINO GIALLO E ZUCCHINA 5,5\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●SPAGHETTI ALL'AMATRICIANA 5,0\n●RIGATONCELLO CON SALSICCIA E STRACCHINO 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●POLPETTONE DI VITELLO FARCITO CON PATATE\n●HAMBURGER DI VITELLO ALLA BIS MAS\n●PARMIGIANA\n●TRIANGOLO DI MERLUZZO CON IMPANATURA DI PATATE CON SALSA ROSA\n●SPIEDINO DI ZUCCHINE AL SALMONE E GALBANINO GRATINATO AL FORNO\n●RUSTICO COPPA E GALBANINO\n●TRAMEZZINO DI PANCARRÉ CON PROSCIUTTO E GALBANINO CON IMPANATURA PROFUMATA",
-      "published_at": "22/09/2026 09:17 circa",
-      "published_at_raw": "11h",
+      "published_at": "22/09/2026 09:30 circa",
+      "published_at_raw": "23h",
       "error": null
     }
   ]
