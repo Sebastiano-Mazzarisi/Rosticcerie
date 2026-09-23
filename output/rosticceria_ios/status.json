@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-23T08:04:52",
+  "updated_at": "2026-09-23T13:13:20",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 23/09/26",
-      "published_at": "23/09/2026 09:10 circa",
-      "published_at_raw": "8m",
+      "published_at": "23/09/2026 09:11 circa",
+      "published_at_raw": "6h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "23 Settembre.\nMenù del giorno.",
-      "published_at": "23/09/2026 09:44 circa",
+      "published_at": "23/09/2026 10:11 circa",
       "published_at_raw": "23/09/2026",
       "error": null
     },
@@ -27,11 +27,11 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "23/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Aufer",
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 23  Settembre",
-      "published_at": "23/09/2026 08:39 circa",
+      "published_at": "23/09/2026 09:12 circa",
       "published_at_raw": "23/09/2026",
       "error": null
     },
@@ -61,8 +61,8 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●CASERECCIA ALLA CRUDAIOLA CON PESTO, POMODORO SPECK E FIORDILATTE 5,0\n●PENNETTE CON SPINACI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●MACCHERONI SALSICCIA E CREMA DI FORMAGGIO 5,0\n●FARFALLE CON SALMONE E PISELLI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●MAXI HAMBURGER DI VITELLO CON UOMO IN CAMICIA\n●SPIEDINO DI BOMBETTE CON IMPANATURA GIALLA AL PROFUMO DI PEPERONI\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●PEPERONI RIPIENI CON RISO PISELLI E PROSCIUTTO COTTO\n●PESCE SPADA ALLA SICILIANA\nCONTORNI: OLIVE FRITTE, VERDURE GRATINATE, VERDURE GRIGLIATE",
-      "published_at": "23/09/2026 09:43 circa",
-      "published_at_raw": "20m",
+      "published_at": "23/09/2026 10:13 circa",
+      "published_at_raw": "5h",
       "error": null
     }
   ]
