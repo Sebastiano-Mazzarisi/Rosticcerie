@@ -3498,9 +3498,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             # la sua gestione) - immagine + pulsante di condivisione del
             # sito, gestiti da renderDetail().
             cards.append(f"""
-            <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="recordExtraHit('Info'); cardClicked({i})">
+            <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color};position:relative" onclick="recordExtraHit('Info'); cardClicked({i})">
                 <span class="card-name">Info<span class="info-access-count" id="info-access-count"></span></span><span class="card-counter" id="extra-counter-info"></span>
                 {reference_html}
+                <a class="db-badge" href="javascript:void(0)" onclick="event.stopPropagation(); window.open(SHEET_ARCHIVE_URL,'_blank','noopener')">DB</a>
             </button>
             """)
             continue
@@ -3850,6 +3851,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       text-align: left;
     }}
 
+    /* Tabella accessi per bottone (admin) */
     .date-table {{
       width: 100%;
       border-collapse: collapse;
@@ -3876,6 +3878,26 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }}
+    /* Confetto DB (link archivio Google Sheet) nel riquadro Info — solo admin */
+    .db-badge {{
+      display: none;
+      position: absolute;
+      bottom: 7px;
+      right: 7px;
+      background: #2196f3;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-decoration: none;
+      line-height: 1.4;
+      z-index: 10;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }}
+    .db-badge:active {{ background: #1565c0; }}
+    body.is-admin .db-badge {{ display: inline-block; }}
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {{
@@ -3987,6 +4009,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get('v') === '57';
+    if (isAdmin) document.body.classList.add('is-admin');
     // Uso un'API globale gratuita per il contatore, un contatore separato per ogni rosticceria
     const ABACUS_BASE = 'https://abacus.jasoncameron.dev';
     const COUNTER_NAMESPACE = 'rosticcerie-fantasia';
@@ -4173,6 +4196,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // geolocalizzazione del dispositivo, che richiederebbero un permesso
     // esplicito al visitatore).
     const SHEET_LOG_URL = 'https://script.google.com/macros/s/AKfycbxD0bXOZ-bmVjhOCH8NhUNa2oao8XxEEkFJeArTbZk-1VQ3_1UFZlVV0P7WXVjo6VhnhA/exec';
+    // URL del foglio Google con lo storico dei click (visibile solo all'admin).
+    // Aprilo da Google Drive e copia l'indirizzo dalla barra del browser.
+    const SHEET_ARCHIVE_URL = 'https://docs.google.com/spreadsheets/d/19CecVlwBvdE1KBkTY-lvZe2A3poQ5icc-vhC3Y6D6I4/edit?gid=2108863093#gid=2108863093';
 
     function detectDeviceLabel() {{
         const ua = navigator.userAgent || '';
@@ -4242,34 +4268,23 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // settimana invece che solo su oggi. Ricalcolato ogni volta che si apre
     // la scheda Info o che la pagina fa un refresh (vedi forceFreshReload,
     // che richiama renderDetail se la scheda Info e' quella aperta).
-    // Converte un array di conteggi grezzi in percentuali arrotondate
-    // all'intero piu' vicino (la somma puo' non fare esattamente 100 per via
-    // degli arrotondamenti, ma e' abbastanza precisa per le barre).
-    function conteggioAPercentuali(counts) {{
-        const totale = counts.reduce((a, b) => a + b, 0);
-        if (totale === 0) return counts.map(() => 0);
-        return counts.map(c => Math.round((c / totale) * 100));
-    }}
-
     function loadWeekdayChart() {{
         fetch(SHEET_LOG_URL + '?action=weekdayStats', {{cache: 'no-store'}})
             .then(r => r.json())
             .then(data => {{
                 const el = document.getElementById('weekday-bars');
-                if (!el) return;
-                // Il backend restituisce {{ "weekday": [c0, c1, ..., c6] }}
-                // dove c0=lunedi', c6=domenica (conteggi grezzi).
-                const raw = Array.isArray(data.weekday) ? data.weekday : (Array.isArray(data.percentages) ? data.percentages : null);
-                if (!raw) return;
+                // Apps Script restituisce {{ weekday: [dom,lun,mar,mer,gio,ven,sab] }}
+                // dove l'indice e' calcolato con (u % 7): 0=dom, 1=lun..., 6=sab.
+                if (!el || !Array.isArray(data.weekday)) return;
+                const raw = data.weekday; // [0]=dom, [1]=lun, ..., [6]=sab
+                // Ordine visualizzazione: Lun-Dom (indici Apps Script: 1,2,3,4,5,6,0)
+                const order = [1, 2, 3, 4, 5, 6, 0];
                 const labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-                // La barra e' scalata su un massimo del 50% (non del 100%):
-                // cosi' anche i valori piu' comuni, che raramente superano il
-                // 40-50%, si vedono ben distinti invece di restare tutti
-                // schiacciati sulla sinistra di una scala 0-100%.
+                const totale = order.reduce((s, i) => s + (raw[i] || 0), 0) || 1;
                 const SCALA_MASSIMA = 50;
-                const pcts = conteggioAPercentuali(raw);
-                el.innerHTML = labels.map((label, idx) => {{
-                    const pct = pcts[idx] || 0;
+                el.innerHTML = labels.map((label, j) => {{
+                    const cnt = raw[order[j]] || 0;
+                    const pct = Math.round(cnt / totale * 100);
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
                     return '<div class="weekday-row"><span class="weekday-label">' + label + '.</span>'
                         + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
@@ -4290,28 +4305,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             .then(r => r.json())
             .then(data => {{
                 const el = document.getElementById('hourly-bars');
-                if (!el) return;
-                // Il backend restituisce {{ "hourly": {{"0": c, "1": c, ..., "23": c}} }}
-                // dove la chiave e' l'ora 0-23 (0 = mezzanotte, 23 = 23:00).
-                // L'etichetta italiana va da 01 a 24 (24 = 00:xx = chiave "0").
-                let raw;
-                if (data.hourly && typeof data.hourly === 'object' && !Array.isArray(data.hourly)) {{
-                    // Formato oggetto {{ "0": c, ..., "23": c }}: riordiniamo in
-                    // array di 24 elementi [c_ora0, c_ora1, ..., c_ora23]
-                    raw = Array.from({{length: 24}}, (_, i) => Number(data.hourly[String(i)] || 0));
-                }} else if (Array.isArray(data.percentages)) {{
-                    raw = data.percentages;
-                }} else {{
-                    return;
-                }}
-                // Ruotiamo: etichetta '01' = ora 1, ..., '23' = ora 23, '24' = ora 0.
-                const rawRotated = raw.slice(1).concat(raw.slice(0, 1));
+                // Apps Script restituisce {{ hourly: {{ "0": cnt, "1": cnt, ..., "23": cnt }} }}
+                if (!el || !data.hourly || typeof data.hourly !== 'object') return;
+                const h = data.hourly;
+                // Etichette italiane 01-24: ora 1=label 01, ..., ora 23=label 23, ora 0=label 24
+                const hoursOrder = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,0];
                 const labels = ['01','02','03','04','05','06','07','08','09','10','11','12',
                     '13','14','15','16','17','18','19','20','21','22','23','24'];
+                const totale = hoursOrder.reduce((s, i) => s + (Number(h[i]) || 0), 0) || 1;
                 const SCALA_MASSIMA = 30;
-                const pcts = conteggioAPercentuali(rawRotated);
-                el.innerHTML = labels.map((label, idx) => {{
-                    const pct = pcts[idx] || 0;
+                el.innerHTML = labels.map((label, j) => {{
+                    const cnt = Number(h[hoursOrder[j]]) || 0;
+                    const pct = Math.round(cnt / totale * 100);
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
                     return '<div class="weekday-row"><span class="weekday-label">' + label + '</span>'
                         + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
@@ -4322,37 +4327,35 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
 
     // Istogramma "distribuzione per dispositivo" mostrato subito sotto
-    // quello orario, nella stessa scheda Info: i dispositivi vengono
-    // accorpati in 4 categorie (iPhone, Android, Windows, Altro) per
-    // leggibilita'. La scala va da 0 a 70%.
+    // quello orario, nella stessa scheda Info: a differenza degli altri due,
+    // qui si conta OGNI riga della tabella (nessuna deduplicazione per
+    // sessione/nuovo accesso), perche' l'obiettivo e' sapere da quali
+    // sistemi operativi arrivano tutte le richieste registrate. La scala va
+    // da 0 a 70% (non da 0 a 100%): cosi' anche i valori piu' comuni restano
+    // ben distinti invece di schiacciarsi tutti sulla sinistra.
     function loadDeviceChart() {{
         fetch(SHEET_LOG_URL + '?action=deviceStats', {{cache: 'no-store'}})
             .then(r => r.json())
             .then(data => {{
                 const el = document.getElementById('device-bars');
-                if (!el) return;
-                // Accorpa le voci raw in 4 categorie.
-                const gruppi = {{ 'iPhone': 0, 'Android': 0, 'Windows': 0, 'Altro': 0 }};
-                let rawMap = {{}};
-                if (data.devices && typeof data.devices === 'object' && !Array.isArray(data.devices)) {{
-                    rawMap = data.devices;
-                }} else if (Array.isArray(data.percentages) && data.labels) {{
-                    data.labels.forEach((l, i) => {{ rawMap[l] = data.percentages[i]; }});
-                }} else {{ return; }}
-                Object.entries(rawMap).forEach(([k, v]) => {{
-                    if (k === 'debug') return;
-                    const n = Number(v) || 0;
-                    if (k.startsWith('iPhone')) gruppi['iPhone'] += n;
-                    else if (k.startsWith('Android')) gruppi['Android'] += n;
-                    else if (k.startsWith('Windows')) gruppi['Windows'] += n;
-                    else gruppi['Altro'] += n;
+                // Apps Script restituisce {{ devices: {{ "iPhone 14": 5, "Windows PC": 2, ... }} }}
+                if (!el || !data.devices || typeof data.devices !== 'object') return;
+                const raw = data.devices;
+                // Raggruppa in 4 categorie: iPhone, Android, Windows, Altro
+                const groups = {{ 'iPhone': 0, 'Android': 0, 'Windows': 0, 'Altro': 0 }};
+                Object.keys(raw).forEach(dev => {{
+                    const n = Number(raw[dev]) || 0;
+                    const d = dev.toLowerCase();
+                    if (d.includes('iphone') || d.includes('ios') || d.includes('ipad') || d.includes('mac')) groups['iPhone'] += n;
+                    else if (d.includes('android')) groups['Android'] += n;
+                    else if (d.includes('windows') || d.includes('win')) groups['Windows'] += n;
+                    else groups['Altro'] += n;
                 }});
                 const labels = ['iPhone', 'Android', 'Windows', 'Altro'];
-                const raw = labels.map(l => gruppi[l]);
+                const totale = labels.reduce((s, l) => s + groups[l], 0) || 1;
                 const SCALA_MASSIMA = 70;
-                const pcts = conteggioAPercentuali(raw);
-                el.innerHTML = labels.map((label, idx) => {{
-                    const pct = pcts[idx] || 0;
+                el.innerHTML = labels.map(label => {{
+                    const pct = Math.round(groups[label] / totale * 100);
                     const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
                     return '<div class="weekday-row"><span class="weekday-label">' + label + '</span>'
                         + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
@@ -4362,9 +4365,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             .catch(err => console.error('Statistiche per dispositivo non disponibili', err));
     }}
 
-    // Tabella per-bottone visibile solo in admin: una riga per ogni
-    // rosticceria con i click di oggi, del mese in corso e dell'anno
-    // in corso. Dati da ?action=buttonStats dell'Apps Script.
+    // Tabella "accessi per bottone" (admin): mostra oggi/mese/anno per ogni pannello.
     function loadButtonStatsTable() {{
         if (!isAdmin) return;
         fetch(SHEET_LOG_URL + '?action=buttonStats', {{cache: 'no-store'}})
@@ -4376,7 +4377,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                     .filter(p => p.counter_enabled !== false)
                     .map(p => p.name);
                 el.innerHTML = panelNames.map(name => {{
-                    const s = data.buttons[name] || {{ today: 0, month: 0, year: 0 }};
+                    // I click Info sono loggati come 'Info' ma il pannello e' 'Suggerimenti'
+                    const key = name === 'Suggerimenti' ? 'Info' : name;
+                    const s = data.buttons[key] || {{ today: 0, month: 0, year: 0 }};
                     return '<tr>'
                         + '<td class="bst-name">' + name + '</td>'
                         + '<td class="bst-num">' + (s.today || 0) + '</td>'
@@ -4712,8 +4715,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             el.title = 'Accessi oggi';
             el.style.display = 'block';
         }}
-        // Badge 'extra-counter-info' sul tasto Info: mostra gli accessi di OGGI
-        // (i click su Info vengono loggati come 'Info', pannello 'Suggerimenti').
+        // Badge extra sul tasto Info: mostra accessi di OGGI (loggati come 'Info')
         const sugIdx = PANELS.findIndex(p => p.name === 'Suggerimenti');
         const elInfo = document.getElementById('extra-counter-info');
         if (elInfo && sugIdx >= 0) {{
@@ -4734,8 +4736,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();  // {{ "Fantasia": 3, "Bollenti piatti": 1, ... }}
             PANELS.forEach((p, i) => {{
-                // I click sulla scheda Info vengono registrati come 'Info',
-                // ma il pannello si chiama 'Suggerimenti': usiamo la chiave corretta.
+                // I click su Info vengono loggati come 'Info', non come 'Suggerimenti'
                 const key = p.name === 'Suggerimenti' ? 'Info' : p.name;
                 todayCountByPanel[i] = data[key] ?? 0;
             }});
@@ -5330,15 +5331,22 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const sharePanel = p.name === 'Suggerimenti'
                 ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
                 : '';
-            const weekdayChart = p.name === 'Suggerimenti'
+            const weekdayChart = (isAdmin && p.name === 'Suggerimenti')
                 ? '<div class="weekday-chart weekday-chart-first"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione oraria</div><div class="weekday-bars" id="hourly-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione per dispositivi</div><div class="weekday-bars" id="device-bars"></div></div>'
-                    + (isAdmin ? '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per bottone</div><table class="date-table"><thead><tr><th class="bst-name">Bottone</th><th class="bst-num">Oggi</th><th class="bst-num">Mese</th><th class="bst-num">Anno</th></tr></thead><tbody id="button-stats-body"></tbody></table></div>' : '')
+                    + '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per bottone</div>'
+                    + '<table class="date-table"><thead><tr>'
+                    + '<th class="bst-name">Bottone</th>'
+                    + '<th class="bst-num">Oggi</th>'
+                    + '<th class="bst-num">Mese</th>'
+                    + '<th class="bst-num">Anno</th>'
+                    + '</tr></thead><tbody id="button-stats-body"></tbody></table></div>'
+                    + ''  /* link foglio spostato sul confetto DB del riquadro Info */
                 : '';
             content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
             applyDetailImageFit();
-            if (p.name === 'Suggerimenti') {{
+            if (isAdmin && p.name === 'Suggerimenti') {{
                 loadWeekdayChart();
                 loadHourlyChart();
                 loadDeviceChart();
