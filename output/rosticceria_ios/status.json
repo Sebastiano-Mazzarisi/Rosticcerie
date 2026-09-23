@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-09-23T08:01:20",
+  "updated_at": "2026-09-23T08:04:52",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 23/09/26",
       "published_at": "23/09/2026 09:10 circa",
-      "published_at_raw": "48m",
+      "published_at_raw": "8m",
       "error": null
     },
     {
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 23  Settembre",
-      "published_at": "23/09/2026 09:00 circa",
+      "published_at": "23/09/2026 08:39 circa",
       "published_at_raw": "23/09/2026",
       "error": null
     },
@@ -61,8 +61,8 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●CASERECCIA ALLA CRUDAIOLA CON PESTO, POMODORO SPECK E FIORDILATTE 5,0\n●PENNETTE CON SPINACI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●MACCHERONI SALSICCIA E CREMA DI FORMAGGIO 5,0\n●FARFALLE CON SALMONE E PISELLI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●MAXI HAMBURGER DI VITELLO CON UOMO IN CAMICIA\n●SPIEDINO DI BOMBETTE CON IMPANATURA GIALLA AL PROFUMO DI PEPERONI\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●PEPERONI RIPIENI CON RISO PISELLI E PROSCIUTTO COTTO\n●PESCE SPADA ALLA SICILIANA\nCONTORNI: OLIVE FRITTE, VERDURE GRATINATE, VERDURE GRIGLIATE",
-      "published_at": "23/09/2026 09:44 circa",
-      "published_at_raw": "17m",
+      "published_at": "23/09/2026 09:43 circa",
+      "published_at_raw": "20m",
       "error": null
     }
   ]
