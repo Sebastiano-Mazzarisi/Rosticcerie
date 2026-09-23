@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-09-23T06:55:55",
+  "updated_at": "2026-09-23T07:18:04",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 22/09/26",
-      "published_at": "22/09/2026 09:37 circa",
-      "published_at_raw": "10h",
+      "text": "MENÙ DEL GIORNO 23/09/26",
+      "published_at": "23/09/2026 09:10 circa",
+      "published_at_raw": "6m",
       "error": null
     },
     {
@@ -61,8 +61,8 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "PRIMI PIATTI\n●RISO A INSALATA\n●PEPERONI RIPIENI ALL'ARANCINO DI RISO\n●SEDANINI ALLA CRUDAIOLA CON GAMBERI, DATTERINO GIALLO E ZUCCHINA 5,5\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●SPAGHETTI ALL'AMATRICIANA 5,0\n●RIGATONCELLO CON SALSICCIA E STRACCHINO 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●POLPETTONE DI VITELLO FARCITO CON PATATE\n●HAMBURGER DI VITELLO ALLA BIS MAS\n●PARMIGIANA\n●TRIANGOLO DI MERLUZZO CON IMPANATURA DI PATATE CON SALSA ROSA\n●SPIEDINO DI ZUCCHINE AL SALMONE E GALBANINO GRATINATO AL FORNO\n●RUSTICO COPPA E GALBANINO\n●TRAMEZZINO DI PANCARRÉ CON PROSCIUTTO E GALBANINO CON IMPANATURA PROFUMATA",
-      "published_at": "22/09/2026 09:54 circa",
-      "published_at_raw": "23h",
+      "published_at": "22/09/2026 circa",
+      "published_at_raw": "1d",
       "error": null
     }
   ]
