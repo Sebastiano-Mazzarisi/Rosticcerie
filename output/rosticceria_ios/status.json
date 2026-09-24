@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-24T07:56:28",
+  "updated_at": "2026-09-24T11:42:32",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 23/09/26",
-      "published_at": "23/09/2026 09:57 circa",
-      "published_at_raw": "10h",
+      "text": "MENÙ DEL GIORNO 24/09/26",
+      "published_at": "24/09/2026 10:39 circa",
+      "published_at_raw": "3h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "24 Settembre 2026.\nMenù del giorno.",
-      "published_at": "24/09/2026 09:28 circa",
+      "published_at": "24/09/2026 09:39 circa",
       "published_at_raw": "24/09/2026",
       "error": null
     },
@@ -52,7 +52,7 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 24 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Penne alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Risotto con vellutata di zucca, gorgonzola e noci - €8.00\n- Gnocchi di patate alla sorrentina - €8.00\n- Cavatelli al grano arso con pomodorino, zucchina, cozze e cernia - €8.50\n- Zuppa di fagioli tondini - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di pesce persico in guazzetto di vongole e datterino giallo - €8.50\n- Bocconcini di capocollo all'ortolana - €7.50",
+      "text": "Menu 24 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Spaghetti con vellutata di cavolfiore e capocollo croccante - €8.00\n- Foglie d'ulivo con zucca e salsiccia - €8.50\n- Risotto con ragù di mare (cernia, gamberetti, cozze e vongole) - €8.50\n- Zuppa del casale - €6.00\n  Con lenticchie, fagioli, farro e ceci Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di pesce persico con vongole e zucchine - €8.50\n- Spezzatino di lonza con verdurine - €7.50\n- Scaloppe di pollo al limone - €7.50\n  2 pezzi",
       "published_at": "24/09/2026",
       "published_at_raw": "24 Settembre",
       "error": null
