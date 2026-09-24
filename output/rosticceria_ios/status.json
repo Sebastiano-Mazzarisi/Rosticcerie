@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-23T17:59:27",
+  "updated_at": "2026-09-24T05:55:17",
   "pages": [
     {
       "name": "Fantasia",
@@ -20,26 +20,26 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "1h\n·",
-      "published_at": "23/09/2026 07:28 circa",
-      "published_at_raw": "1h",
+      "text": "41 minutes ago\n41m\n·",
+      "published_at": "24/09/2026 07:11 circa",
+      "published_at_raw": "41m",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
-      "image": "Le_delizie_di_Michela.jpg",
+      "image": null,
       "text": "",
-      "published_at": "23/09/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Le delizie di Michela."
     },
     {
       "name": "Aufer",
-      "image": "Aufer.jpg",
+      "image": null,
       "text": "",
-      "published_at": "23/09/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun menu locale importato oggi per Aufer."
     },
     {
       "name": "Santoro (Castellana)",
@@ -52,17 +52,17 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 23 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Penne alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Risotto con vellutata di zucca, gorgonzola e noci - €8.00\n- Gnocchi di patate alla sorrentina - €8.00\n- Cavatelli al grano arso con pomodorino, zucchina, cozze e cernia - €8.50\n- Zuppa di fagioli tondini - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di pesce persico in guazzetto di vongole e datterino giallo - €8.50\n- Bocconcini di capocollo all'ortolana - €7.50",
-      "published_at": "23/09/2026",
-      "published_at_raw": "23 Settembre",
+      "text": "Menu 24 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Penne alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Risotto con vellutata di zucca, gorgonzola e noci - €8.00\n- Gnocchi di patate alla sorrentina - €8.00\n- Cavatelli al grano arso con pomodorino, zucchina, cozze e cernia - €8.50\n- Zuppa di fagioli tondini - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di pesce persico in guazzetto di vongole e datterino giallo - €8.50\n- Bocconcini di capocollo all'ortolana - €7.50",
+      "published_at": "24/09/2026",
+      "published_at_raw": "24 Settembre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "10 hours ago\nPRIMI PIATTI\n●RISO A INSALATA\n●CASERECCIA ALLA CRUDAIOLA CON PESTO, POMODORO SPECK E FIORDILATTE 5,0\n●PENNETTE CON SPINACI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●MACCHERONI SALSICCIA E CREMA DI FORMAGGIO 5,0\n●FARFALLE CON SALMONE E PISELLI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●MAXI HAMBURGER DI VITELLO CON UOMO IN CAMICIA\n●SPIEDINO DI BOMBETTE CON IMPANATURA GIALLA AL PROFUMO DI PEPERONI\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●PEPERONI RIPIENI CON RISO PISELLI E PROSCIUTTO COTTO\n●PESCE SPADA ALLA SICILIANA\nCONTORNI: OLIVE FRITTE, VERDURE GRATINATE, VERDURE GRIGLIATE",
-      "published_at": "23/09/2026 09:59 circa",
-      "published_at_raw": "10h",
+      "text": "22 hours ago\nPRIMI PIATTI\n●RISO A INSALATA\n●CASERECCIA ALLA CRUDAIOLA CON PESTO, POMODORO SPECK E FIORDILATTE 5,0\n●PENNETTE CON SPINACI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●MACCHERONI SALSICCIA E CREMA DI FORMAGGIO 5,0\n●FARFALLE CON SALMONE E PISELLI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●MAXI HAMBURGER DI VITELLO CON UOMO IN CAMICIA\n●SPIEDINO DI BOMBETTE CON IMPANATURA GIALLA AL PROFUMO DI PEPERONI\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●PEPERONI RIPIENI CON RISO PISELLI E PROSCIUTTO COTTO\n●PESCE SPADA ALLA SICILIANA\nCONTORNI: OLIVE FRITTE, VERDURE GRATINATE, VERDURE GRIGLIATE",
+      "published_at": "23/09/2026 09:54 circa",
+      "published_at_raw": "22h",
       "error": null
     }
   ]
