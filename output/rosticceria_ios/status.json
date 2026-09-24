@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-24T06:12:24",
+  "updated_at": "2026-09-24T07:56:28",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,9 +12,9 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "23 Settembre.\nMenù del giorno.",
-      "published_at": "23/09/2026 09:57 circa",
-      "published_at_raw": "23/09/2026",
+      "text": "24 Settembre 2026.\nMenù del giorno.",
+      "published_at": "24/09/2026 09:28 circa",
+      "published_at_raw": "24/09/2026",
       "error": null
     },
     {
@@ -44,9 +44,9 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 23  Settembre",
-      "published_at": "23/09/2026 08:58 circa",
-      "published_at_raw": "23/09/2026",
+      "text": "menù del giorno 24 Settembre",
+      "published_at": "24/09/2026 08:55 circa",
+      "published_at_raw": "24/09/2026",
       "error": null
     },
     {
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "22 hours ago\nPRIMI PIATTI\n●RISO A INSALATA\n●CASERECCIA ALLA CRUDAIOLA CON PESTO, POMODORO SPECK E FIORDILATTE 5,0\n●PENNETTE CON SPINACI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●MACCHERONI SALSICCIA E CREMA DI FORMAGGIO 5,0\n●FARFALLE CON SALMONE E PISELLI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO AL FORNELLO\n●MAXI HAMBURGER DI VITELLO CON UOMO IN CAMICIA\n●SPIEDINO DI BOMBETTE CON IMPANATURA GIALLA AL PROFUMO DI PEPERONI\n●INSALATA DI POLLO\n●INSALATA DI POLLO TONNATA\n●PEPERONI RIPIENI CON RISO PISELLI E PROSCIUTTO COTTO\n●PESCE SPADA ALLA SICILIANA\nCONTORNI: OLIVE FRITTE, VERDURE GRATINATE, VERDURE GRIGLIATE",
-      "published_at": "23/09/2026 10:12 circa",
-      "published_at_raw": "22h",
+      "text": "2 minutes ago\nPRIMI PIATTI\n●RISO A INSALATA\n●PENNE CON SPINACI, PANCETTA CROCCANTE E SCAMORZA AFFUMICATA 4,5\n●STROZZAPRETI ALLA PORTO VENERE CON SPECK E STRACCIATELLA 4,5\n●TORTELLINI ALLA CRUDAIOLA CON PESTO DI PEPERONI, PROSCIUTTO COTTO E MANDORLE 5,5\n●GNOCCHI ALLA SORRENTINA AL FORNO 5,0\n●TROFIE AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●COSCIA E SOVRAVOSCIA DI POLLO ARROSTO\n●SPEZZATINO DI MANZO IN UMIDO CON PATATE CAROTE E SEDANO\n●ROSTBEEF DI SUINO IN SALSA ALLA GENOVESE\n●PARMIGIANA\n●TRANCIO DI PESCE SPADA ALLA SICILIANA\n●PEPERONI FARCITI ALL'ARANCINO DI RISO\n●SPIEDO DI BOMBETTE GRATINATI CON PEPERONI",
+      "published_at": "24/09/2026 09:54 circa",
+      "published_at_raw": "2m",
       "error": null
     }
   ]
