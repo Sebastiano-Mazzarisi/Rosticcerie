@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-24T17:45:16",
+  "updated_at": "2026-09-25T07:31:10",
   "pages": [
     {
       "name": "Fantasia",
@@ -20,9 +20,9 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "41 minutes ago\n41m\n·",
-      "published_at": "24/09/2026 07:11 circa",
-      "published_at_raw": "41m",
+      "text": "about an hour ago\n1h\n·",
+      "published_at": "25/09/2026 08:29 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
@@ -35,34 +35,34 @@
     },
     {
       "name": "Aufer",
-      "image": "Aufer.jpg",
+      "image": null,
       "text": "",
-      "published_at": "24/09/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun menu locale importato oggi per Aufer."
     },
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 24 Settembre",
-      "published_at": "24/09/2026 09:44 circa",
-      "published_at_raw": "24/09/2026",
+      "text": "menù del giorno 25 Settembre",
+      "published_at": "25/09/2026 09:01 circa",
+      "published_at_raw": "25/09/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 24 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Foglie d'ulivo con zucca e salsiccia - €8.50\n- Risotto con ragù di mare (cernia, gamberetti, cozze e vongole) - €8.50\n- Zuppa del casale - €6.00\n  Con lenticchie, fagioli, farro e ceci Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di pesce persico con vongole e zucchine - €8.50\n- Spezzatino di lonza con verdurine - €7.50\n- Scaloppe di pollo al limone - €7.50\n  2 pezzi",
-      "published_at": "24/09/2026",
-      "published_at_raw": "24 Settembre",
+      "text": "Menu 25 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Foglie d'ulivo con zucca e salsiccia - €8.50\n- Risotto con ragù di mare (cernia, gamberetti, cozze e vongole) - €8.50\n- Zuppa del casale - €6.00\n  Con lenticchie, fagioli, farro e ceci Con o senza pasta\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Mezzi rigatoni con gorgonzola e pistacchi - €7.50\n- Risotto con zucca e speck croccante - €7.50\n- Cavatelli al grano arso con cernia, vongole e pomodorino - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di pesce persico con vongole e zucchine - €8.50\n- Spezzatino di lonza con verdurine - €7.50\n- Scaloppe di pollo al limone - €7.50\n  2 pezzi\n- Trancio di pesce spada alla pizzaiola - €8.50\n  Con pomodorini, origano e olive\n- Bocconcini di fesa di tacchino con curry e verdurine - €7.50",
+      "published_at": "25/09/2026",
+      "published_at_raw": "25 Settembre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "9 hours ago\nPRIMI PIATTI\n●RISO A INSALATA\n●PENNE CON SPINACI, PANCETTA CROCCANTE E SCAMORZA AFFUMICATA 4,5\n●STROZZAPRETI ALLA PORTO VENERE CON SPECK E STRACCIATELLA 4,5\n●TORTELLINI ALLA CRUDAIOLA CON PESTO DI PEPERONI, PROSCIUTTO COTTO E MANDORLE 5,5\n●GNOCCHI ALLA SORRENTINA AL FORNO 5,0\n●TROFIE AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●COSCIA E SOVRAVOSCIA DI POLLO ARROSTO\n●SPEZZATINO DI MANZO IN UMIDO CON PATATE CAROTE E SEDANO\n●ROSTBEEF DI SUINO IN SALSA ALLA GENOVESE\n●PARMIGIANA\n●TRANCIO DI PESCE SPADA ALLA SICILIANA\n●PEPERONI FARCITI ALL'ARANCINO DI RISO\n●SPIEDO DI BOMBETTE GRATINATI CON PEPERONI",
-      "published_at": "24/09/2026 10:45 circa",
-      "published_at_raw": "9h",
+      "text": "23 hours ago\nPRIMI PIATTI\n●RISO A INSALATA\n●PENNE CON SPINACI, PANCETTA CROCCANTE E SCAMORZA AFFUMICATA 4,5\n●STROZZAPRETI ALLA PORTO VENERE CON SPECK E STRACCIATELLA 4,5\n●TORTELLINI ALLA CRUDAIOLA CON PESTO DI PEPERONI, PROSCIUTTO COTTO E MANDORLE 5,5\n●GNOCCHI ALLA SORRENTINA AL FORNO 5,0\n●TROFIE AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●COSCIA E SOVRAVOSCIA DI POLLO ARROSTO\n●SPEZZATINO DI MANZO IN UMIDO CON PATATE CAROTE E SEDANO\n●ROSTBEEF DI SUINO IN SALSA ALLA GENOVESE\n●PARMIGIANA\n●TRANCIO DI PESCE SPADA ALLA SICILIANA\n●PEPERONI FARCITI ALL'ARANCINO DI RISO\n●SPIEDO DI BOMBETTE GRATINATI CON PEPERONI",
+      "published_at": "24/09/2026 10:31 circa",
+      "published_at_raw": "23h",
       "error": null
     }
   ]
