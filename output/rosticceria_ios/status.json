@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-09-26T13:26:21",
+  "updated_at": "2026-09-26T16:55:21",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "OGGI FACCIAMO FESTA",
-      "published_at": "26/09/2026 08:59 circa",
-      "published_at_raw": "6h",
+      "published_at": "26/09/2026 08:53 circa",
+      "published_at_raw": "10h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "26 Settembre 2026.\nMenù del giorno.",
-      "published_at": "26/09/2026 10:59 circa",
+      "published_at": "26/09/2026 10:53 circa",
       "published_at_raw": "26/09/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 26 Settembre",
-      "published_at": "26/09/2026 10:02 circa",
+      "published_at": "26/09/2026 09:54 circa",
       "published_at_raw": "26/09/2026",
       "error": null
     },
