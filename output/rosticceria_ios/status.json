@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-26T13:03:01",
+  "updated_at": "2026-09-26T13:26:21",
   "pages": [
     {
       "name": "Fantasia",
@@ -27,11 +27,11 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "26/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Aufer",
@@ -61,7 +61,7 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "5 hours ago\nPRIMI PIATTI\n●LASAGNA AL FORNO 5,0\n●PENNONI CON ASPARAGI, SPECK E CREMA DI ROBIOLA 5,5\n●PENNETTE ALLA CRUDAIOLA CON PESTO DI PISELLI, PROSCIUTTO COTTO E FIORDILATTE 5,5\n●RIGATONCELLO CON FUNGHI MISTI CON PORCINI, GUANCIALE E CACIORICOTTA 5,5\n●CAVATELLI AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●COTOLETTE DI SOVRACOSCIA DI POLLO GRATINATO AL FORNO\n●STINCO DI SUINO AL FORNO\n●INVOLTINI DI SOVRAVOSCIA DI POLLO BARDATI CON PANCETTA E ROSMARINO IN SALSA DI VERDURE AL PROFUMO DI PEPERONI\n●POLPETTE DI POLLO CON SPINACI E CAROTE IN SALSA DI PORCINI\n●PARMIGIANA\n●CUORE DI MERLUZZO ALLA MEDITERRANEA\n●POLPETTE DI PANE FRITTE",
-      "published_at": "26/09/2026 10:02 circa",
+      "published_at": "26/09/2026 10:26 circa",
       "published_at_raw": "5h",
       "error": null
     }
