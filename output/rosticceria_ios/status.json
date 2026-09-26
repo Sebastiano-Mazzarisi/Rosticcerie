@@ -1,21 +1,21 @@
 {
-  "updated_at": "2026-09-26T06:35:55",
+  "updated_at": "2026-09-26T08:06:46",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "OGGI FACCIAMO FESTA",
-      "published_at": "26/09/2026 08:18 circa",
-      "published_at_raw": "15m",
+      "published_at": "26/09/2026 09:03 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
       "name": "Cibària",
-      "image": null,
-      "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Cibària."
+      "image": "Cibaria.jpg",
+      "text": "26 Settembre 2026.\nMenù del giorno.",
+      "published_at": "26/09/2026 09:39 circa",
+      "published_at_raw": "26/09/2026",
+      "error": null
     },
     {
       "name": "Impastamò",
@@ -44,9 +44,9 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 25 Settembre",
-      "published_at": "25/09/2026 09:06 circa",
-      "published_at_raw": "25/09/2026",
+      "text": "menù del giorno 26 Settembre",
+      "published_at": "26/09/2026 09:06 circa",
+      "published_at_raw": "26/09/2026",
       "error": null
     },
     {
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "22 hours ago\nPRIMI PIATTI\n●INSALATA DI RISO\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●GNOCCHI ALLA SORRENTINA AL FORNO 5,0\n●LASAGNA AL FORNO 5,0\n●FARFALLE ALLA CRUDAIOLA CON POMODORINI, SALMONE E PESTO DI ZUCCHINA 5,5\n●PENNONI CON ASPARAGI, SPECK IN CREMA DI FORMAGGIO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●COSCIA E SOVRAVOSCIA DI POLLO ARROSTO CON VERDURINE\n●POLPETTE DI POLLO CON SPINACI E CAROTE IN SALSA DI PORCINI\n●COTOLETTE DI SOVRAVOSCIE DI POLLO GRATINATI AL FORNO\n●AGNELLO ARROSTO CON SCALOGNO, OLIVE E CAROTE IN PIGNATA\n●ROSTBEEF DI SUINO IN SALSA DI VERDURE\n●FILETTO DI ORATA AL FORNO SU LETTO DI VERDURE MISTE\n●POLPETTE DI PANE AL SUGO\n●MELANZANE RIPIENE\n●PARMIGIANA",
-      "published_at": "25/09/2026 10:34 circa",
-      "published_at_raw": "22h",
+      "text": "9 minutes ago\nPRIMI PIATTI\n●LASAGNA AL FORNO 5,0\n●PENNONI CON ASPARAGI, SPECK E CREMA DI ROBIOLA 5,5\n●PENNETTE ALLA CRUDAIOLA CON PESTO DI PISELLI, PROSCIUTTO COTTO E FIORDILATTE 5,5\n●RIGATONCELLO CON FUNGHI MISTI CON PORCINI, GUANCIALE E CACIORICOTTA 5,5\n●CAVATELLI AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●COTOLETTE DI SOVRACOSCIA DI POLLO GRATINATO AL FORNO\n●STINCO DI SUINO AL FORNO\n●INVOLTINI DI SOVRAVOSCIA DI POLLO BARDATI CON PANCETTA E ROSMARINO IN SALSA DI VERDURE AL PROFUMO DI PEPERONI\n●POLPETTE DI POLLO CON SPINACI E CAROTE IN SALSA DI PORCINI\n●PARMIGIANA\n●CUORE DI MERLUZZO ALLA MEDITERRANEA\n●POLPETTE DI PANE FRITTE",
+      "published_at": "26/09/2026 09:57 circa",
+      "published_at_raw": "9m",
       "error": null
     }
   ]
