@@ -1,20 +1,20 @@
 {
-  "updated_at": "2026-09-28T09:06:55",
+  "updated_at": "2026-09-28T12:09:42",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "OGGI FACCIAMO FESTA",
-      "published_at": "26/09/2026 08:53 circa",
-      "published_at_raw": "10h",
+      "text": "",
+      "published_at": "28/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "26 Settembre 2026.\nMenù del giorno.",
-      "published_at": "26/09/2026 10:53 circa",
-      "published_at_raw": "26/09/2026",
+      "text": "",
+      "published_at": "28/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
       "error": null
     },
     {
@@ -27,11 +27,11 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "28/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Aufer",
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 28 Settembre",
-      "published_at": "28/09/2026 09:06 circa",
+      "published_at": "28/09/2026 09:08 circa",
       "published_at_raw": "28/09/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "about an hour ago\nPRIMI PIATTI\n●CICORIE ALL'OLIO 5,0\n●CANNELLONI ALLA CARNE 5,5\n●MEZZI RIGATONI CON BROCCOLI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●TORTELLINI DI CARNE ALLA BOLOGNESE 5,5\n●FETTUCCINE CON GAMBERI AL LIMONE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SCALOPPINE DI VITELLO AI FUNGHI\n●PANZEROTTO DI POLLO CON PROSCIUTTO E GALBANINO CON PEPERONI\n●HAMBURGER DI VITELLO CON PISELLI\n●SPIEDINO DI BOMBETTE ALLO SPECK E SCAMORZA CON PATATE\n●SPIEDINO DI GAMBERONI A SURINO AVVOLTI ALLO SPECK E GRATINATI AL FORNO\n●MILLEFOGLIE DI ZUCCHINE AL SALMONE CREMOSO\n●INSALATA DI POLLO TONNATA\n●RUSTICO SPECK E GALBANINO",
-      "published_at": "28/09/2026 10:06 circa",
-      "published_at_raw": "1h",
+      "text": "4 hours ago\nPRIMI PIATTI\n●CICORIE ALL'OLIO 5,0\n●CANNELLONI ALLA CARNE 5,5\n●MEZZI RIGATONI CON BROCCOLI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●TORTELLINI DI CARNE ALLA BOLOGNESE 5,5\n●FETTUCCINE CON GAMBERI AL LIMONE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SCALOPPINE DI VITELLO AI FUNGHI\n●PANZEROTTO DI POLLO CON PROSCIUTTO E GALBANINO CON PEPERONI\n●HAMBURGER DI VITELLO CON PISELLI\n●SPIEDINO DI BOMBETTE ALLO SPECK E SCAMORZA CON PATATE\n●SPIEDINO DI GAMBERONI A SURINO AVVOLTI ALLO SPECK E GRATINATI AL FORNO\n●MILLEFOGLIE DI ZUCCHINE AL SALMONE CREMOSO\n●INSALATA DI POLLO TONNATA\n●RUSTICO SPECK E GALBANINO",
+      "published_at": "28/09/2026 10:09 circa",
+      "published_at_raw": "4h",
       "error": null
     }
   ]
