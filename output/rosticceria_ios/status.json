@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-29T09:14:59",
+  "updated_at": "2026-09-29T09:24:38",
   "pages": [
     {
       "name": "Fantasia",
@@ -27,11 +27,11 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "29/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Aufer",
@@ -61,7 +61,7 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "about an hour ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●MEZZE MANICHE CON BROCCOLETTI, PANCETTA E JULIENNE DI SCAMORZA 4,5\n●PASTA E FAGIOLI ALLA NAPOLETANA 5,0\n●FUSILLI ALLA CRUDAIOLA CON PESTO DI MELANZANE, TONNO E CILIEGINO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●CONIGLIO AL FORNO CON VERDURINE E FUNGHI\n●ZAMPINA ARROSTO\n●MAXI HAMBURGER DI VITELLO CON JULIENNE DI PEPERONI E PISELLI\n●QUADRATO DI ZUCCHINA AL SALMONE\n●INSALATA DI POLPO CON VERDURINE\n●ZUCCHINE RIPIENE\n●SPIEDINO DI GAMBERONI DI SURINI AVVOLTI ALLO SPECK GRATINATI AL FORNO\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
-      "published_at": "29/09/2026 10:14 circa",
+      "published_at": "29/09/2026 10:24 circa",
       "published_at_raw": "1h",
       "error": null
     }
