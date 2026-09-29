@@ -1,13 +1,13 @@
 {
-  "updated_at": "2026-09-29T07:31:06",
+  "updated_at": "2026-09-29T08:01:11",
   "pages": [
     {
       "name": "Fantasia",
-      "image": null,
-      "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Fantasia."
+      "image": "Fantasia.jpg",
+      "text": "MENÙ DEL GIORNO 29/09/26",
+      "published_at": "29/09/2026 09:47 circa",
+      "published_at_raw": "12m",
+      "error": null
     },
     {
       "name": "Cibària",
@@ -35,11 +35,11 @@
     },
     {
       "name": "Aufer",
-      "image": null,
+      "image": "Aufer.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun menu locale importato oggi per Aufer."
+      "published_at": "29/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Santoro (Castellana)",
@@ -52,7 +52,7 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 29 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla carbonara - €6.50\n- Pennette con pesto di pomodori (base ricotta) e noci - €7.50\n- Risotto con funghi misti e zafferano - €7.50\n- Cavatelli al grano arso con cernia, cozze e pomodorini - €8.50\n- Zuppa di fagioli - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Trancio di pesce spada con pomodorino, capperi e olive - €8.50\n- Fusi di pollo al forno con patate - €7.50\n  2 pezzi",
+      "text": "Menu 29 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Risotto con zucca e speck croccante - €7.50\n- Gnocchi di patate con gorgonzola e piastcchi - €8.00\n- Cavatelli al grano arso con pesce spada, pomodorini, olive e capperi - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con verdurine - €8.50\n- Bombette di capocollo con olive e vino bianco - €7.50\n  5 pezzi",
       "published_at": "29/09/2026",
       "published_at_raw": "29 Settembre",
       "error": null
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "23 hours ago\nPRIMI PIATTI\n●CICORIE ALL'OLIO 5,0\n●CANNELLONI ALLA CARNE 5,5\n●MEZZI RIGATONI CON BROCCOLI, PANCETTA E SCAMORZA AFFUMICATA 5,0\n●TORTELLINI DI CARNE ALLA BOLOGNESE 5,5\n●FETTUCCINE CON GAMBERI AL LIMONE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SCALOPPINE DI VITELLO AI FUNGHI\n●PANZEROTTO DI POLLO CON PROSCIUTTO E GALBANINO CON PEPERONI\n●HAMBURGER DI VITELLO CON PISELLI\n●SPIEDINO DI BOMBETTE ALLO SPECK E SCAMORZA CON PATATE\n●SPIEDINO DI GAMBERONI A SURINO AVVOLTI ALLO SPECK E GRATINATI AL FORNO\n●MILLEFOGLIE DI ZUCCHINE AL SALMONE CREMOSO\n●INSALATA DI POLLO TONNATA\n●RUSTICO SPECK E GALBANINO",
-      "published_at": "28/09/2026 10:30 circa",
-      "published_at_raw": "23h",
+      "text": "14 minutes ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●MEZZE MANICHE CON BROCCOLETTI, PANCETTA E JULIENNE DI SCAMORZA 4,5\n●PASTA E FAGIOLI ALLA NAPOLETANA 5,0\n●FUSILLI ALLA CRUDAIOLA CON PESTO DI MELANZANE, TONNO E CILIEGINO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●CONIGLIO AL FORNO CON VERDURINE E FUNGHI\n●ZAMPINA ARROSTO\n●MAXI HAMBURGER DI VITELLO CON JULIENNE DI PEPERONI E PISELLI\n●QUADRATO DI ZUCCHINA AL SALMONE\n●INSALATA DI POLPO CON VERDURINE\n●ZUCCHINE RIPIENE\n●SPIEDINO DI GAMBERONI DI SURINI AVVOLTI ALLO SPECK GRATINATI AL FORNO\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
+      "published_at": "29/09/2026 09:46 circa",
+      "published_at_raw": "14m",
       "error": null
     }
   ]
