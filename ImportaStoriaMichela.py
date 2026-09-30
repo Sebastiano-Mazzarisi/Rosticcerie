@@ -108,9 +108,9 @@ RECENT_JS = """() => {
  const re = /(^|[^\\p{L}\\p{N}])(\\d{1,2}\\s*(m|min|h)|adesso|ora)(?![\\p{L}\\p{N}])/iu;
  return [...document.querySelectorAll('*')].some(el => {
    const t = (el.innerText || el.textContent || '').trim();
-   if (!t || t.length > 24 || !re.test(t)) return false;
+   if (!t || t.length > 80 || !re.test(t)) return false;
    const r = el.getBoundingClientRect();
-   return r.width > 0 && r.height > 0 && r.height < 40 && r.top >= 0 && r.top < 140
+   return r.width > 0 && r.height > 0 && r.height < 60 && r.top >= 0 && r.top < 140
      && r.left > innerWidth * .35 && r.left < innerWidth;
  });
 }"""
