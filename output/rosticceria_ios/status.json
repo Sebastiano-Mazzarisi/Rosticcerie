@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-29T15:55:37",
+  "updated_at": "2026-09-30T06:46:30",
   "pages": [
     {
       "name": "Fantasia",
@@ -20,49 +20,49 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "2 hours ago\n2h\n·",
-      "published_at": "29/09/2026 07:28 circa",
-      "published_at_raw": "2h",
+      "text": "about an hour ago\n1h\n·",
+      "published_at": "30/09/2026 07:44 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
-      "image": "Le_delizie_di_Michela.jpg",
+      "image": null,
       "text": "",
-      "published_at": "29/09/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Le delizie di Michela."
     },
     {
       "name": "Aufer",
-      "image": "Aufer.jpg",
+      "image": null,
       "text": "",
-      "published_at": "29/09/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun menu locale importato oggi per Aufer."
     },
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 28 Settembre",
-      "published_at": "28/09/2026 09:36 circa",
-      "published_at_raw": "28/09/2026",
+      "text": "menù del giorno 30 Settembre",
+      "published_at": "30/09/2026 08:42 circa",
+      "published_at_raw": "30/09/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 29 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Risotto con zucca e speck croccante - €7.50\n- Gnocchi di patate con gorgonzola e piastcchi - €8.00\n- Cavatelli al grano arso con pesce spada, pomodorini, olive e capperi - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con verdurine - €8.50\n- Bombette di capocollo con olive e vino bianco - €7.50\n  5 pezzi",
-      "published_at": "29/09/2026",
-      "published_at_raw": "29 Settembre",
+      "text": "Menu 30 Settembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Risotto con zucca e speck croccante - €7.50\n- Gnocchi di patate con gorgonzola e piastcchi - €8.00\n- Cavatelli al grano arso con pesce spada, pomodorini, olive e capperi - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con verdurine - €8.50\n- Bombette di capocollo con olive e vino bianco - €7.50\n  5 pezzi",
+      "published_at": "30/09/2026",
+      "published_at_raw": "30 Settembre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "8 hours ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●MEZZE MANICHE CON BROCCOLETTI, PANCETTA E JULIENNE DI SCAMORZA 4,5\n●PASTA E FAGIOLI ALLA NAPOLETANA 5,0\n●FUSILLI ALLA CRUDAIOLA CON PESTO DI MELANZANE, TONNO E CILIEGINO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●CONIGLIO AL FORNO CON VERDURINE E FUNGHI\n●ZAMPINA ARROSTO\n●MAXI HAMBURGER DI VITELLO CON JULIENNE DI PEPERONI E PISELLI\n●QUADRATO DI ZUCCHINA AL SALMONE\n●INSALATA DI POLPO CON VERDURINE\n●ZUCCHINE RIPIENE\n●SPIEDINO DI GAMBERONI DI SURINI AVVOLTI ALLO SPECK GRATINATI AL FORNO\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
-      "published_at": "29/09/2026 09:55 circa",
-      "published_at_raw": "8h",
+      "text": "23 hours ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●MEZZE MANICHE CON BROCCOLETTI, PANCETTA E JULIENNE DI SCAMORZA 4,5\n●PASTA E FAGIOLI ALLA NAPOLETANA 5,0\n●FUSILLI ALLA CRUDAIOLA CON PESTO DI MELANZANE, TONNO E CILIEGINO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●CONIGLIO AL FORNO CON VERDURINE E FUNGHI\n●ZAMPINA ARROSTO\n●MAXI HAMBURGER DI VITELLO CON JULIENNE DI PEPERONI E PISELLI\n●QUADRATO DI ZUCCHINA AL SALMONE\n●INSALATA DI POLPO CON VERDURINE\n●ZUCCHINE RIPIENE\n●SPIEDINO DI GAMBERONI DI SURINI AVVOLTI ALLO SPECK GRATINATI AL FORNO\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
+      "published_at": "29/09/2026 09:46 circa",
+      "published_at_raw": "23h",
       "error": null
     }
   ]
