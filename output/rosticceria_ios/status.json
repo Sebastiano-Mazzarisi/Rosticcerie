@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-30T09:07:05",
+  "updated_at": "2026-09-30T09:21:41",
   "pages": [
     {
       "name": "Fantasia",
@@ -27,19 +27,19 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "30/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Aufer",
-      "image": null,
+      "image": "Aufer.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun menu locale importato oggi per Aufer."
+      "published_at": "30/09/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Santoro (Castellana)",
