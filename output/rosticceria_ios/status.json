@@ -1,20 +1,20 @@
 {
-  "updated_at": "2026-09-30T08:05:42",
+  "updated_at": "2026-09-30T08:13:02",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 30/09/26",
-      "published_at": "30/09/2026 09:43 circa",
-      "published_at_raw": "19m",
+      "published_at": "30/09/2026 09:42 circa",
+      "published_at_raw": "27m",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "29 Settembre 2026.\nMenù del giorno.",
-      "published_at": "29/09/2026 11:53 circa",
-      "published_at_raw": "29/09/2026",
+      "text": "30 Settembre 2026.\nMenù del giorno.",
+      "published_at": "30/09/2026 10:06 circa",
+      "published_at_raw": "30/09/2026",
       "error": null
     },
     {
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 30 Settembre",
-      "published_at": "30/09/2026 09:04 circa",
+      "published_at": "30/09/2026 09:12 circa",
       "published_at_raw": "30/09/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "27 minutes ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE 5,0\n●TIMBALLO DI SPINACI CON PROSCIUTTO E MOZZARELLA 5,0\n●LASAGNETTA PISTACHIELLO CON MORTADELLA, MOZZARELLA E PESTO DI PISTACCHIO 5,5\n●FUSILLI ALLA CRUDAIOLA CON PESTO DI MELANZANE, TONNO E CILIEGINO 5,0\n●ORECCHIETTE CON CIME DI RAPE 5,5\n●FARFALLE ALLA CRUDAIOLA CON GAMBERI, SALMONE E PESTO DI BASILICO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●TRAMEZZINO DI CARNE CON PROSCIUTTO COTTO, GALBANINO E CARCIOFI\n●FEGATO ALLA VENEZIANA\n●COSCIA E SOVRAVOSCIA DI POLLO NOSTRANO AL FORNO CON CAROTE, SCALOGNO OLIVE\n●INVOLTINO DI ZUCCHINE GRIGLIATE AL SALMONE GRATINATO AL FORNO\n●INSALATA DI POLPO\n●POLPETTE AZES DO SUG\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
-      "published_at": "30/09/2026 09:38 circa",
-      "published_at_raw": "27m",
+      "text": "35 minutes ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE 5,0\n●TIMBALLO DI SPINACI CON PROSCIUTTO E MOZZARELLA 5,0\n●LASAGNETTA PISTACHIELLO CON MORTADELLA, MOZZARELLA E PESTO DI PISTACCHIO 5,5\n●FUSILLI ALLA CRUDAIOLA CON PESTO DI MELANZANE, TONNO E CILIEGINO 5,0\n●ORECCHIETTE CON CIME DI RAPE 5,5\n●FARFALLE ALLA CRUDAIOLA CON GAMBERI, SALMONE E PESTO DI BASILICO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●TRAMEZZINO DI CARNE CON PROSCIUTTO COTTO, GALBANINO E CARCIOFI\n●FEGATO ALLA VENEZIANA\n●COSCIA E SOVRAVOSCIA DI POLLO NOSTRANO AL FORNO CON CAROTE, SCALOGNO OLIVE\n●INVOLTINO DI ZUCCHINE GRIGLIATE AL SALMONE GRATINATO AL FORNO\n●INSALATA DI POLPO\n●POLPETTE AZES DO SUG\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
+      "published_at": "30/09/2026 09:37 circa",
+      "published_at_raw": "35m",
       "error": null
     }
   ]
