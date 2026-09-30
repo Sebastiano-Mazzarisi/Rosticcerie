@@ -4009,7 +4009,10 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     const urlParams = new URLSearchParams(window.location.search);
     const isAdmin = urlParams.get('v') === '57';
-    if (isAdmin) document.body.classList.add('is-admin');
+    // Lo script e' nell'head: body esiste solo dopo il parsing del DOM.
+    document.addEventListener('DOMContentLoaded', () => {{
+        document.body.classList.toggle('is-admin', isAdmin);
+    }});
     // Uso un'API globale gratuita per il contatore, un contatore separato per ogni rosticceria
     const ABACUS_BASE = 'https://abacus.jasoncameron.dev';
     const COUNTER_NAMESPACE = 'rosticcerie-fantasia';
@@ -4425,7 +4428,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     // amministratore (?v=57), con lo stesso meccanismo (Abacus + offset di
     // azzeramento) dei contatori dei menu.
     const EXTRA_COUNTERS = [
-        {{ name: 'Audio', elId: 'audio-play-counter', display: 'inline-block' }},
+        // sheet:true → il valore giornaliero arriva da loadTodayCardStats (foglio Google),
+        // NON da Abacus, così si azzera automaticamente a mezzanotte.
+        {{ name: 'Audio', elId: 'audio-play-counter', display: 'inline-block', sheet: true }},
     ];
     let extraCounterState = {{}};
     function extraVisibleCounter(name) {{
@@ -4442,11 +4447,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             el.innerText = val === null ? '0' : formatCounter(val);
             el.style.display = display;
         }});
+        updateAdminTitle();
     }}
     async function loadExtraCounters() {{
         if (!isAdmin) return;
         updateExtraCounters();
-        for (const {{name}} of EXTRA_COUNTERS) {{
+        for (const {{name, sheet}} of EXTRA_COUNTERS) {{
+            // I contatori con sheet:true ricevono il valore giornaliero da
+            // loadTodayCardStats: non sovrascrivere con il totale Abacus.
+            if (sheet) continue;
             try {{
                 const totalData = await fetchJsonWithRetry(counterGetUrlFor(name), 4, true);
                 await sleep(150);
@@ -4689,9 +4698,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         if (document.getElementById('detail-view').style.display === 'block') return;
         let val = 0;
         for (let i = 0; i < PANELS.length; i++) {{
-            if (PANELS[i].counter_enabled === false) continue;
+            // Info ha un badge giornaliero anche se non usa il contatore menu.
+            if (PANELS[i].counter_enabled === false && PANELS[i].name !== 'Suggerimenti') continue;
             const today = todayCountByPanel[i];
-            if (typeof today === 'number') val += today;
+            if (Number.isFinite(today)) val += today;
+        }}
+        // Somma gli stessi valori mostrati dai badge extra (Audio).
+        for (const {{name}} of EXTRA_COUNTERS) {{
+            const extra = extraVisibleCounter(name);
+            if (Number.isFinite(extra)) val += extra;
         }}
         document.getElementById('main-title').innerText = 'Rosticcerie';
         document.getElementById('main-signature').innerText = 'by Mazzarisi' + (isAdmin ? ' ' + formatCounter(val) : '');
@@ -4732,14 +4747,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         if (!isAdmin) return;
         try {{
             const url = SHEET_LOG_URL + '?action=todayStats&t=' + Date.now();
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-            let resp;
-            try {{
-                resp = await fetch(url, {{cache: 'no-store', signal: controller.signal}});
-            }} finally {{
-                clearTimeout(timeoutId);
-            }}
+            const resp = await fetch(url, {{cache: 'no-store'}});
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();  // {{ "Fantasia": 3, "Bollenti piatti": 1, ... }}
             PANELS.forEach((p, i) => {{
