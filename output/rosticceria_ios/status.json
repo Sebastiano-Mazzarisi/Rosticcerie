@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-01T08:13:53",
+  "updated_at": "2026-10-01T08:46:17",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,9 +12,9 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "30 Settembre 2026.\nMenù del giorno.",
-      "published_at": "30/09/2026 10:40 circa",
-      "published_at_raw": "30/09/2026",
+      "text": "1 Ottobre 2026.\nMenù del giorno.",
+      "published_at": "01/10/2026 10:37 circa",
+      "published_at_raw": "01/10/2026",
       "error": null
     },
     {
@@ -27,11 +27,11 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "01/10/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Aufer",
@@ -44,9 +44,9 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 30 Settembre",
-      "published_at": "30/09/2026 09:41 circa",
-      "published_at_raw": "30/09/2026",
+      "text": "menù del giorno 1 Ottobre",
+      "published_at": "01/10/2026 10:21 circa",
+      "published_at_raw": "01/10/2026",
       "error": null
     },
     {
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "17 minutes ago\nPRIMI PIATTI\n●TROFIETTE PORCINI, PANCETTA E CREMA DI ZAFFERANO 5,5\n●CASERECCIA CON FAGIOLI CANNELLINI, PATATE E SPECK CROCCANTE 5,0\n●SPAGHETTI AGLI SCAMPI 6,0\n●FARFALLE ALLA CRUDAIOLA CON GAMBERI, SALMONE E PESTO DI BASILICO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●QUADRATO DI CARNE MACINATO CON CARCIOFI, PROSCIUTTO E GALBANINO\n●TRIPPA IN UMIDO\n●SPIEDINO DI ROSE DI CARNE CON SPECK RUCOLA E GALBANINO\n●MILLEFOGLIE DI VERDURE GRATINATO AL FORNO\n●FILETTO DI ORATA IN CROSTA DI ZUCCHINA\n●OLIVE FRITTE\n●RUSTICO PROSCIUTTO COTTO E SCAMORZA AFFUMICATA",
-      "published_at": "01/10/2026 09:56 circa",
-      "published_at_raw": "17m",
+      "text": "49 minutes ago\nPRIMI PIATTI\n●TROFIETTE PORCINI, PANCETTA E CREMA DI ZAFFERANO 5,5\n●CASERECCIA CON FAGIOLI CANNELLINI, PATATE E SPECK CROCCANTE 5,0\n●SPAGHETTI AGLI SCAMPI 6,0\n●FARFALLE ALLA CRUDAIOLA CON GAMBERI, SALMONE E PESTO DI BASILICO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●QUADRATO DI CARNE MACINATO CON CARCIOFI, PROSCIUTTO E GALBANINO\n●TRIPPA IN UMIDO\n●SPIEDINO DI ROSE DI CARNE CON SPECK RUCOLA E GALBANINO\n●MILLEFOGLIE DI VERDURE GRATINATO AL FORNO\n●FILETTO DI ORATA IN CROSTA DI ZUCCHINA\n●OLIVE FRITTE\n●RUSTICO PROSCIUTTO COTTO E SCAMORZA AFFUMICATA",
+      "published_at": "01/10/2026 09:57 circa",
+      "published_at_raw": "49m",
       "error": null
     }
   ]
