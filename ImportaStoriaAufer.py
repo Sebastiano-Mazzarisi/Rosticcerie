@@ -163,6 +163,27 @@ def publish_via_git(relative_path, day):
     return True
 
 
+def _click_visualizza(page):
+    """Clicca 'Visualizza storia' se Instagram mostra il dialogo di conferma
+    ("Vuoi visualizzare come <utente>?"). Non fa nulla se il dialogo non c'e'."""
+    from playwright.sync_api import TimeoutError as _TE
+    selectors = [
+        'button:has-text("Visualizza storia")',
+        'button:has-text("View story")',
+        '[role="button"]:has-text("Visualizza storia")',
+        '[role="button"]:has-text("View story")',
+    ]
+    for sel in selectors:
+        try:
+            btn = page.locator(sel).first
+            btn.wait_for(state='visible', timeout=3000)
+            btn.click()
+            page.wait_for_timeout(1500)
+            return
+        except Exception:
+            pass
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('url', nargs='?', default=PROFILE_URL, type=instagram_story_url)
@@ -274,6 +295,10 @@ def main():
                     # Verifica di essere effettivamente su una pagina storie
                     # (se non c'e' storia Instagram reindirizza al profilo)
                     if '/stories/' in urlparse(page.url).path:
+                        # Instagram mostra un dialogo di conferma prima di
+                        # aprire la storia ("Vuoi visualizzare come <utente>?")
+                        # — clicca subito "Visualizza storia" se presente.
+                        _click_visualizza(page)
                         return True
                 except Exception:
                     pass
@@ -313,16 +338,6 @@ def main():
                         print('Nessuna storia attiva al momento (Aufer probabilmente non ha ancora '
                               'pubblicato il menu di oggi). Nuovo controllo fra 10 minuti.')
                         return None
-
-                # Instagram a volte chiede conferma prima di aprire la storia
-                # ("Vuoi visualizzare come <utente>?") — clicca il bottone.
-                try:
-                    btn = page.get_by_role('button', name=re.compile(r'visualizza storia|view story', re.I))
-                    btn.first.wait_for(state='visible', timeout=5000)
-                    btn.first.click()
-                    page.wait_for_timeout(1500)
-                except PlaywrightTimeoutError:
-                    pass  # Dialogo non presente: procede normalmente
 
                 # Attende che l'immagine principale della storia si carichi
                 deadline = time.monotonic() + 25
