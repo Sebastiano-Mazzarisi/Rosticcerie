@@ -3404,6 +3404,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     display_names = {
         "Aufer": "Aufer Gastronomia",
     }
+    # Indirizzo fisico di ogni rosticceria, mostrato nel popup del pin mappa.
+    # Il valore viene usato anche per costruire il link a Google Maps.
+    map_addresses = {
+        "Fantasia":            "Via Nicola Losavio 10, Putignano",
+        "Bollenti piatti":     "Via Noci 48, Putignano",
+        "Pane & Co":           "Viale Federico II 49, Putignano",
+        "Cibària":             "Estrad. a Levante 11, Putignano",
+        "Le delizie di Michela": "Corso Umberto I 87, Putignano",
+        "Impastamò":           "Via Conversano 34, Putignano",
+        "Santoro (Castellana)": "Via Mazzini 28, Castellana Grotte",
+        "Aufer":               "Estrad. a Mezzogiorno 83, Putignano",
+    }
     today = rome_now().date()
     panels_data = []
 
@@ -3506,11 +3518,20 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             """)
             continue
         title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
+        address = map_addresses.get(p["name"], "")
+        maps_url = f"https://www.google.com/maps/search/?api=1&query={html.escape(address)}" if address else ""
+        pin_html = (
+            f'<span class="map-pin" title="{html.escape(address)}"'
+            f' onclick="event.stopPropagation(); showMapPopup({json.dumps(address)},{json.dumps(maps_url)})">'
+            f'📍</span>'
+            if address else ""
+        )
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="handleCardClick({i})">
             <span class="card-name" style="color:{name_color}">{title}</span>
             {reference_html}
             {counter_html}
+            {pin_html}
         </button>
         """)
 
@@ -3898,6 +3919,86 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     .db-badge:active {{ background: #1565c0; }}
     body.is-admin .db-badge {{ display: inline-block; }}
+
+    /* Pin mappa in basso a destra di ogni card */
+    .map-pin {{
+      position: absolute;
+      bottom: 6px;
+      right: 8px;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      opacity: 0.55;
+      transition: opacity .15s, transform .15s;
+      z-index: 9;
+      user-select: none;
+      -webkit-user-select: none;
+    }}
+    .map-pin:active {{ opacity: 1; transform: scale(1.25); }}
+    /* In modalità admin sposta il pin a sinistra del badge DB */
+    body.is-admin .map-pin {{ right: 44px; }}
+
+    /* Popup indirizzo mappa */
+    #map-popup {{
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      align-items: flex-end;
+      justify-content: center;
+    }}
+    #map-popup.open {{ display: flex; }}
+    #map-popup-backdrop {{
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+    }}
+    #map-popup-box {{
+      position: relative;
+      z-index: 1;
+      width: min(420px, 94vw);
+      margin-bottom: 32px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 22px 20px 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+      text-align: center;
+    }}
+    #map-popup-addr {{
+      font-size: 16px;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 14px;
+      line-height: 1.35;
+    }}
+    #map-popup-open {{
+      display: block;
+      width: 100%;
+      padding: 12px 0;
+      background: #4285f4;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      letter-spacing: 0.02em;
+    }}
+    #map-popup-open:active {{ background: #1a73e8; }}
+    #map-popup-close {{
+      display: block;
+      width: 100%;
+      padding: 10px 0;
+      background: #f0f0f0;
+      color: #444;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }}
+    #map-popup-close:active {{ background: #d8d8d8; }}
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {{
@@ -5406,6 +5507,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     function showPrev() {{ renderDetail(currentIndex - 1); recordCurrentView(); }}
     function showNext() {{ renderDetail(currentIndex + 1); recordCurrentView(); }}
 
+    function showMapPopup(address, url) {{
+      document.getElementById('map-popup-addr').textContent = address;
+      const btn = document.getElementById('map-popup-open');
+      btn.onclick = function() {{ window.open(url, '_blank'); }};
+      btn.style.display = url ? 'block' : 'none';
+      document.getElementById('map-popup').classList.add('open');
+    }}
+    function closeMapPopup() {{
+      document.getElementById('map-popup').classList.remove('open');
+    }}
+
     function closeDetail() {{
         document.getElementById('identity-block').classList.add('has-logo', 'home-identity');
         const logo = document.getElementById('identity-logo');
@@ -5677,6 +5789,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 <dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
     <p id="waiting-update-text">In attesa di<br>aggiornamento</p>
   </dialog>
+
+  <div id="map-popup" role="dialog" aria-modal="true" aria-label="Indirizzo">
+    <div id="map-popup-backdrop" onclick="closeMapPopup()"></div>
+    <div id="map-popup-box">
+      <div id="map-popup-addr"></div>
+      <button id="map-popup-open" type="button">Apri in Google Maps</button>
+      <button id="map-popup-close" type="button" onclick="closeMapPopup()">Esci</button>
+    </div>
+  </div>
 </body>
 </html>
 """
