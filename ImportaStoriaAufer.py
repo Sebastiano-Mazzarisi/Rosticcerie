@@ -38,6 +38,9 @@ import time
 BASE = Path(__file__).resolve().parent  # cartella Progetto
 
 PROFILE_URL = "https://www.instagram.com/aufergastronomia/"
+# URL diretto alle storie: Instagram lo accetta senza dover cliccare l'avatar.
+# Lo script prova prima questo, poi ricade sul profilo se non funziona.
+STORIES_URL = "https://www.instagram.com/stories/aufergastronomia/"
 
 # Slug usato per il file locale (deve corrispondere a local_slug in config.py)
 SLUG = "aufer"
@@ -78,9 +81,9 @@ RECENT_JS = """() => {
  const re = /(^|[^\\p{L}\\p{N}])(\\d{1,2}\\s*(m|min|h|ora|ore)|adesso|ora)(?![\\p{L}\\p{N}])/iu;
  return [...document.querySelectorAll('*')].some(el => {
    const t = (el.innerText || el.textContent || '').trim();
-   if (!t || t.length > 80 || !re.test(t)) return false;
+   if (!t || t.length > 120 || !re.test(t)) return false;
    const r = el.getBoundingClientRect();
-   return r.width > 0 && r.height > 0 && r.height < 60 && r.top >= 0 && r.top < 160
+   return r.width > 0 && r.height > 0 && r.height < 80 && r.top >= 0 && r.top < 250
      && r.left >= 0 && r.left < innerWidth;
  });
 }"""
@@ -258,41 +261,33 @@ def main():
                 page.goto(args.url, wait_until='domcontentloaded')
 
             def discover_current_story():
-                """Riparte dal profilo di Aufer su Instagram e clicca sulla
-                storia attualmente attiva (il cerchio colorato intorno all'avatar).
-                Ritorna True se si e' arrivati su un URL /stories/, False se
-                al momento non c'e' nessuna storia attiva."""
-                if '/stories/' not in urlparse(page.url).path:
-                    page.goto(PROFILE_URL, wait_until='domcontentloaded')
+                """Naviga direttamente all'URL delle storie di Aufer.
+                Instagram accetta questo URL diretto senza dover cliccare
+                sull'avatar del profilo. Ritorna True se si e' arrivati su
+                un URL /stories/, False se al momento non c'e' storia attiva."""
                 if needs_login():
                     print('Instagram richiede di completare l\'accesso.')
                     complete_login()
-
-                # Su Instagram il link alla storia e' il cerchio colorato
-                # intorno all'avatar del profilo, spesso senza label esplicita.
-                # Si cerca un link a /stories/aufergastronomia/ oppure
-                # l'elemento con aria-label che contiene "storia" o "story".
-                story_link = page.locator('a[href*="/stories/aufergastronomia/"]').first
-                story_aria = page.locator('[role="button"][aria-label*="storia"], [role="button"][aria-label*="story"]').first
-                story = story_link.or_(story_aria)
+                # Prova prima l'URL diretto delle storie
                 try:
-                    story.first.wait_for(state='visible', timeout=30000)
-                    story.first.click()
-                    page.wait_for_url(re.compile(r'https://(?:www\.)?instagram\.com/stories/'), timeout=15000)
+                    page.goto(STORIES_URL, wait_until='domcontentloaded')
+                    # Verifica di essere effettivamente su una pagina storie
+                    # (se non c'e' storia Instagram reindirizza al profilo)
+                    if '/stories/' in urlparse(page.url).path:
+                        return True
+                except Exception:
+                    pass
+                # Ricaduta: naviga al profilo e cerca il link alla storia
+                page.goto(PROFILE_URL, wait_until='domcontentloaded')
+                if needs_login():
+                    raise RuntimeError('Instagram mostra ancora la schermata di accesso. Ctrl+C e --login.')
+                story_link = page.locator('a[href*="/stories/aufergastronomia/"]').first
+                try:
+                    story_link.wait_for(state='visible', timeout=15000)
+                    story_link.click()
+                    page.wait_for_url(re.compile(r'https://(?:www\.)?instagram\.com/stories/'), timeout=10000)
                     return True
                 except PlaywrightTimeoutError:
-                    # Secondo tentativo: clicca direttamente sull'avatar del profilo
-                    # (il primo elemento cliccabile con l'immagine del profilo)
-                    try:
-                        avatar = page.locator('header img, section img').first
-                        avatar.wait_for(state='visible', timeout=10000)
-                        avatar.click()
-                        page.wait_for_url(re.compile(r'https://(?:www\.)?instagram\.com/stories/'), timeout=10000)
-                        return True
-                    except PlaywrightTimeoutError:
-                        pass
-                    if needs_login():
-                        raise RuntimeError('Instagram mostra ancora la schermata di accesso. Ctrl+C e --login.')
                     print('Nessuna storia attiva al momento su Aufer Gastronomia. Nuovo controllo fra 10 minuti.')
                     return False
 
@@ -319,6 +314,16 @@ def main():
                               'pubblicato il menu di oggi). Nuovo controllo fra 10 minuti.')
                         return None
 
+                # Instagram a volte chiede conferma prima di aprire la storia
+                # ("Vuoi visualizzare come <utente>?") — clicca il bottone.
+                try:
+                    btn = page.get_by_role('button', name=re.compile(r'visualizza storia|view story', re.I))
+                    btn.first.wait_for(state='visible', timeout=5000)
+                    btn.first.click()
+                    page.wait_for_timeout(1500)
+                except PlaywrightTimeoutError:
+                    pass  # Dialogo non presente: procede normalmente
+
                 # Attende che l'immagine principale della storia si carichi
                 deadline = time.monotonic() + 25
                 candidate = None
@@ -329,10 +334,19 @@ def main():
                     page.wait_for_timeout(200)
 
                 if not candidate:
+                    # Instagram a volte rende le storie come <video> o canvas
+                    # invece di <img>: in quel caso IMAGE_JS non trova nulla.
+                    # Fallback: screenshot dell'area centrale della storia.
+                    print('Nessun <img> trovato: uso screenshot della storia come fallback.')
                     diagnostic = BASE / 'local_menus' / 'aufer_diagnostica.png'
                     diagnostic.parent.mkdir(parents=True, exist_ok=True)
-                    page.screenshot(path=str(diagnostic))
-                    raise RuntimeError('Nessuna immagine caricata nel visualizzatore. Schermata diagnostica: ' + str(diagnostic))
+                    # Ritaglia l'area del visualizzatore (zona centrale dello schermo)
+                    vw = page.viewport_size['width'] if page.viewport_size else 1280
+                    vh = page.viewport_size['height'] if page.viewport_size else 900
+                    clip = {'x': int(vw * 0.35), 'y': 155, 'width': int(vw * 0.45), 'height': vh - 160}
+                    page.screenshot(path=str(diagnostic), clip=clip)
+                    # Usa lo screenshot come immagine del menu
+                    return diagnostic.read_bytes() if diagnostic.exists() and diagnostic.stat().st_size > 10000 else None
 
                 if not story_is_recent():
                     diagnostic = BASE / 'local_menus' / 'aufer_diagnostica.png'
