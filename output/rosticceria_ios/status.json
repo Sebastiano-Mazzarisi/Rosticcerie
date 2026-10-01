@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-10-01T09:32:17",
+  "updated_at": "2026-10-01T16:44:55",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 01/10/26",
-      "published_at": "01/10/2026 10:31 circa",
-      "published_at_raw": "1h",
+      "published_at": "01/10/2026 10:43 circa",
+      "published_at_raw": "8h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "1 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "01/10/2026 10:37 circa",
+      "published_at": "01/10/2026 10:43 circa",
       "published_at_raw": "01/10/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 1 Ottobre",
-      "published_at": "01/10/2026 10:21 circa",
+      "published_at": "01/10/2026 10:44 circa",
       "published_at_raw": "01/10/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "about an hour ago\nPRIMI PIATTI\n●TROFIETTE PORCINI, PANCETTA E CREMA DI ZAFFERANO 5,5\n●CASERECCIA CON FAGIOLI CANNELLINI, PATATE E SPECK CROCCANTE 5,0\n●SPAGHETTI AGLI SCAMPI 6,0\n●FARFALLE ALLA CRUDAIOLA CON GAMBERI, SALMONE E PESTO DI BASILICO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●QUADRATO DI CARNE MACINATO CON CARCIOFI, PROSCIUTTO E GALBANINO\n●TRIPPA IN UMIDO\n●SPIEDINO DI ROSE DI CARNE CON SPECK RUCOLA E GALBANINO\n●MILLEFOGLIE DI VERDURE GRATINATO AL FORNO\n●FILETTO DI ORATA IN CROSTA DI ZUCCHINA\n●OLIVE FRITTE\n●RUSTICO PROSCIUTTO COTTO E SCAMORZA AFFUMICATA",
-      "published_at": "01/10/2026 10:31 circa",
-      "published_at_raw": "1h",
+      "text": "8 hours ago\nPRIMI PIATTI\n●TROFIETTE PORCINI, PANCETTA E CREMA DI ZAFFERANO 5,5\n●CASERECCIA CON FAGIOLI CANNELLINI, PATATE E SPECK CROCCANTE 5,0\n●SPAGHETTI AGLI SCAMPI 6,0\n●FARFALLE ALLA CRUDAIOLA CON GAMBERI, SALMONE E PESTO DI BASILICO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●QUADRATO DI CARNE MACINATO CON CARCIOFI, PROSCIUTTO E GALBANINO\n●TRIPPA IN UMIDO\n●SPIEDINO DI ROSE DI CARNE CON SPECK RUCOLA E GALBANINO\n●MILLEFOGLIE DI VERDURE GRATINATO AL FORNO\n●FILETTO DI ORATA IN CROSTA DI ZUCCHINA\n●OLIVE FRITTE\n●RUSTICO PROSCIUTTO COTTO E SCAMORZA AFFUMICATA",
+      "published_at": "01/10/2026 10:44 circa",
+      "published_at_raw": "8h",
       "error": null
     }
   ]
