@@ -3404,6 +3404,16 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     display_names = {
         "Aufer": "Aufer Gastronomia",
     }
+    map_addresses = {
+        "Fantasia":              "Via Nicola Losavio 10, Putignano",
+        "Bollenti piatti":       "Via Noci 48, Putignano",
+        "Pane & Co":             "Viale Federico II 49, Putignano",
+        "Cibària":               "Estrad. a Levante 11, Putignano",
+        "Le delizie di Michela": "Corso Umberto I 87, Putignano",
+        "Impastamò":             "Via Conversano 34, Putignano",
+        "Santoro (Castellana)":  "Via Mazzini 28, Castellana Grotte",
+        "Aufer":                 "Estrad. a Mezzogiorno 83, Putignano",
+    }
     today = rome_now().date()
     panels_data = []
 
@@ -3506,11 +3516,23 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             """)
             continue
         title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
+        address = map_addresses.get(p["name"], "")
+        maps_url = (
+            "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote(address)
+            if address else ""
+        )
+        pin_html = (
+            f'<span class="map-pin" title="{html.escape(address)}"'
+            f' onclick="event.stopPropagation();showMapPopup({html.escape(json.dumps(address))},{html.escape(json.dumps(maps_url))})">'
+            f'📍</span>'
+            if address else ""
+        )
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="handleCardClick({i})">
             <span class="card-name" style="color:{name_color}">{title}</span>
             {reference_html}
             {counter_html}
+            {pin_html}
         </button>
         """)
 
