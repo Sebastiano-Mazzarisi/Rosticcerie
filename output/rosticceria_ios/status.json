@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-02T19:15:39",
+  "updated_at": "2026-10-02T17:15:48",
   "pages": [
     {
       "name": "Fantasia",
@@ -13,7 +13,7 @@
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "2 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "02/10/2026 09:12 circa",
+      "published_at": "02/10/2026 09:13 circa",
       "published_at_raw": "02/10/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 2 Ottobre",
-      "published_at": "02/10/2026 09:14 circa",
+      "published_at": "02/10/2026 09:15 circa",
       "published_at_raw": "02/10/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "9 ore fa\nPRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●LASAGNA AL FORNO 5,0\n●PENNETTE CON SUGO DI POMODORO, PESTO DI BASILICO, STRACCIATELLA E CARNE DI VITELLO 5,5\n●LINGUINE ALLE VONGOLE CON CREMA DI PATATE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO ALLA PAPRIKA E ERBE DI PROVENZIA\n●POLPETTONE DI VITELLO FARCITO\n●POLPETTE DI POLLO CON CAROTE E SPINACI IN SALSA DI PORCINI\n●PARMIGIANA\n●CUORE DI MERLUZZO IN CREMA DI CECI AL CURRY E POMODORINO\n●INSALATA DI POLLO TONNATA\n●PIZZA DI PATATE CON SPECK E MOZZARELLA\n●OLIVE NERE FRITTE\nTutte le reazioni:",
-      "published_at": "02/10/2026 10:14 circa",
-      "published_at_raw": "9 h",
+      "text": "9 hours ago\nPRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●LASAGNA AL FORNO 5,0\n●PENNETTE CON SUGO DI POMODORO, PESTO DI BASILICO, STRACCIATELLA E CARNE DI VITELLO 5,5\n●LINGUINE ALLE VONGOLE CON CREMA DI PATATE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO ALLA PAPRIKA E ERBE DI PROVENZIA\n●POLPETTONE DI VITELLO FARCITO\n●POLPETTE DI POLLO CON CAROTE E SPINACI IN SALSA DI PORCINI\n●PARMIGIANA\n●CUORE DI MERLUZZO IN CREMA DI CECI AL CURRY E POMODORINO\n●INSALATA DI POLLO TONNATA\n●PIZZA DI PATATE CON SPECK E MOZZARELLA\n●OLIVE NERE FRITTE",
+      "published_at": "02/10/2026 10:15 circa",
+      "published_at_raw": "9h",
       "error": null
     }
   ]
