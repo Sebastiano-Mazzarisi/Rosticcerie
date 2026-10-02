@@ -1,0 +1,6086 @@
+# Nome.py: Rosticceria.py
+# Data e ora ultima modifica: 03/09/2026 23:19
+# Descrizione: Estrae e pubblica i menu delle rosticcerie Fantasia, Cibària, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela, Santoro e Aufer da Facebook, web e menu importati a mano.
+# File di input: cookies.txt
+# File di output: status.json, Rosticcerie.html, immagini jpg
+# Parametri: --once, --show, --no-git
+
+import io
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+import argparse
+import datetime
+import html
+import unicodedata
+import urllib.parse
+from zoneinfo import ZoneInfo
+from typing import Dict, List, Optional, Tuple
+
+import requests
+from PIL import Image, ImageDraw, ImageFont
+
+try:
+    from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+    from playwright.sync_api import sync_playwright
+    from playwright_stealth import Stealth
+except ImportError:
+    print("Manca Playwright. Installa con: pip install playwright")
+    print("Poi esegui: playwright install chromium")
+    sys.exit(1)
+
+
+FACEBOOK_PAGES = [
+    {
+        "name": "Fantasia",
+        "url": "https://www.facebook.com/RosticceriaFantasia",
+        "output_image": "Rosticceria_Fantasia.jpg",
+    },
+    {
+        "name": "Cibària",
+        "url": "https://www.facebook.com/cibaria.asporto",
+        "output_image": "Rosticceria_Cibaria.jpg",
+    },
+    {
+        "name": "Impastamò",
+        "url": "https://www.facebook.com/profile.php?id=61560452176728",
+        "output_image": "Rosticceria_Impastamo.jpg",
+    },
+    {
+        "name": "Le delizie di Michela",
+        "url": "https://www.facebook.com/profile.php?id=100045208848338",
+        "output_image": "Rosticceria_LeDelizieDiMichela.jpg",
+    },
+    {
+        "name": "Santoro (Castellana)",
+        "url": "https://www.facebook.com/santorogastronomia",
+        "output_image": "Rosticceria_Santoro.jpg",
+    },
+]
+TEXT_FACEBOOK_PAGES = [
+    {
+        "name": "Bollenti piatti",
+        "display_name": "Bollenti piatti",
+        "url": "https://www.facebook.com/BollentiPiatti",
+        "required_terms": ["secondi piatti"],
+    },
+]
+PANECO_PAGE = {
+    "name": "Pane & Co",
+    "url": "https://www.paneeco.it/menu",
+}
+SOURCE_URLS = {page["name"]: page["url"] for page in FACEBOOK_PAGES}
+SOURCE_URLS.update({page["name"]: page["url"] for page in TEXT_FACEBOOK_PAGES})
+SOURCE_URLS[PANECO_PAGE["name"]] = PANECO_PAGE["url"]
+# Aufer non ha uno scraping automatico (menu importato a mano, vedi
+# rosticcerie_clean/config.py), quindi non passa da FACEBOOK_PAGES: senza
+# questa riga il pannello restava con "url" vuoto e il click sul nome/logo
+# per aprire la pagina Instagram non faceva nulla.
+SOURCE_URLS["Aufer"] = "https://www.instagram.com/aufergastronomia/"
+COOKIE_FILE = "cookies.txt"
+PUBLISH_DIR = os.path.join("output", "rosticceria_ios")
+MIDNIGHT_REFRESH = datetime.time(0, 1)
+MIDNIGHT_REFRESH_GRACE_MINUTES = 15
+RUN_START = datetime.time(5, 0)
+RUN_END = datetime.time(20, 0)
+RUN_INTERVAL_MINUTES = 10
+ITALIAN_MONTHS = {
+    "gennaio": 1,
+    "gen": 1,
+    "febbraio": 2,
+    "feb": 2,
+    "marzo": 3,
+    "mar": 3,
+    "aprile": 4,
+    "apr": 4,
+    "maggio": 5,
+    "mag": 5,
+    "giugno": 6,
+    "giu": 6,
+    "luglio": 7,
+    "lug": 7,
+    "agosto": 8,
+    "ago": 8,
+    "settembre": 9,
+    "set": 9,
+    "ottobre": 10,
+    "ott": 10,
+    "novembre": 11,
+    "nov": 11,
+    "dicembre": 12,
+    "dic": 12,
+}
+# Facebook mostra le date assolute in inglese (es. "August 29 at 1:22 PM")
+# quando si naviga senza un login valido ed il post e' troppo vecchio per un
+# tempo relativo ("2 g", "3 h", ...): senza questa tabella quella data non
+# veniva riconosciuta affatto e il chiamante ripiegava sulla data odierna,
+# facendo sembrare "appena aggiornato" un post vecchio di settimane.
+ENGLISH_MONTHS = {
+    "january": 1,
+    "jan": 1,
+    "february": 2,
+    "feb": 2,
+    "march": 3,
+    "mar": 3,
+    "april": 4,
+    "apr": 4,
+    "may": 5,
+    "june": 6,
+    "jun": 6,
+    "july": 7,
+    "jul": 7,
+    "august": 8,
+    "aug": 8,
+    "september": 9,
+    "sept": 9,
+    "sep": 9,
+    "october": 10,
+    "oct": 10,
+    "november": 11,
+    "nov": 11,
+    "december": 12,
+    "dec": 12,
+}
+# Cookie che compaiono solo dopo un login Facebook riuscito. Se mancano,
+# stiamo navigando come visitatori anonimi e Facebook mostra molte meno
+# informazioni (spesso senza data/ora del post).
+FACEBOOK_LOGIN_COOKIE_NAMES = {"c_user", "xs"}
+
+
+def script_dir() -> str:
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def load_facebook_cookies(cookie_path: str) -> List[Dict]:
+    if not os.path.exists(cookie_path):
+        return []
+
+    cookies = []
+    with open(cookie_path, "r", encoding="utf-8") as cookie_file:
+        for line in cookie_file:
+            if not line.strip() or line.startswith("#"):
+                continue
+
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) != 7:
+                continue
+
+            domain, _include_subdomains, path, secure, expires, name, value = parts
+            if "facebook.com" not in domain:
+                continue
+
+            try:
+                expires_value = int(float(expires))
+            except ValueError:
+                expires_value = -1
+
+            cookies.append(
+                {
+                    "domain": domain,
+                    "path": path or "/",
+                    "secure": secure.upper() == "TRUE",
+                    "expires": expires_value,
+                    "name": name,
+                    "value": value,
+                    "httpOnly": False,
+                    "sameSite": "Lax",
+                }
+            )
+
+    return cookies
+
+
+def clean_post_text(text: str) -> str:
+    lines = []
+    blocked = {
+        "Mi piace",
+        "Commenta",
+        "Condividi",
+        "Invia",
+        "Tutti",
+        "Piu pertinenti",
+        "Più pertinenti",
+        "Like",
+        "Comment",
+        "Share",
+        "Send",
+        "All",
+        "Most relevant",
+        "Reply",
+        "All reactions:",
+    }
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line in blocked:
+            continue
+
+        lower_line = line.lower()
+        if (
+            lower_line.startswith("foto di ")
+            or lower_line.startswith("rosticceria fantasia")
+            or lower_line.startswith("cibaria")
+            or lower_line.startswith("cibarìa")
+            or lower_line.startswith("bollenti")
+            or lower_line.startswith("impastamo")
+            or lower_line.startswith("impastamò")
+            or lower_line.startswith("le delizie di michela")
+            or lower_line.startswith("santoro")
+            or lower_line.startswith("all reactions")
+        ):
+            continue
+        lines.append(line)
+
+    return "\n".join(lines).strip()
+
+
+_INVISIBLE_CHARS_RE = re.compile(
+    "[\u200b\u200c\u200d\u200e\u200f\u202a\u202b\u202c\u202d\u202e"
+    "\u2066\u2067\u2068\u2069\ufeff\u00a0]"
+)
+
+
+def clean_text_menu_post(text: str) -> str:
+    cleaned_lines = []
+
+    for raw_line in clean_post_text(text).splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        # Facebook a volte inserisce caratteri invisibili (marcatori di
+        # direzione del testo, spazi unificatori, ecc.) attorno a numeri o
+        # icone dei contatori: li rimuoviamo prima di valutare la
+        # lunghezza "visibile" della riga, altrimenti righe di un solo
+        # carattere visibile sfuggirebbero al controllo sotto.
+        line = _INVISIBLE_CHARS_RE.sub("", line).strip()
+        if not line:
+            continue
+        if re.fullmatch(r"\d+\s*(?:h|min|m|g|d)", line, re.IGNORECASE):
+            continue
+        if re.fullmatch(r"[·.\-]+", line):
+            continue
+        if re.fullmatch(r"\d+", line):
+            continue
+        if re.fullmatch(r"(?:facebook|Me gusta|Comentar|Compartir|Ver menos|Like|Comment|Share|Mi piace|Commenta|Condividi)", line, re.IGNORECASE):
+            continue
+        if re.match(r"^(?:Commenta come|Comment as)\b", line, re.IGNORECASE):
+            continue
+        if len(line) <= 1:
+            continue
+
+        line = re.sub(r"\s*Vedi meno\s*$", "", line, flags=re.IGNORECASE).strip()
+        line = re.sub(r"\s*See less\s*$", "", line, flags=re.IGNORECASE).strip()
+        # "Altro"/"See more" (a seconda della lingua dell'interfaccia di
+        # Facebook) indicano un post troncato: il testo che segue non e'
+        # presente, quindi rimuoviamo solo l'etichetta finale.
+        line = re.sub(
+            r"\s*(?:…|\.\.\.)\s*(?:Altro(?:\.\.\.)?|See more)\s*$",
+            "",
+            line,
+            flags=re.IGNORECASE,
+        ).strip()
+        if re.match(r"^men[uù]\s+di\b", line, re.IGNORECASE):
+            continue
+        if not line:
+            continue
+        cleaned_lines.append(line)
+
+    # Rete di sicurezza: se restano comunque diverse righe consecutive di
+    # 1-2 caratteri visibili (es. le cifre di un contatore Facebook
+    # spezzettate riga per riga), le eliminiamo in blocco: nel testo di un
+    # vero menu non compaiono mai sequenze cosi'.
+    filtered_lines = []
+    i = 0
+    total = len(cleaned_lines)
+    while i < total:
+        j = i
+        while j < total and len(cleaned_lines[j]) <= 2:
+            j += 1
+        if j - i >= 4:
+            i = j
+            continue
+        filtered_lines.append(cleaned_lines[i])
+        i += 1
+
+    return "\n".join(filtered_lines).strip()
+
+
+def has_see_more_marker(text: str) -> bool:
+    return bool(re.search(r"(?:…|\.\.\.)\s*Altro|Mostra altro|See more|Ver m[aá]s|Voir plus|Mehr anzeigen", text or "", re.IGNORECASE))
+
+
+def expand_facebook_see_more(post, page) -> None:
+    selectors = [
+        'button:has-text("Altro")',
+        'button:has-text("Mostra altro")',
+        'button:has-text("See more")',
+        'div[role="button"]:has-text("Altro")',
+        'div[role="button"]:has-text("Mostra altro")',
+        'div[role="button"]:has-text("See more")',
+        'span:has-text("Altro")',
+        'span:has-text("Mostra altro")',
+        'span:has-text("See more")',
+        'a:has-text("Altro")',
+        'a:has-text("Mostra altro")',
+        'a:has-text("See more")',
+    ]
+
+    selectors.extend(f'{tag}:has-text("{label}")' for tag in ("button", 'div[role="button"]', "span", "a") for label in ("Ver más", "Voir plus", "Mehr anzeigen"))
+    for _ in range(4):
+        clicked = False
+        try:
+            post.scroll_into_view_if_needed(timeout=1500)
+            page.wait_for_timeout(250)
+        except Exception:
+            pass
+        try:
+            before_text = post.inner_text(timeout=1000)
+        except Exception:
+            before_text = ""
+
+        # Facebook puo' rendere "Altro..." come semplice testo, senza ruolo
+        # button: in quel caso individuiamo direttamente l'elemento visibile
+        # e proviamo anche l'attivazione da tastiera.
+        more_pattern = re.compile(
+            r"^(?:…|\.\.\.)?\s*(?:Altro|Mostra altro|See more|Ver más|Voir plus|Mehr anzeigen)\s*\.*$",
+            re.IGNORECASE,
+        )
+        for more_locator in (post.get_by_text(more_pattern), page.get_by_text(more_pattern)):
+            if clicked:
+                break
+            try:
+                candidates = more_locator.all()
+            except Exception:
+                candidates = []
+            for element in candidates:
+                try:
+                    if not element.is_visible(timeout=700):
+                        continue
+                    element.scroll_into_view_if_needed(timeout=1200)
+                    element.click(timeout=2500, force=True)
+                    page.wait_for_timeout(1200)
+                    after_text = post.inner_text(timeout=1500)
+                    if after_text and not has_see_more_marker(after_text):
+                        clicked = True
+                        break
+                    element.press("Enter", timeout=1500)
+                    page.wait_for_timeout(1200)
+                    after_text = post.inner_text(timeout=1500)
+                    if after_text and not has_see_more_marker(after_text):
+                        clicked = True
+                        break
+                except Exception:
+                    continue
+
+        if clicked:
+            return
+
+        for selector in selectors:
+            try:
+                for element in post.locator(selector).all():
+                    label = element.inner_text(timeout=700).strip()
+                    lower_label = label.lower()
+                    if not any(label in lower_label for label in ("altro", "see more", "ver más", "voir plus", "mehr anzeigen")):
+                        continue
+                    if not element.is_visible(timeout=700):
+                        continue
+                    element.click(timeout=2000, force=True)
+                    page.wait_for_timeout(900)
+                    clicked = True
+                    break
+            except Exception:
+                pass
+            if clicked:
+                break
+
+        if not clicked:
+            try:
+                clicked = bool(
+                    post.evaluate(
+                        """post => {
+                            const candidates = Array.from(post.querySelectorAll('div[role="button"], a, span, div'));
+                            const matching = candidates
+                                .map((candidate) => ({
+                                    candidate,
+                                    label: (candidate.innerText || candidate.textContent || '').trim()
+                                }))
+                                .filter((item) => /altro|mostra altro|see more/i.test(item.label))
+                                .sort((a, b) => a.label.length - b.label.length);
+
+                            for (const { candidate, label } of matching) {
+                                if (!/altro|mostra altro|see more/i.test(label)) {
+                                    continue;
+                                }
+                                let clickable = candidate.closest('[role="button"], a') || candidate;
+                                for (let depth = 0; clickable && depth < 5; depth += 1) {
+                                    try {
+                                        clickable.click();
+                                        return true;
+                                    } catch (error) {
+                                        clickable = clickable.parentElement;
+                                    }
+                                }
+                            }
+                            return false;
+                        }"""
+                    )
+                )
+                if clicked:
+                    page.wait_for_timeout(900)
+            except Exception:
+                clicked = False
+
+        if not clicked:
+            # Il pulsante "Altro" potrebbe non essere ancora comparso (pagina
+            # ancora in caricamento): a differenza di prima, non rinunciamo
+            # subito al primo tentativo a vuoto, ma aspettiamo un attimo e
+            # riproviamo, fino a esaurire i tentativi previsti dal ciclo.
+            page.wait_for_timeout(700)
+            continue
+        try:
+            after_text = post.inner_text(timeout=1000)
+        except Exception:
+            after_text = ""
+        if after_text and after_text != before_text and "Altro" not in after_text:
+            return
+
+    # Ultima rete di sicurezza, indipendentemente dal fatto che uno dei
+    # tentativi di click sopra sia riuscito o no: alcuni post mostrano il
+    # testo completo gia' presente nella pagina, solo tagliato via CSS
+    # (line-clamp/altezza massima) invece che davvero assente dal DOM finche'
+    # non si clicca. In quel caso forziamo la visibilita' del testo intero e
+    # rimuoviamo l'eventuale etichetta "Altro"/"See more" residua, cosi' il
+    # testo completo (ora leggibile) non venga comunque scartato come
+    # troncato da has_see_more_marker.
+    try:
+        post.evaluate(
+            """post => {
+                post.querySelectorAll('*').forEach(el => {
+                    const style = window.getComputedStyle(el);
+                    if (style && style.webkitLineClamp && style.webkitLineClamp !== 'none') {
+                        el.style.setProperty('-webkit-line-clamp', 'unset', 'important');
+                        el.style.setProperty('display', 'block', 'important');
+                        el.style.setProperty('max-height', 'none', 'important');
+                        el.style.setProperty('overflow', 'visible', 'important');
+                    }
+                });
+                post.querySelectorAll('div[role="button"], a, span').forEach(el => {
+                    const label = (el.innerText || el.textContent || '').trim();
+                    if (/^(?:\\u2026|\\.\\.\\.)?\\s*(altro\\.?|mostra altro|see more)$/i.test(label)) {
+                        el.remove();
+                    }
+                });
+            }"""
+        )
+    except Exception:
+        pass
+
+
+def menu_date_line_from_text(text: str) -> str:
+    for raw_line in (text or "").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if not re.search(r"\bmenu\b|\bmenù\b", line, re.IGNORECASE):
+            continue
+        if infer_date_from_text(line):
+            return line
+
+    return ""
+
+
+def best_text_from_post(post) -> str:
+    try:
+        full_text = clean_post_text(post.inner_text(timeout=3000))
+        menu_date_line = menu_date_line_from_text(full_text)
+        if menu_date_line:
+            return menu_date_line
+    except Exception:
+        full_text = ""
+
+    message_selectors = [
+        'div[data-ad-preview="message"] span[dir="auto"]',
+        'div[data-ad-preview="message"] div[dir="auto"]',
+        'div[data-ad-comet-preview="message"] span[dir="auto"]',
+        'div[data-ad-comet-preview="message"] div[dir="auto"]',
+    ]
+
+    for selector in message_selectors:
+        try:
+            text_parts = []
+            for element in post.locator(selector).all():
+                if element.is_visible(timeout=1000):
+                    text_parts.append(element.inner_text(timeout=3000))
+            text = clean_post_text("\n".join(text_parts))
+            if text:
+                menu_date_line = menu_date_line_from_text(text)
+                if menu_date_line:
+                    return menu_date_line
+                return text
+        except Exception:
+            pass
+
+    try:
+        text_parts = []
+        seen = set()
+        for element in post.locator('div[dir="auto"], span[dir="auto"]').all():
+            if not element.is_visible(timeout=500):
+                continue
+            text = element.inner_text(timeout=1000).strip()
+            if text and text not in seen:
+                seen.add(text)
+                text_parts.append(text)
+        text = clean_post_text("\n".join(text_parts))
+        if text:
+            menu_date_line = menu_date_line_from_text(text)
+            if menu_date_line:
+                return menu_date_line
+            return text
+    except Exception:
+        pass
+
+    return full_text
+
+
+def best_published_time_from_post(post) -> str:
+    selectors = [
+        "time",
+        "abbr",
+        'a[aria-label]',
+        'span[aria-label]',
+        'a[href*="/posts/"]',
+        'a[href*="story_fbid"]',
+        'a[role="link"]',
+        'span',
+    ]
+
+    candidates = []
+    for selector in selectors:
+        try:
+            for element in post.locator(selector).all():
+                # Nota: "href" e' escluso di proposito. I link ai permalink dei
+                # post Facebook (es. /stories/.../?...__cft__[0]=...) sono
+                # stringhe alfanumeriche lunghe che possono contenere per caso
+                # sequenze tipo "23h" o lettere isolate come "h"/"g"/"d", e
+                # venivano scambiate per un'etichetta di tempo relativa
+                # (es. "23 ore fa"), producendo date completamente sbagliate.
+                for attribute in ("title", "aria-label", "datetime"):
+                    value = element.get_attribute(attribute)
+                    if value:
+                        candidates.append(value.strip())
+
+                try:
+                    text = element.inner_text(timeout=1000).strip()
+                except Exception:
+                    text = ""
+                if text:
+                    candidates.append(text)
+        except Exception:
+            pass
+
+    try:
+        text = post.inner_text(timeout=3000)
+        candidates.extend(line.strip() for line in text.splitlines()[:10] if line.strip())
+    except Exception:
+        pass
+
+    def time_priority(value):
+        return 0 if re.search(r"\d{1,2}:\d{2}", value) else 1
+    candidates.sort(key=time_priority)
+    seen = set()
+    for value in candidates:
+        compact = re.sub(r"\s+", " ", value).strip()
+        if not compact or compact in seen:
+            continue
+        seen.add(compact)
+        if looks_like_facebook_time(compact):
+            return compact
+
+    return ""
+
+
+def rome_now() -> datetime.datetime:
+    return datetime.datetime.now(ZoneInfo("Europe/Rome"))
+
+
+def hours_since_published(published_at: str) -> Optional[float]:
+    """Quante ore sono passate da published_at (formato prodotto da
+    normalize_facebook_time/prefer_publication_time: "DD/MM/YYYY[ HH:MM][
+    circa]"), rispetto ad ora. Restituisce None se il testo non e'
+    interpretabile come data. Usata per capire se un post candidato e'
+    genuinamente recente, invece di scegliere semplicemente la foto piu'
+    grande tra quelle gia' caricate anche se vecchia di giorni."""
+    if not published_at:
+        return None
+    match = re.search(r"(\d{2})/(\d{2})/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?", published_at)
+    if not match:
+        return None
+    day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+    hour = int(match.group(4)) if match.group(4) else 12
+    minute = int(match.group(5)) if match.group(5) else 0
+    try:
+        published = datetime.datetime(year, month, day, hour, minute, tzinfo=ZoneInfo("Europe/Rome"))
+    except ValueError:
+        return None
+    return (rome_now() - published).total_seconds() / 3600
+
+
+ITALIAN_WEEKDAYS = [
+    "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica",
+]
+ITALIAN_MONTH_NAMES = [
+    "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+    "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre",
+]
+
+
+def italian_long_date(value: datetime.date) -> str:
+    """Restituisce la data nel formato esteso italiano richiesto, ad
+    esempio 'Venerdì 4 settembre' (giorno della settimana con iniziale
+    maiuscola, mese minuscolo, senza anno)."""
+    weekday = ITALIAN_WEEKDAYS[value.weekday()].capitalize()
+    month = ITALIAN_MONTH_NAMES[value.month - 1]
+    return f"{weekday} {value.day} {month}"
+
+
+def format_menu_date(value: str) -> str:
+    """Converte una data 'DD/MM/YYYY' (con eventuale testo/orario dopo,
+    come prodotto da normalize_facebook_time/normalize_paneeco_date) nel
+    formato esteso italiano. Restituisce stringa vuota se non riconosciuta,
+    cosi' chi chiama puo' scegliere di non stampare nulla."""
+    match = re.search(r"(\d{2})/(\d{2})/(\d{4})", value or "")
+    if not match:
+        return ""
+    try:
+        day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+        return italian_long_date(datetime.date(year, month, day))
+    except ValueError:
+        return ""
+
+
+def prefer_publication_time(menu_date: str, publication: str) -> str:
+    """Keep a source time only when its date matches the menu date."""
+    if not menu_date:
+        return publication
+    if parse_status_date(menu_date) == parse_status_date(publication) and re.search(r"\b\d{1,2}:\d{2}\b", publication or ""):
+        return publication
+    return menu_date
+
+
+def format_card_reference(value: str, is_updated: bool) -> str:
+    """Formato breve: ora per i menu di oggi, data per quelli precedenti.
+
+    NOTA: oltre che per il testo mostrato, questa funzione viene usata
+    altrove (pipeline.py) come "c'e' gia' un riferimento orario valido per
+    oggi?" per decidere se saltare un nuovo controllo della fonte: per
+    questo, quando is_updated=True, resta intenzionalmente vuota se non
+    troviamo un orario preciso (es. Pane & Co, che sul sito riporta solo la
+    data, senza ora) invece di ripiegare sulla data. Per il "confetto"
+    visivo in home, che invece deve comunque comparire anche senza un
+    orario preciso, vedi format_card_badge qui sotto."""
+    if is_updated:
+        match = re.search(r"(?:^|\s)(\d{1,2}):(\d{2})(?:\s|$)", value or "")
+        return f"{int(match.group(1)):02d}:{match.group(2)}" if match else ""
+
+    match = re.search(r"(\d{2})/(\d{2})/(\d{4})", value or "")
+    if not match:
+        return ""
+    try:
+        day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+        date_value = datetime.date(year, month, day)
+        months = ("gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic")
+        return f"{date_value.day} {months[date_value.month - 1]}"
+    except ValueError:
+        return ""
+
+
+def format_card_badge(value: str, is_updated: bool) -> str:
+    """Testo del "confetto" verde mostrato sulla casella in home.
+
+    Come format_card_reference, ma quando il menu e' di oggi (is_updated)
+    senza pero' un orario preciso disponibile (es. Pane & Co, che sul sito
+    riporta solo la data "10 Settembre", mai un'ora), mostriamo comunque la
+    data invece di nascondere del tutto il confetto: prima restava vuoto e
+    il confetto verde non compariva mai per queste rosticcerie."""
+    reference = format_card_reference(value, is_updated)
+    if reference or not is_updated:
+        return reference
+
+    match = re.search(r"(\d{2})/(\d{2})/(\d{4})", value or "")
+    if not match:
+        return ""
+    try:
+        day, month, year = (int(match.group(i)) for i in (1, 2, 3))
+        date_value = datetime.date(year, month, day)
+        months = ("gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic")
+        return f"{date_value.day} {months[date_value.month - 1]}"
+    except ValueError:
+        return ""
+
+
+def normalize_facebook_time(value: str) -> str:
+    value = value.strip()
+    if not value:
+        return ""
+
+    lower_value = value.lower()
+    now = rome_now()
+
+    match = re.search(r"\d{4}-\d{2}-\d{2}(?:[t ][0-9:.+-]+)?", lower_value)
+    if match:
+        raw_iso = match.group(0)
+        try:
+            published = datetime.datetime.fromisoformat(raw_iso.replace("z", "+00:00"))
+            if published.tzinfo:
+                published = published.astimezone(ZoneInfo("Europe/Rome"))
+            return published.strftime("%d/%m/%Y %H:%M")
+        except ValueError:
+            pass
+
+    if lower_value.startswith(("oggi", "today")):
+        match = re.search(r"(\d{1,2})[:.](\d{2})", lower_value)
+        if match:
+            published = now.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=0, microsecond=0)
+            return published.strftime("%d/%m/%Y %H:%M")
+        return now.strftime("%d/%m/%Y circa")
+
+    # I confini di parola (\b) sono importanti: senza di essi una stringa
+    # "casuale" (es. un URL o un ID interno di Facebook) puo' contenere per
+    # coincidenza una cifra seguita da una lettera come "h"/"g"/"d"/"w" in
+    # mezzo ad altri caratteri, venendo interpretata come un tempo relativo
+    # e producendo una data completamente inventata.
+    match = re.search(r"\b(\d{1,3})\s*(min|minuti|m)\b", lower_value)
+    if match:
+        minutes = int(match.group(1))
+        return (now - datetime.timedelta(minutes=minutes)).strftime("%d/%m/%Y %H:%M circa")
+
+    match = re.search(r"\b(\d{1,3})\s*(h|ore?|ora|hours?)\b", lower_value)
+    if match:
+        hours = int(match.group(1))
+        return (now - datetime.timedelta(hours=hours)).strftime("%d/%m/%Y %H:%M circa")
+
+    match = re.search(r"\b(\d{1,3})\s*(g|gg|giorno|giorni|d|days?)\b", lower_value)
+    if match:
+        days = int(match.group(1))
+        return (now - datetime.timedelta(days=days)).strftime("%d/%m/%Y circa")
+
+    match = re.search(r"\b(\d{1,3})\s*(sett|settiman[ae]|settimane|w|weeks?)\b", lower_value)
+    if match:
+        weeks = int(match.group(1))
+        return (now - datetime.timedelta(weeks=weeks)).strftime("%d/%m/%Y circa")
+
+    if lower_value.startswith(("ieri", "yesterday")):
+        published = now - datetime.timedelta(days=1)
+        match = re.search(r"(\d{1,2})[:.](\d{2})", lower_value)
+        if match:
+            published = published.replace(hour=int(match.group(1)), minute=int(match.group(2)), second=0, microsecond=0)
+        return published.strftime("%d/%m/%Y %H:%M")
+
+    # Data assoluta in inglese (es. "August 29 at 1:22 PM", "Aug 29, 2025"):
+    # vedi il commento sopra ENGLISH_MONTHS.
+    english_month_pattern = "|".join(ENGLISH_MONTHS.keys())
+    match = re.search(
+        rf"\b({english_month_pattern})\s+(\d{{1,2}})(?:st|nd|rd|th)?(?:,?\s+(\d{{4}}))?"
+        rf"(?:\s+at\s+(\d{{1,2}})[:.](\d{{2}})\s*(am|pm)?)?",
+        lower_value,
+    )
+    if match:
+        month = ENGLISH_MONTHS[match.group(1)]
+        day = int(match.group(2))
+        explicit_year = match.group(3)
+        year = int(explicit_year) if explicit_year else now.year
+        try:
+            candidate = datetime.date(year, month, day)
+            if not explicit_year and candidate > now.date():
+                # Nessun anno esplicito e la data risulterebbe nel futuro:
+                # il post e' quasi certamente dell'anno precedente.
+                candidate = datetime.date(year - 1, month, day)
+            if match.group(4) and match.group(5):
+                hour = int(match.group(4))
+                minute = match.group(5)
+                meridiem = (match.group(6) or "").lower()
+                if meridiem == "pm" and hour != 12:
+                    hour += 12
+                elif meridiem == "am" and hour == 12:
+                    hour = 0
+                return f"{candidate.strftime('%d/%m/%Y')} {hour:02d}:{minute}"
+            return candidate.strftime("%d/%m/%Y")
+        except ValueError:
+            pass
+
+    inferred = infer_date_from_text(value)
+    if inferred:
+        return inferred
+
+    # Nessun formato riconosciuto: meglio restituire una stringa vuota (che i
+    # chiamanti trattano come "non trovata") piuttosto che l'intero testo in
+    # ingresso invariato. In precedenza, quando "value" era l'intero testo di
+    # un post (perche' non si era trovata nessuna etichetta di tempo), questo
+    # ramo lo restituiva cosi' com'era: il chiamante lo scambiava per una data
+    # valida gia' "normalizzata" e lo salvava in status.json al posto della
+    # data, gonfiandolo inutilmente senza mai mostrare una vera data.
+    return ""
+
+
+def looks_like_facebook_time(value: str) -> bool:
+    value = value.strip().lower()
+    if not value:
+        return False
+    if value.startswith(("http://", "https://", "/")) and not re.search(
+        r"\b\d{1,2}/\d{1,2}/\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b", value
+    ):
+        return False
+    # Gli URL/permalink dei post Facebook (es. "/stories/.../?...&__cft__..."
+    # oppure con "__tn__=") non sono mai una vera etichetta di tempo, anche se
+    # contengono per caso cifre e lettere isolate: li escludiamo subito,
+    # prima ancora di controllare le parole "relative" qui sotto.
+    if any(marker in value for marker in ("=", "&", "__")):
+        return False
+
+    month_words = list(ITALIAN_MONTHS.keys()) + [
+        "january",
+        "jan",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "aug",
+        "september",
+        "sep",
+        "sept",
+        "october",
+        "oct",
+        "november",
+        "december",
+        "dec",
+    ]
+    # I confini di parola (\b) evitano che una cifra seguita per coincidenza
+    # da una lettera isolata dentro una stringa piu' lunga (non un vero
+    # "23h"/"1d" restituito da Facebook) venga scambiata per un tempo
+    # relativo valido.
+    relative_pattern = re.compile(
+        r"\b\d{1,3}\s*(min|minuti|m|h|ore?|ora|hours?|gg|giorno|giorni|g|days?|d"
+        r"|settiman[ae]|settimane|sett|weeks?|w)\b"
+    )
+    has_digit = any(char.isdigit() for char in value)
+
+    return has_digit and (
+        any(month in value for month in month_words)
+        or bool(relative_pattern.search(value))
+        or bool(re.search(r"\b\d{1,2}/\d{1,2}/\d{2,4}\b", value))
+        or bool(re.search(r"\b\d{4}-\d{2}-\d{2}\b", value))
+        or bool(re.search(r"\b\d{1,2}:\d{2}\b", value))
+    )
+
+
+def image_score(image) -> int:
+    try:
+        # Le immagini caricate pigramente da Facebook (specie in modalita'
+        # headless) possono impiegare piu' di un secondo a ottenere una
+        # bounding box valida: un timeout troppo corto scarta silenziosamente
+        # post autentici (es. il menu del giorno) che risultano ancora vuoti
+        # al momento della scansione.
+        box = image.bounding_box(timeout=3000)
+    except Exception:
+        box = None
+
+    if not box:
+        return 0
+
+    width = int(box.get("width", 0))
+    height = int(box.get("height", 0))
+    if width < 180 or height < 120:
+        return 0
+
+    src = image.get_attribute("src") or ""
+    if not src.startswith("http"):
+        return 0
+    if "emoji.php" in src or "static.xx.fbcdn.net" in src:
+        return 0
+
+    return width * height
+
+
+def find_first_post_image(
+    page,
+    skip_closure_notices: bool = False,
+    skip_first_today_post: bool = False,
+    prefer_facebook_date: bool = False,
+    label: str = "Pagina",
+    return_all_candidates: bool = False,
+) -> Optional[Dict[str, str]]:
+    post_selectors = [
+        'div[role="article"]',
+        "div[aria-posinset]",
+    ]
+    candidates = []
+    post_index = 0
+    skipped_first_today_post = False
+
+    for selector in post_selectors:
+        posts = page.locator(selector).all()
+        for post in posts[:20]:
+            current_post_index = post_index
+            post_index += 1
+            try:
+                images = post.locator("img").all()
+            except Exception:
+                continue
+
+            best_image = None
+            best_score = 0
+            for image in images:
+                score = image_score(image)
+                if score > best_score:
+                    best_image = image
+                    best_score = score
+
+            # Facebook sometimes leaves the lazy-loaded image without a
+            # usable bounding box in headless mode. Keep a direct fallback
+            # so a later menu post is not discarded after an announcement.
+            if best_image is None:
+                for image in images:
+                    try:
+                        src = image.get_attribute("src") or ""
+                    except Exception:
+                        src = ""
+                    if src.startswith("http") and "emoji.php" not in src:
+                        best_image = image
+                        best_score = 1
+                        break
+
+            if best_image and best_score:
+                image_url = best_image.get_attribute("src")
+                if image_url:
+                    try:
+                        image_alt = (best_image.get_attribute("alt") or "").strip()
+                    except Exception:
+                        image_alt = ""
+                    post_text = best_text_from_post(post)
+                    try:
+                        full_post_text = clean_post_text(post.inner_text(timeout=3000))
+                    except Exception:
+                        full_post_text = post_text
+                    combined_text = f"{post_text} {full_post_text} {image_alt}"
+                    # Impastamò pubblica gli avvisi con una descrizione testuale,
+                    # mentre il menu del giorno e' normalmente una foto senza testo.
+                    textual_post = bool(clean_post_text(post_text or full_post_text))
+                    if (
+                        skip_closure_notices
+                        and textual_post
+                        and looks_like_closure_notice(combined_text)
+                        and not looks_like_real_menu(combined_text)
+                    ):
+                        if skip_first_today_post and not skipped_first_today_post:
+                            skipped_first_today_post = True
+                        print(
+                            f"{label}: salto l'immagine dell'annuncio di riapertura "
+                            "e cerco il post successivo con il menu."
+                        )
+                        continue
+                    date_in_post_text = infer_date_from_text(post_text) or infer_date_from_text(full_post_text)
+                    facebook_time = best_published_time_from_post(post)
+                    normalized_facebook_time = normalize_facebook_time(facebook_time)
+                    if prefer_facebook_date and normalized_facebook_time:
+                        published_at_raw = facebook_time
+                        published_at = normalized_facebook_time
+                    else:
+                        # Quando Facebook mostra una data esplicita nel post
+                        # (es. "29 agosto alle 13:22"), e' piu' affidabile del
+                        # primo indicatore temporale relativo trovato nel DOM.
+                        published_at_raw = date_in_post_text or facebook_time
+                        published_at = prefer_publication_time(date_in_post_text, normalized_facebook_time) or rome_now().strftime("%d/%m/%Y")
+                    if (
+                        skip_first_today_post
+                        and not skipped_first_today_post
+                        and parse_status_date(published_at) == rome_now().date()
+                    ):
+                        skipped_first_today_post = True
+                        print(
+                            f"{label}: salto per prova il primo post di oggi "
+                            "e cerco quello successivo."
+                        )
+                        continue
+                    try:
+                        photo_url = best_image.evaluate(
+                            "image => { const link = image.closest('a[href]'); return link ? link.href : ''; }"
+                        )
+                    except Exception:
+                        photo_url = ""
+                    candidate = {
+                        "image_url": image_url,
+                        "photo_url": photo_url,
+                        "text": post_text,
+                        "image_alt": image_alt,
+                        "published_at": published_at,
+                        "published_at_raw": published_at_raw,
+                    }
+                    if not skip_closure_notices and not return_all_candidates:
+                        return candidate
+
+                    score = min(best_score / 10000, 100)
+                    is_real_menu = looks_like_real_menu(combined_text)
+                    if is_real_menu:
+                        score += 1000
+                    if looks_like_closure_notice(combined_text):
+                        score -= 200
+                    score -= current_post_index * 5
+                    # Preferiamo un post genuinamente recente (minuti/ore fa)
+                    # a uno vecchio di giorni, anche quando il suo testo non
+                    # contiene parole chiave riconosciute come "vero menu"
+                    # (es. una lavagna fotografata senza descrizione utile
+                    # generata da Facebook): prima, in assenza di questa
+                    # corrispondenza testuale, veniva scelto semplicemente il
+                    # post con l'immagine piu' grande tra quelli gia'
+                    # caricati nella pagina, anche se vecchio di giorni.
+                    elapsed_hours = hours_since_published(published_at)
+                    is_recent = elapsed_hours is not None and elapsed_hours < 20
+                    if elapsed_hours is not None:
+                        if elapsed_hours < 6:
+                            score += 600
+                        elif elapsed_hours < 20:
+                            score += 350
+                        elif elapsed_hours > 48:
+                            score -= 150
+                    candidate["score"] = score
+                    candidate["post_index"] = current_post_index
+                    # "confident" richiede un vero menu riconosciuto dal
+                    # testo, non basta che il post sia recente: un post
+                    # pubblicitario pubblicato DOPO il menu del giorno (es.
+                    # Impastamò) e' spesso il piu' recente in assoluto, ma
+                    # non va mai preferito al menu solo perche' e' fresco.
+                    # La recente e' comunque usata nel punteggio sopra, cosi'
+                    # se non troviamo mai un vero menu (es. Michela, le cui
+                    # foto non hanno mai una descrizione testuale) scegliamo
+                    # comunque il candidato piu' recente tra quelli trovati.
+                    candidate["confident"] = is_real_menu
+                    candidates.append(candidate)
+                    print(
+                        f"{label}: candidato post "
+                        f"{current_post_index} punteggio {score:.1f} "
+                        f"testo: {clean_post_text(combined_text)[:80]}"
+                    )
+
+    if candidates:
+        candidates.sort(key=lambda item: item.get("score", 0), reverse=True)
+        if return_all_candidates:
+            # Il chiamante vuole vedere tutti i post trovati (es. per unire
+            # tutti quelli di oggi), non solo il migliore: lasciamo a lui la
+            # scelta di cosa tenere.
+            return candidates
+        best_candidate = candidates[0]
+        print(
+            f"{label}: scelgo il post "
+            f"{best_candidate.get('post_index')} con punteggio "
+            f"{best_candidate.get('score', 0):.1f}."
+        )
+        return {
+            key: value
+            for key, value in best_candidate.items()
+            if key != "post_index"
+        }
+
+    return [] if return_all_candidates else None
+
+
+WEEKDAY_INDEX_BY_NAME = {
+    "lunedi": 0,
+    "martedi": 1,
+    "mercoledi": 2,
+    "giovedi": 3,
+    "venerdi": 4,
+    "sabato": 5,
+    "domenica": 6,
+}
+
+
+def infer_weekday_date_from_text(text: str) -> str:
+    """Cerca un riferimento tipo 'MENU DI SABATO'/'MENU DI VENERDI' nel testo
+    e restituisce la data (DD/MM/YYYY) dell'ultima occorrenza di quel giorno
+    della settimana (oggi compreso). Utile per i "menu del giorno" (es.
+    Bollenti piatti) che non riportano mai una data esplicita ne' un orario
+    di pubblicazione leggibile, solo il nome del giorno."""
+    # Rimuoviamo tutti gli accenti (non solo quelli di "menu"/"venerdi"),
+    # cosi' "MENU'"/"MENÙ" e le varianti dei giorni con o senza accento
+    # vengono tutte riconosciute allo stesso modo.
+    unaccented = "".join(
+        char
+        for char in unicodedata.normalize("NFKD", text.lower())
+        if not unicodedata.combining(char)
+    )
+    match = re.search(
+        r"\bmenu\s+di\s+(lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)\b",
+        unaccented,
+    )
+    if not match:
+        return ""
+
+    target_weekday = WEEKDAY_INDEX_BY_NAME.get(match.group(1))
+    if target_weekday is None:
+        return ""
+
+    today = rome_now().date()
+    for days_back in range(7):
+        candidate_date = today - datetime.timedelta(days=days_back)
+        if candidate_date.weekday() == target_weekday:
+            return candidate_date.strftime("%d/%m/%Y")
+
+    return ""
+
+
+def find_first_text_menu_post(page, required_terms: Optional[List[str]] = None) -> Optional[Dict[str, str]]:
+    post_selectors = [
+        'div[role="article"]',
+        "div[aria-posinset]",
+    ]
+
+    fallback_post = None
+    fallback_post_has_terms = False
+    truncated_fallback_post = None
+    truncated_fallback_has_terms = False
+    for selector in post_selectors:
+        posts = page.locator(selector).all()
+        for post in posts[:20]:
+            expand_facebook_see_more(post, page)
+
+            try:
+                raw_text = post.inner_text(timeout=3000)
+                truncated = has_see_more_marker(raw_text)
+                full_text = clean_text_menu_post(raw_text)
+            except Exception:
+                continue
+
+            post_text = full_text
+            if not post_text:
+                continue
+
+            published_at = infer_date_from_text(post_text) or infer_date_from_text(raw_text)
+            published_at_raw = best_published_time_from_post(post) or published_at or raw_text
+            normalized_published_at = (
+                prefer_publication_time(published_at, normalize_facebook_time(published_at_raw))
+                or normalize_facebook_time(published_at_raw)
+                or normalize_facebook_time(raw_text)
+                # I "menu del giorno" (es. Bollenti piatti) non riportano mai
+                # un orario di pubblicazione leggibile ne' una data esplicita,
+                # solo il nome del giorno (es. "MENU DI SABATO"): in
+                # quel caso risaliamo alla data dell'ultima occorrenza di
+                # quel giorno della settimana (oggi compreso). Cerchiamo
+                # questo riferimento nel testo GREZZO (raw_text) e non in
+                # quello ripulito (post_text): clean_text_menu_post scarta
+                # apposta le righe "Menu di <giorno>" in quanto ridondanti
+                # per la visualizzazione, ma cosi' facendo le rendeva anche
+                # invisibili a questa deduzione della data, che quindi non
+                # trovava mai nulla.
+                or infer_weekday_date_from_text(raw_text)
+            )
+            candidate = {
+                "text": post_text,
+                "published_at": normalized_published_at,
+                "published_at_raw": published_at_raw,
+            }
+            lower_text = post_text.lower()
+            has_required_terms = all(term.lower() in lower_text for term in (required_terms or []))
+
+            if truncated or not has_required_terms:
+                continue
+
+            if has_required_terms and ("menu" in lower_text or "menù" in lower_text) and normalized_published_at:
+                return candidate
+
+            if len(post_text) > 20 and (
+                fallback_post is None or (has_required_terms and not fallback_post_has_terms)
+            ):
+                fallback_post = candidate
+                fallback_post_has_terms = has_required_terms
+
+        if fallback_post:
+            return fallback_post
+
+    return fallback_post
+
+
+def find_largest_visible_image_url(page) -> str:
+    best_url = ""
+    best_score = 0
+
+    for image in page.locator("img").all():
+        score = image_score(image)
+        if score > best_score:
+            src = image.get_attribute("src") or ""
+            if src.startswith("http"):
+                best_url = src
+                best_score = score
+
+    return best_url
+
+
+def facebook_original_image_url(image_url: str) -> str:
+    """Rimuove dai percorsi CDN Facebook le directory di crop/resize.
+
+    Facebook serve spesso miniature con segmenti come /p720x720/,
+    /s960x960/ o /c0.15.200.200/. Togliendoli si arriva, quando la CDN lo
+    consente, al file caricato senza tagli della griglia Foto.
+    """
+    if not image_url:
+        return ""
+
+    try:
+        parsed = urllib.parse.urlsplit(image_url)
+        path = re.sub(r"/[ps]\d+x\d+/", "/", parsed.path)
+        path = re.sub(r"/c\d+(?:\.\d+){3}/", "/", path)
+        return urllib.parse.urlunsplit(
+            (parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment)
+        )
+    except Exception:
+        return image_url
+
+
+def facebook_photo_download_url(photo_href: str) -> str:
+    if not photo_href:
+        return ""
+    try:
+        parsed = urllib.parse.urlsplit(photo_href)
+        query = urllib.parse.parse_qs(parsed.query)
+        fbid_values = query.get("fbid") or query.get("photo_id")
+        if not fbid_values:
+            match = re.search(r"/photos/(?:[^/]+/)?(\d+)", parsed.path)
+            fbid_values = [match.group(1)] if match else []
+        if not fbid_values:
+            return ""
+        return "https://www.facebook.com/photo/download/?" + urllib.parse.urlencode(
+            {"fbid": fbid_values[0]}
+        )
+    except Exception:
+        return ""
+
+
+def facebook_image_url_variants(image_url: str) -> List[str]:
+    """Restituisce varianti CDN evitando, quando possibile, il crop quadrato
+    usato dalle miniature Facebook."""
+    if not image_url:
+        return []
+
+    variants: List[str] = []
+
+    def add(url: str) -> None:
+        if url and url.startswith("http") and url not in variants:
+            variants.append(url)
+
+    add(facebook_original_image_url(image_url))
+
+    try:
+        parsed = urllib.parse.urlsplit(image_url)
+        query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+
+        no_crop_query = [
+            (key, value)
+            for key, value in query
+            if key not in {"stp", "cstp", "ctp"}
+        ]
+        add(
+            facebook_original_image_url(
+                urllib.parse.urlunsplit(
+                    (
+                        parsed.scheme,
+                        parsed.netloc,
+                        parsed.path,
+                        urllib.parse.urlencode(no_crop_query),
+                        parsed.fragment,
+                    )
+                )
+            )
+        )
+
+        no_stp_query = [
+            (key, "s960x960" if key == "ctp" else value)
+            for key, value in query
+            if key not in {"stp", "cstp"}
+        ]
+        add(
+            facebook_original_image_url(
+                urllib.parse.urlunsplit(
+                    (
+                        parsed.scheme,
+                        parsed.netloc,
+                        parsed.path,
+                        urllib.parse.urlencode(no_stp_query),
+                        parsed.fragment,
+                    )
+                )
+            )
+        )
+    except Exception:
+        pass
+
+    add(facebook_original_image_url(re.sub(r"(?:ctp=|s)\d+x\d+", "s960x960", image_url)))
+    add(image_url)
+    return variants
+
+
+def select_best_facebook_image_variant(image_urls: List[str]) -> Tuple[str, Tuple[int, int]]:
+    selected_image_url = ""
+    selected_dimensions = (0, 0)
+    selected_variant_score = (-1.0, 0)
+    tried: List[str] = []
+
+    for image_url in image_urls:
+        for variant_url in facebook_image_url_variants(image_url):
+            if variant_url in tried:
+                continue
+            tried.append(variant_url)
+            try:
+                image_bytes = download_image(variant_url)
+                width, height = Image.open(io.BytesIO(image_bytes)).size
+                if min(width, height) < 380:
+                    continue
+                aspect_ratio = height / width if width else 0
+                vertical_menu_score = min(aspect_ratio, 1.6)
+                variant_score = (vertical_menu_score, width * height)
+                if variant_score > selected_variant_score:
+                    selected_image_url = variant_url
+                    selected_dimensions = (width, height)
+                    selected_variant_score = variant_score
+            except Exception:
+                continue
+
+    return selected_image_url, selected_dimensions
+
+
+def cookies_look_authenticated(cookies: List[Dict]) -> bool:
+    names = {cookie.get("name", "") for cookie in cookies}
+    return bool(names & FACEBOOK_LOGIN_COOKIE_NAMES)
+
+
+def find_first_menu_photo_via_photos(context, facebook_url: str) -> Optional[Dict[str, str]]:
+    """Cerca una foto-menu nella griglia Foto quando il menu e' pubblicato
+    come immagine senza testo nel feed."""
+    photos_page = context.new_page()
+    try:
+        photos_page.goto(
+            build_photos_tab_url(facebook_url),
+            wait_until="domcontentloaded",
+            timeout=60000,
+        )
+        for cookie_label in ("Consenti tutti i cookie", "Allow all cookies"):
+            try:
+                photos_page.get_by_role("button", name=cookie_label).click(timeout=3000)
+                break
+            except Exception:
+                pass
+        photos_page.wait_for_timeout(4000)
+        photos_page.keyboard.press("Escape")
+        photos_page.wait_for_timeout(1000)
+
+        # Facebook espone la griglia come immagini lazy-loaded. Usiamo
+        # currentSrc e l'alt OCR, come nella diagnostica prova.py.
+        candidates = []
+        seen = set()
+        for image in photos_page.locator("img").all():
+            try:
+                data = image.evaluate(
+                    """image => ({
+                        src: image.currentSrc || image.src || '',
+                        alt: image.alt || '',
+                        width: image.naturalWidth || image.width || 0,
+                        height: image.naturalHeight || image.height || 0,
+                        href: image.closest('a[href]') ? image.closest('a[href]').href : ''
+                    })"""
+                )
+            except Exception:
+                continue
+            image_url = data.get("src", "")
+            if not image_url.startswith("http") or "emoji.php" in image_url:
+                continue
+            if "scontent" not in image_url and "fbcdn" not in image_url:
+                continue
+            if data.get("width", 0) < 100 or data.get("height", 0) < 100:
+                continue
+            if image_url in seen:
+                continue
+            seen.add(image_url)
+            data["is_photo_link"] = "/photo" in data.get("href", "")
+            candidates.append(data)
+
+        # I link /photo mantengono l'ordine delle immagini recenti.
+        candidates.sort(key=lambda item: not item["is_photo_link"])
+        menu_candidates = []
+        for candidate in candidates[:80]:
+            image_url = candidate.get("src", "")
+            image_alt = (candidate.get("alt", "") or "").strip()
+            clean_alt = clean_facebook_alt_text(image_alt) or image_alt
+            score = menu_photo_score(clean_alt)
+            if score < 0:
+                print(
+                    "Scarto foto avviso dalla griglia Foto: "
+                    f"{clean_post_text(clean_alt)[:90]}"
+                )
+                continue
+            if score <= 0:
+                continue
+
+            photo_href = candidate.get("href", "")
+
+            image_urls_to_try = []
+            download_url = facebook_photo_download_url(photo_href)
+            if download_url:
+                image_urls_to_try.append(download_url)
+            if photo_href:
+                try:
+                    photo_page = context.new_page()
+                    photo_page.goto(photo_href, wait_until="domcontentloaded", timeout=60000)
+                    photo_page.wait_for_timeout(2500)
+                    visible_url = find_largest_visible_image_url(photo_page)
+                    photo_page.close()
+                    if visible_url:
+                        image_urls_to_try.append(visible_url)
+                except Exception:
+                    try:
+                        photo_page.close()
+                    except Exception:
+                        pass
+            image_urls_to_try.extend(facebook_image_url_variants(image_url))
+
+            selected_image_url, selected_dimensions = select_best_facebook_image_variant(
+                image_urls_to_try
+            )
+            if not selected_image_url:
+                continue
+            print(
+                "Variante immagine menu scelta dalla griglia Foto: "
+                f"{selected_dimensions[0]}x{selected_dimensions[1]}"
+            )
+
+            menu_candidates.append(
+                {
+                    "image_url": selected_image_url,
+                    "photo_url": photo_href,
+                    "text": clean_alt,
+                    "image_alt": image_alt,
+                    "published_at": rome_now().strftime("%d/%m/%Y"),
+                    "published_at_raw": "foto menu trovata nella griglia Foto",
+                    "score": score,
+                }
+            )
+            print(
+                "Candidato menu Foto punteggio "
+                f"{score}: {clean_post_text(clean_alt)[:90]}"
+            )
+            if score >= 1000:
+                print(
+                    "Scelgo subito il primo menu forte dalla griglia Foto."
+                )
+                return {
+                    "image_url": selected_image_url,
+                    "photo_url": photo_href,
+                    "text": clean_alt,
+                    "image_alt": image_alt,
+                    "published_at": rome_now().strftime("%d/%m/%Y"),
+                    "published_at_raw": "foto menu trovata nella griglia Foto",
+                }
+
+        if menu_candidates:
+            menu_candidates.sort(key=lambda item: item["score"], reverse=True)
+            selected = menu_candidates[0]
+            print(
+                "Scelgo la foto menu dalla griglia Foto con punteggio "
+                f"{selected['score']}."
+            )
+            return {
+                key: value
+                for key, value in selected.items()
+                if key != "score"
+            }
+    except Exception:
+        return None
+    finally:
+        try:
+            photos_page.close()
+        except Exception:
+            pass
+    return None
+
+
+def extract_facebook_story(context, story_url: str, label: str = "Pagina") -> Optional[Dict[str, str]]:
+    """Apre la vista Storie di Facebook e cattura un fermo immagine della
+    storia attiva della pagina indicata. Le storie-foto vengono mostrate da
+    Facebook dentro un elemento <video> (non un tag <img> come i post
+    normali), quindi qui il contenuto si cattura con uno screenshot
+    dell'elemento video invece di cercare un URL immagine da scaricare."""
+    page = context.new_page()
+    try:
+        page.goto(story_url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(3000)
+        try:
+            page.get_by_text(re.compile(re.escape(label), re.IGNORECASE)).first.click(timeout=5000)
+        except Exception:
+            print(f"{label}: nessuna storia attiva in lista, controllo i post.")
+            return None
+        page.wait_for_timeout(800)
+        try:
+            page.get_by_text("Clicca per visualizzare la storia").click(timeout=3000)
+        except Exception:
+            pass
+        page.wait_for_timeout(1500)
+        video = page.locator("video").first
+        if video.count() == 0:
+            print(f"{label}: storia Facebook non accessibile, controllo i post.")
+            return None
+        published_raw = ""
+        try:
+            published_raw = video.evaluate(
+                r"""el => {
+                    let node = el;
+                    for (let depth = 0; node && depth < 8; depth++, node = node.parentElement) {
+                        const text = node.innerText || '';
+                        if (text.length > 400) break;
+                        const m = text.match(/\b\d+\s*(?:minuti?|min|ore?|ora|h|hours?)\b/i);
+                        if (m) return m[0];
+                    }
+                    return '';
+                }"""
+            )
+        except Exception:
+            pass
+        image_bytes = video.screenshot()
+        return {
+            "image_url": "",
+            "image_bytes": image_bytes,
+            "image_alt": "",
+            "text": "",
+            "photo_url": page.url,
+            "source_type": "story",
+            "published_at_raw": published_raw,
+            "published_at": normalize_facebook_time(published_raw) if published_raw else "",
+        }
+    except Exception as exc:
+        print(f"{label}: storia Facebook non leggibile ({type(exc).__name__}); cerco nei post.")
+        return None
+    finally:
+        page.close()
+
+
+def extract_first_facebook_image(
+    facebook_url: str,
+    prefer_active_closure: bool = False,
+    skip_closure_notices: bool = False,
+    skip_first_today_post: bool = False,
+    photo_grid_first: bool = False,
+    prefer_facebook_date: bool = False,
+    label: str = "Pagina",
+    story_url: str = "",
+) -> Dict[str, str]:
+    cookie_path = os.path.join(script_dir(), COOKIE_FILE)
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            context = browser.new_context(
+                viewport={"width": 1366, "height": 2400},
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36"
+                ),
+            )
+            # Maschera i segnali tipici di un browser automatizzato
+            # (navigator.webdriver, plugin mancanti, ecc.): Facebook puo'
+            # limitare il contenuto servito a sessioni riconosciute come bot.
+            Stealth().apply_stealth_sync(context)
+
+            cookies = load_facebook_cookies(cookie_path)
+            if cookies:
+                context.add_cookies(cookies)
+            if not cookies_look_authenticated(cookies):
+                print(
+                    f"ATTENZIONE: {cookie_path} non contiene un login Facebook valido "
+                    "(mancano i cookie 'c_user'/'xs'). Verrà usata una sessione anonima."
+                )
+
+            if story_url:
+                story = extract_facebook_story(context, story_url, label=label)
+                if story:
+                    print(f"{label}: immagine recuperata dalla storia Facebook.")
+                    return story
+
+            page = context.new_page()
+            page.goto(facebook_url, wait_until="domcontentloaded", timeout=60000)
+
+            try:
+                page.get_by_role("button", name="Consenti tutti i cookie").click(timeout=3000)
+            except PlaywrightTimeoutError:
+                pass
+            except Exception:
+                pass
+
+            if prefer_active_closure:
+                try:
+                    closure_post = find_active_closure_post_via_photos(context, facebook_url)
+                except Exception:
+                    closure_post = None
+                if closure_post:
+                    return closure_post
+
+            if photo_grid_first:
+                menu_photo = find_first_menu_photo_via_photos(context, facebook_url)
+                if menu_photo:
+                    print("Menu trovato nella griglia Foto di Facebook.")
+                    return menu_photo
+                raise RuntimeError(
+                    "Menu non trovato nella griglia Foto: trovati solo avvisi o foto non riconosciute."
+                )
+
+            page.wait_for_timeout(5000)
+            try:
+                page.screenshot(path="debug_facebook_feed.png", full_page=True)
+            except Exception:
+                pass
+            best_post = None
+            best_score = float("-inf")
+            for _ in range(6):
+                post = find_first_post_image(
+                    page,
+                    skip_closure_notices=skip_closure_notices,
+                    skip_first_today_post=skip_first_today_post,
+                    prefer_facebook_date=prefer_facebook_date,
+                    label=label,
+                )
+                if post:
+                    confident = post.pop("confident", False)
+                    score = post.pop("score", 0)
+                    # Teniamo il candidato con il punteggio migliore visto
+                    # finora tra tutti i tentativi (rete di sicurezza), ma se
+                    # non e' "affidabile" - cioe' non e' un vero menu
+                    # riconosciuto dal testo - continuiamo a scorrere qualche
+                    # secondo in piu' invece di fermarci subito: un post
+                    # pubblicitario pubblicato dopo il menu del giorno (es.
+                    # Impastamò) e' spesso il piu' recente e quindi il primo
+                    # trovato, ma non va mai preferito al menu vero e proprio
+                    # solo perche' e' fresco. Se non troviamo mai un vero
+                    # menu (es. Michela, le cui foto non hanno descrizione
+                    # testuale) restiamo comunque con il candidato dal
+                    # punteggio migliore invece di rinunciare del tutto.
+                    if best_post is None or score > best_score:
+                        best_post = post
+                        best_score = score
+                    if confident:
+                        break
+                # Uno scroll con page.mouse.wheel da solo puo' non avere
+                # alcun effetto in modalita' headless se il puntatore non e'
+                # sopra il contenitore scorrevole del feed: prima ci
+                # spostiamo al centro della pagina e poi rinforziamo lo
+                # scroll con window.scrollBy diretto, cosi' il feed avanza
+                # davvero anche quando l'evento "wheel" non viene intercettato
+                # dal punto giusto (causa osservata: gli stessi 2 post
+                # restavano identici ad ogni tentativo, segno che il feed non
+                # avanzava affatto).
+                try:
+                    page.mouse.move(683, 1200)
+                except Exception:
+                    pass
+                page.mouse.wheel(0, 1200)
+                try:
+                    page.evaluate("window.scrollBy(0, 1200)")
+                except Exception:
+                    pass
+                # Piu' tempo per far caricare le immagini pigre dopo ogni
+                # scroll: con 2s capitava che il post autentico del menu
+                # (es. Impastamò) non risultasse ancora renderizzato e venisse
+                # scartato da find_first_post_image, lasciando come unico
+                # candidato valido un post pubblicitario gia' caricato.
+                page.wait_for_timeout(3000)
+
+            if best_post:
+                post = best_post
+                photo_url = post.get("photo_url", "")
+                image_urls_to_try = [post.get("image_url", "")]
+                download_url = facebook_photo_download_url(photo_url)
+                if download_url:
+                    image_urls_to_try.append(download_url)
+                if photo_url:
+                    try:
+                        photo_page = context.new_page()
+                        photo_page.goto(photo_url, wait_until="domcontentloaded", timeout=60000)
+                        photo_page.wait_for_timeout(4000)
+                        larger_image_url = find_largest_visible_image_url(photo_page)
+                        photo_page.close()
+                        if larger_image_url:
+                            image_urls_to_try.append(larger_image_url)
+                    except Exception:
+                        pass
+                selected_image_url, selected_dimensions = select_best_facebook_image_variant(
+                    image_urls_to_try
+                )
+                if selected_image_url:
+                    post["image_url"] = selected_image_url
+                    print(
+                        "Variante immagine post scelta: "
+                        f"{selected_dimensions[0]}x{selected_dimensions[1]}"
+                    )
+                return post
+
+            raise RuntimeError(f"Non ho trovato nessuna immagine grande nella pagina Facebook: {facebook_url}")
+        finally:
+            browser.close()
+
+
+def stack_images_vertically(
+    images: List["Image.Image"], gap: int = 12, gap_color=(255, 255, 255)
+) -> "Image.Image":
+    """Impila piu' immagini una sotto l'altra, allineate alla stessa
+    larghezza (quella dell'immagine piu' stretta, per non deformare le
+    altre) e separate da uno spazio bianco. Serve per unire piu' post dello
+    stesso giorno (es. il menu del giorno e, pubblicato dopo, un post
+    pubblicitario come talvolta capita a Impastamò) in un unico pannello,
+    invece di dover indovinare quale dei due sia "il" post giusto."""
+    if not images:
+        raise ValueError("Nessuna immagine da impilare.")
+    if len(images) == 1:
+        return images[0]
+
+    target_width = min(img.width for img in images)
+    resized = []
+    for img in images:
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        if img.width != target_width:
+            new_height = max(1, int(img.height * (target_width / img.width)))
+            img = img.resize((target_width, new_height), Image.LANCZOS)
+        resized.append(img)
+
+    total_height = sum(img.height for img in resized) + gap * (len(resized) - 1)
+    combined = Image.new("RGB", (target_width, total_height), gap_color)
+    y = 0
+    for img in resized:
+        combined.paste(img, (0, y))
+        y += img.height + gap
+    return combined
+
+
+def combine_images_vertically(image_bytes_list: List[bytes]) -> bytes:
+    """Versione a bytes di stack_images_vertically, per non far uscire PIL
+    dai confini di questo modulo verso pipeline.py."""
+    images = [Image.open(io.BytesIO(data)) for data in image_bytes_list]
+    combined = stack_images_vertically(images)
+    buffer = io.BytesIO()
+    combined.save(buffer, format="JPEG", quality=90)
+    return buffer.getvalue()
+
+
+def find_today_photos(context, facebook_url: str) -> List[Dict[str, str]]:
+    """Integra il feed con foto la cui data e' esplicita nel testo dell'immagine."""
+    page = context.new_page()
+    try:
+        page.goto(build_photos_tab_url(facebook_url), wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_timeout(6000)
+        page.keyboard.press("Escape")
+        photos = page.locator("img").evaluate_all("""images => images.map(image => ({
+            image_url: image.currentSrc || image.src || '',
+            image_alt: image.alt || '',
+            photo_url: image.closest('a[href]')?.href || ''
+        })).filter(photo => photo.photo_url.includes('/photo'))""")
+        result = []
+        seen = set()
+        for photo in photos:
+            alt = photo["image_alt"]
+            # Mai assegnare la data odierna soltanto perche' la foto e' nella griglia.
+            if not re.search(r"\b\d{1,2}[/.-]\d{1,2}(?:[/.-]\d{2,4})?\b", alt):
+                continue
+            date_text = infer_date_from_text(alt)
+            if not date_text:
+                match = re.search(r"\b(\d{1,2})/(\d{1,2})(?:/(\d{4}|\d{2}))?\b", alt)
+                if match:
+                    try:
+                        year = int(match.group(3)) if match.group(3) else rome_now().year
+                        if year < 100:
+                            year += 2000
+                        date_text = datetime.date(year, int(match.group(2)), int(match.group(1))).strftime("%d/%m/%Y")
+                    except ValueError:
+                        continue
+            if parse_status_date(date_text) != rome_now().date():
+                continue
+            if photo["photo_url"] in seen:
+                continue
+            seen.add(photo["photo_url"])
+            photo.update(text=clean_facebook_alt_text(alt), published_at=date_text,
+                         published_at_raw="Data esplicita sulla foto: " + date_text)
+            result.append(photo)
+        return result
+    finally:
+        page.close()
+
+
+def extract_today_facebook_posts(
+    facebook_url: str,
+    prefer_active_closure: bool = False,
+    skip_closure_notices: bool = False,
+    skip_first_today_post: bool = False,
+    photo_grid_first: bool = False,
+    prefer_facebook_date: bool = False,
+    label: str = "Pagina",
+    story_url: str = "",
+) -> List[Dict[str, str]]:
+    """Restituisce TUTTI i post pubblicati oggi trovati sulla pagina
+    Facebook (non solo il migliore), in ordine dal piu' vecchio al piu'
+    recente: cosi' quando una rosticceria pubblica sia il menu del giorno
+    sia, dopo, un post pubblicitario nello stesso giorno (es. Impastamò), li
+    mostriamo entrambi impilati invece di dover indovinare quale dei due sia
+    "il" post giusto. Il chiamante decide cosa fare se la lista e' vuota
+    (nessun post di oggi trovato)."""
+    cookie_path = os.path.join(script_dir(), COOKIE_FILE)
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            # Un viewport artificialmente altissimo (era 2400px) fa credere
+            # a Facebook che l'intero contenuto stia gia' in una sola
+            # schermata: il caricamento automatico dei post successivi
+            # (che scatta avvicinandosi al fondo della pagina) non si
+            # attiva mai, perche' non c'e' mai un "fondo pagina" da
+            # avvicinare. Con un'altezza realistica lo scroll simulato
+            # sotto funziona come su un vero dispositivo.
+            context = browser.new_context(
+                viewport={"width": 1366, "height": 1000},
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36"
+                ),
+            )
+            # Maschera i segnali tipici di un browser automatizzato
+            # (navigator.webdriver, plugin mancanti, ecc.): Facebook puo'
+            # limitare il contenuto servito a sessioni riconosciute come bot.
+            Stealth().apply_stealth_sync(context)
+
+            cookies = load_facebook_cookies(cookie_path)
+            if cookies:
+                context.add_cookies(cookies)
+            if not cookies_look_authenticated(cookies):
+                print(
+                    f"ATTENZIONE: {cookie_path} non contiene un login Facebook valido "
+                    "(mancano i cookie 'c_user'/'xs'). Verrà usata una sessione anonima."
+                )
+
+            if story_url:
+                story = extract_facebook_story(context, story_url, label=label)
+                if story:
+                    print(f"{label}: immagine recuperata dalla storia Facebook.")
+                    return [story]
+
+            page = context.new_page()
+            page.goto(facebook_url, wait_until="domcontentloaded", timeout=60000)
+
+            try:
+                page.get_by_role("button", name="Consenti tutti i cookie").click(timeout=3000)
+            except PlaywrightTimeoutError:
+                pass
+            except Exception:
+                pass
+
+            if prefer_active_closure:
+                try:
+                    closure_post = find_active_closure_post_via_photos(context, facebook_url)
+                except Exception:
+                    closure_post = None
+                if closure_post:
+                    return [closure_post]
+
+            if photo_grid_first:
+                menu_photo = find_first_menu_photo_via_photos(context, facebook_url)
+                if menu_photo:
+                    print("Menu trovato nella griglia Foto di Facebook.")
+                    return [menu_photo]
+                raise RuntimeError(
+                    "Menu non trovato nella griglia Foto: trovati solo avvisi o foto non riconosciute."
+                )
+
+            page.wait_for_timeout(5000)
+            try:
+                page.screenshot(path=os.path.join(script_dir(), f"debug_facebook_feed_{safe_file_name(label)}.png"), full_page=True)
+            except Exception:
+                pass
+
+            today_by_url: Dict[str, Dict] = {}
+            stagnant_rounds = 0
+            for _ in range(10):
+                candidates = find_first_post_image(
+                    page,
+                    skip_closure_notices=False,
+                    skip_first_today_post=False,
+                    prefer_facebook_date=prefer_facebook_date,
+                    label=label,
+                    return_all_candidates=True,
+                ) or []
+                added = False
+                for candidate in candidates:
+                    if parse_status_date(candidate.get("published_at", "")) == rome_now().date():
+                        url = candidate.get("image_url", "")
+                        if url and url not in today_by_url:
+                            today_by_url[url] = {
+                                key: value
+                                for key, value in candidate.items()
+                                if key not in {"score", "post_index", "confident"}
+                            }
+                            added = True
+                if today_by_url and not added:
+                    stagnant_rounds += 1
+                    if stagnant_rounds >= 5:
+                        break
+                else:
+                    stagnant_rounds = 0
+                # `document.body`/`window` non sono il vero contenitore che
+                # scorre in questa SPA (il loro scrollHeight resta bloccato
+                # all'altezza del viewport): troviamo il contenitore reale
+                # (il piu' alto tra quelli con overflow scrollabile e
+                # contenuto oltre la propria altezza visibile) e scrolliamo
+                # direttamente quello.
+                # `document.body`/`window` non sono il vero contenitore che
+                # scorre in questa SPA (il loro scrollHeight resta bloccato
+                # all'altezza del viewport): troviamo il contenitore reale
+                # (il piu' alto tra quelli con overflow scrollabile e
+                # contenuto oltre la propria altezza visibile) e scrolliamo
+                # direttamente quello.
+                try:
+                    page.evaluate(
+                        """
+                        () => {
+                            document.querySelectorAll('[data-rosticceria-scrolltarget]').forEach(el => el.removeAttribute('data-rosticceria-scrolltarget'));
+                            const all = Array.from(document.querySelectorAll('*'));
+                            let best = null;
+                            for (const el of all) {
+                                const cs = getComputedStyle(el);
+                                if ((cs.overflowY === 'auto' || cs.overflowY === 'scroll')
+                                    && el.scrollHeight > el.clientHeight + 50) {
+                                    if (!best || el.scrollHeight > best.scrollHeight) {
+                                        best = el;
+
+                                    }
+                                }
+                            }
+                            if (best) best.setAttribute('data-rosticceria-scrolltarget', '1');
+                        }
+                        """
+                    )
+                except Exception:
+                    pass
+                try:
+                    page.mouse.move(683, 500)
+                except Exception:
+                    pass
+                page.mouse.wheel(0, 1200)
+                try:
+                    page.evaluate("window.scrollBy(0, 1200)")
+                except Exception:
+                    pass
+                try:
+                    page.evaluate(
+                        """
+                        () => {
+                            const el = document.querySelector('[data-rosticceria-scrolltarget="1"]');
+                            if (!el) return;
+                            el.scrollTop = el.scrollHeight;
+                            el.dispatchEvent(new Event('scroll', {bubbles: true}));
+                        }
+                        """
+                    )
+                except Exception:
+                    pass
+                page.wait_for_timeout(8000)
+
+            if label == "Impastamò":
+                try:
+                    for photo in find_today_photos(context, facebook_url):
+                        today_by_url.setdefault(photo["image_url"], photo)
+                    print(f"{label}: integrata la ricerca nella sezione Foto.")
+                except Exception as exc:
+                    print(f"{label}: sezione Foto non leggibile ({type(exc).__name__}).")
+            posts = list(today_by_url.values())
+            if not posts:
+                print(f"{label}: nessun post di oggi trovato.")
+                return []
+
+            print(f"{label}: trovati {len(posts)} post di oggi.")
+
+            enriched = []
+            for post in posts:
+                photo_url = post.get("photo_url", "")
+                image_urls_to_try = [post.get("image_url", "")]
+                download_url = facebook_photo_download_url(photo_url)
+                if download_url:
+                    image_urls_to_try.append(download_url)
+                if photo_url:
+                    try:
+                        photo_page = context.new_page()
+                        photo_page.goto(photo_url, wait_until="domcontentloaded", timeout=60000)
+                        photo_page.wait_for_timeout(4000)
+                        larger_image_url = find_largest_visible_image_url(photo_page)
+                        photo_page.close()
+                        if larger_image_url:
+                            image_urls_to_try.append(larger_image_url)
+                    except Exception:
+                        pass
+                selected_image_url, selected_dimensions = select_best_facebook_image_variant(
+                    image_urls_to_try
+                )
+                if selected_image_url:
+                    post = dict(post)
+                    post["image_url"] = selected_image_url
+                    print(
+                        "Variante immagine post scelta: "
+                        f"{selected_dimensions[0]}x{selected_dimensions[1]}"
+                    )
+                enriched.append(post)
+
+            return enriched
+        finally:
+            browser.close()
+
+
+def dump_debug_facebook(page, nome: str = "Bollenti piatti") -> None:
+    """Stampa nei log del job una diagnostica testuale di cosa Playwright
+    sta vedendo sulla pagina Facebook al momento del fallimento: URL finale,
+    titolo, lunghezza dell'HTML, i primi caratteri del testo visibile, una
+    classificazione euristica (login wall? checkpoint? cookie banner?
+    contenuto non disponibile?) e i testi di bottoni/link visibili.
+
+    Serve per capire la causa del blocco senza dover scaricare l'artefatto
+    diagnostico (screenshot/HTML) dalla UI di GitHub Actions: tutto questo
+    finisce direttamente nel log dello step, leggibile da chiunque abbia
+    accesso al workflow.
+    """
+    print("\n" + "=" * 80)
+    print(f"DIAGNOSTICA FACEBOOK — {nome}")
+    print("=" * 80)
+
+    try:
+        print("URL finale:", page.url)
+    except Exception as exc:
+        print("URL non leggibile:", repr(exc))
+
+    try:
+        print("Titolo:", page.title())
+    except Exception as exc:
+        print("Titolo non leggibile:", repr(exc))
+
+    try:
+        html = page.content()
+        print("Lunghezza HTML:", len(html))
+    except Exception as exc:
+        print("HTML non leggibile:", repr(exc))
+
+    try:
+        body_text = page.locator("body").inner_text(timeout=5000)
+    except Exception as exc:
+        body_text = ""
+        print("Body non leggibile:", repr(exc))
+
+    print("\n--- BODY, primi 6000 caratteri ---")
+    print(body_text[:6000])
+
+    low = body_text.lower()
+    checks = {
+        "login_wall": [
+            "log in", "login", "accedi",
+            "email or phone", "e-mail o numero di telefono",
+        ],
+        "checkpoint": [
+            "checkpoint", "security check", "controllo di sicurezza",
+            "confirm your identity", "conferma la tua identità",
+        ],
+        "contenuto_non_disponibile": [
+            "content isn't available", "this content isn't available",
+            "contenuto non disponibile", "questa pagina non è disponibile",
+        ],
+        "cookie": [
+            "allow all cookies", "accept all", "consenti tutti i cookie",
+        ],
+    }
+
+    print("\n--- CLASSIFICAZIONE ---")
+    for tipo, parole in checks.items():
+        trovato = any(p in low for p in parole)
+        print(f"{tipo}: {trovato}")
+
+    try:
+        buttons = page.locator("button").all_inner_texts()
+        print("\n--- BUTTON (primi 30) ---")
+        print(buttons[:30])
+    except Exception as exc:
+        print("Button non leggibili:", repr(exc))
+
+    try:
+        links = page.locator("a").all_inner_texts()
+        print("\n--- LINK (primi 30) ---")
+        print(links[:30])
+    except Exception as exc:
+        print("Link non leggibili:", repr(exc))
+
+    print("=" * 80 + "\n")
+
+
+def extract_first_facebook_text_menu(page_config: Dict[str, str]) -> Dict[str, str]:
+    cookie_path = os.path.join(script_dir(), COOKIE_FILE)
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            context = browser.new_context(
+                viewport={"width": 1366, "height": 2400},
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36"
+                ),
+            )
+            # Maschera i segnali tipici di un browser automatizzato
+            # (navigator.webdriver, plugin mancanti, ecc.): Facebook puo'
+            # limitare il contenuto servito a sessioni riconosciute come bot.
+            Stealth().apply_stealth_sync(context)
+
+            cookies = load_facebook_cookies(cookie_path)
+            if cookies:
+                context.add_cookies(cookies)
+            if not cookies_look_authenticated(cookies):
+                print(
+                    f"ATTENZIONE: {cookie_path} non contiene un login Facebook valido."
+                )
+
+            page = context.new_page()
+            response = page.goto(page_config["url"], wait_until="domcontentloaded", timeout=60000)
+            print("HTTP status:", response.status if response else "nessuna response")
+            print("URL response:", response.url if response else "nessuna response")
+            print("User-Agent:", page.evaluate("navigator.userAgent"))
+
+            try:
+                consent_pattern = re.compile(
+                    r"(Consenti tutti i cookie|Allow all cookies|Accept all|Allow all)",
+                    re.IGNORECASE,
+                )
+                page.get_by_role("button", name=consent_pattern).click(timeout=3000)
+            except PlaywrightTimeoutError:
+                pass
+            except Exception:
+                pass
+
+            page.wait_for_timeout(5000)
+            for _ in range(4):
+                post = find_first_text_menu_post(page, page_config.get("required_terms"))
+                if post:
+                    text = post.get("text", "")
+                    image_bytes = render_text_menu_image(
+                        page_config.get("display_name", page_config["name"]),
+                        text,
+                        post.get("published_at", ""),
+                    )
+                    # Aggiunge sotto l'immagine la stessa fascia bianca con la
+                    # data usata per tutte le altre rosticcerie (vedi
+                    # extract_pages/extract_paneeco_menu), cosi' anche i menu
+                    # testuali come "Bollenti piatti" la mostrano "sotto la
+                    # foto" e non solo (se presente) nell'intestazione.
+                    image_bytes = add_date_footer(image_bytes, post.get("published_at", ""))
+                    return {
+                        "name": page_config["name"],
+                        "image_bytes": image_bytes,
+                        "text": text,
+                        "published_at": post.get("published_at", ""),
+                        "published_at_raw": post.get("published_at_raw", ""),
+                    }
+                page.mouse.wheel(0, 900)
+                page.wait_for_timeout(2000)
+
+            # Diagnostica: stampa nei log un'analisi testuale della pagina
+            # (vedi dump_debug_facebook) e salva anche uno screenshot/HTML
+            # completo come artefatto, utile per un'ispezione visiva se il
+            # log testuale non bastasse a capire il problema.
+            dump_debug_facebook(page, page_config.get("display_name", page_config["name"]))
+            try:
+                debug_name = safe_file_name(page_config["name"])
+                page.screenshot(path=os.path.join(script_dir(), f"error_{debug_name}.png"), full_page=True)
+                with open(os.path.join(script_dir(), f"error_{debug_name}.html"), "w", encoding="utf-8") as debug_file:
+                    debug_file.write(page.content())
+                print(f"Diagnostica salvata: error_{debug_name}.png e error_{debug_name}.html")
+            except Exception as debug_exc:
+                print(f"Errore durante il salvataggio della diagnostica: {debug_exc}")
+
+            raise RuntimeError(f"Non ho trovato nessun post testuale del menu nella pagina Facebook: {page_config['url']}")
+        finally:
+            browser.close()
+
+
+def extract_paneeco_menu() -> Dict:
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            page = browser.new_page(
+                viewport={"width": 1366, "height": 2200},
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/126.0.0.0 Safari/537.36"
+                ),
+            )
+            page.goto(PANECO_PAGE["url"], wait_until="domcontentloaded", timeout=60000)
+            page.wait_for_timeout(2000)
+
+            data = page.evaluate(
+                """() => {
+                    const normalize = (value) => (value || '').replace(/\\s+/g, ' ').trim();
+                    const date = normalize(document.querySelector('.menu-header__title')?.textContent);
+                    const categories = Array.from(document.querySelectorAll('.menu-category')).map((section) => {
+                        const title = normalize(section.querySelector('.menu-category__title')?.textContent);
+                        const description = normalize(section.querySelector('.menu-category__description')?.textContent);
+                        const items = Array.from(section.querySelectorAll('.menu-item')).map((item) => ({
+                            name: normalize(item.querySelector('.menu-item__name')?.textContent),
+                            price: normalize(item.querySelector('.menu-item__price')?.textContent),
+                            description: normalize(item.querySelector('.menu-item__description')?.textContent)
+                        })).filter((item) => item.name);
+                        return { title, description, items };
+                    }).filter((category) => category.title);
+                    const published = document.querySelector('meta[property="article:published_time"]')?.content
+                        || document.querySelector('[itemprop="datePublished"]')?.getAttribute('datetime')
+                        || document.querySelector('.menu-header time[datetime]')?.getAttribute('datetime') || '';
+                    return { date, categories, published };
+                }"""
+            )
+        finally:
+            browser.close()
+
+    wanted_titles = {
+        "primi piatti del giorno",
+        "secondi piatti del giorno",
+    }
+    categories = [
+        category
+        for category in data.get("categories", [])
+        if category.get("title", "").strip().lower() in wanted_titles
+    ]
+
+    if not categories:
+        raise RuntimeError("Non ho trovato Primi del giorno e Secondi del giorno su Pane&Co.")
+
+    published_at = prefer_publication_time(normalize_paneeco_date(data.get("date", "")), normalize_facebook_time(data.get("published", "")))
+    menu_text = paneeco_text(data.get("date", ""), categories)
+    image_bytes = render_paneeco_image(format_menu_date(published_at), categories)
+    # Aggiunge sotto l'immagine la stessa fascia bianca con la data usata per
+    # tutte le altre rosticcerie, cosi' anche Pane&Co la mostra "sotto la
+    # foto" e non solo nell'intestazione della card.
+    image_bytes = add_date_footer(image_bytes, published_at)
+
+    return {
+        "name": PANECO_PAGE["name"],
+        "image_bytes": image_bytes,
+        "text": menu_text,
+        "published_at": published_at,
+        "published_at_raw": data.get("date", ""),
+    }
+
+
+def normalize_paneeco_date(value: str) -> str:
+    value = value.strip()
+    if not value:
+        return ""
+
+    match = re.search(r"(\d{1,2})\s+([A-Za-zÀ-ÿ]+)", value, re.IGNORECASE)
+    if not match:
+        return value
+
+    month = ITALIAN_MONTHS.get(match.group(2).lower())
+    if not month:
+        return value
+
+    year = rome_now().year
+    return f"{int(match.group(1)):02d}/{month:02d}/{year}"
+
+
+def paneeco_text(date_label: str, categories: List[Dict]) -> str:
+    lines = []
+    if date_label:
+        lines.append(f"Menu {date_label}")
+        lines.append("")
+
+    for category in categories:
+        lines.append(category["title"].upper())
+        for item in category.get("items", []):
+            price = f" - {item['price']}" if item.get("price") else ""
+            lines.append(f"- {item['name']}{price}")
+            if item.get("description"):
+                lines.append(f"  {item['description']}")
+        lines.append("")
+
+    return "\n".join(lines).strip()
+
+
+def load_font(size: int, bold: bool = False):
+    candidates = []
+    if os.name == "nt":
+        candidates.extend(
+            [
+                os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts", "arialbd.ttf" if bold else "arial.ttf"),
+                os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts", "segoeuib.ttf" if bold else "segoeui.ttf"),
+            ]
+        )
+    candidates.extend(
+        [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+        ]
+    )
+
+    for path in candidates:
+        if os.path.exists(path):
+            return ImageFont.truetype(path, size=size)
+
+    return ImageFont.load_default()
+
+
+def wrap_text(draw: ImageDraw.ImageDraw, text: str, font, max_width: int) -> List[str]:
+    words = text.split()
+    if not words:
+        return []
+
+    lines = []
+    current = words[0]
+    for word in words[1:]:
+        candidate = f"{current} {word}"
+        if draw.textbbox((0, 0), candidate, font=font)[2] <= max_width:
+            current = candidate
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current)
+    return lines
+
+
+def render_text_menu_image(title: str, text: str, published_at: str = "") -> bytes:
+    width = 1080
+    margin = 58
+    cream = (255, 252, 243)
+    paper = (255, 255, 255)
+    ink = (18, 18, 18)
+    muted = (90, 90, 90)
+    line_color = (226, 226, 226)
+
+    title_font = load_font(52, bold=True)
+    date_font = load_font(30)
+    body_font = load_font(31)
+    section_font = load_font(31, bold=True)
+
+    clean_text = clean_post_text(text)
+    body_lines = []
+    probe = Image.new("RGB", (width, 200), cream)
+    draw = ImageDraw.Draw(probe)
+    text_width = width - (margin * 2) - 48
+
+    for raw_line in clean_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            body_lines.append({"text": "", "section": False})
+            continue
+        is_section = line.upper() in {"PRIMI PIATTI", "SECONDI PIATTI"}
+        wrapped = wrap_text(draw, line, section_font if is_section else body_font, text_width)
+        for wrapped_line in wrapped:
+            body_lines.append({"text": wrapped_line, "section": is_section})
+
+    if not body_lines:
+        body_lines = [{"text": "Menu non disponibile", "section": False}]
+
+    line_height = 43
+    section_height = 54
+    content_height = sum(section_height if line["section"] else line_height if line["text"] else 24 for line in body_lines)
+    height = margin + 66 + 34 + content_height + margin + 70
+    image = Image.new("RGB", (width, max(height, 900)), cream)
+    draw = ImageDraw.Draw(image)
+
+    y = margin
+    draw.text((margin, y), title, fill=ink, font=title_font)
+    y += 64
+
+    display_date = format_menu_date(published_at or infer_date_from_text(clean_text))
+    if display_date:
+        draw.text((margin + 10, y), display_date, fill=muted, font=date_font)
+        y += 52
+
+    card_top = y
+    card_bottom = y + content_height + 76
+    draw.rounded_rectangle((margin, card_top, width - margin, card_bottom), radius=14, fill=paper, outline=line_color, width=2)
+    y += 22
+
+    for line_data in body_lines:
+        line = line_data["text"]
+        if not line:
+            y += 24
+            continue
+        if line_data["section"]:
+            section_bottom = y + 45
+            draw.rounded_rectangle((margin + 18, y - 4, width - margin - 18, section_bottom), radius=12, fill=(255, 214, 65))
+            draw.text((margin + 36, y + 6), line, fill=ink, font=section_font)
+            y += section_height
+            continue
+        draw.text((margin + 24, y), line, fill=ink, font=body_font)
+        y += line_height
+
+    output = io.BytesIO()
+    image.save(output, format="JPEG", quality=92)
+    return output.getvalue()
+
+
+def render_paneeco_image(date_label: str, categories: List[Dict]) -> bytes:
+    width = 1080
+    margin = 54
+    yellow = (255, 214, 65)
+    cream = (255, 252, 243)
+    ink = (16, 16, 16)
+    muted = (92, 92, 92)
+    border = (229, 229, 229)
+
+    title_font = load_font(48, bold=True)
+    date_font = load_font(30)
+    section_font = load_font(30, bold=True)
+    item_font = load_font(28, bold=True)
+    desc_font = load_font(23)
+    price_font = load_font(27, bold=True)
+
+    probe = Image.new("RGB", (width, 200), cream)
+    draw = ImageDraw.Draw(probe)
+
+    row_data = []
+    height = margin
+    height += 66
+    if date_label:
+        height += 45
+    height += 28
+
+    for category in categories:
+        section_height = 74
+        if category.get("description"):
+            section_height += 34
+        height += section_height
+        for item in category.get("items", []):
+            item_lines = wrap_text(draw, item["name"], item_font, width - (margin * 2) - 170)
+            desc_lines = wrap_text(draw, item.get("description", ""), desc_font, width - (margin * 2) - 30)
+            row_height = 38 * max(1, len(item_lines)) + 28 * len(desc_lines) + 30
+            row_data.append((item, item_lines, desc_lines, row_height))
+            height += row_height
+        height += 28
+
+    image = Image.new("RGB", (width, height + margin), cream)
+    draw = ImageDraw.Draw(image)
+
+    y = margin
+    draw.text((margin, y), "Pane & Co", fill=ink, font=title_font)
+    y += 64
+    if date_label:
+        draw.text((margin, y), date_label, fill=muted, font=date_font)
+        y += 48
+    y += 12
+
+    row_index = 0
+    for category in categories:
+        section_top = y
+        section_height = 74 + (34 if category.get("description") else 0)
+        draw.rounded_rectangle((margin, section_top, width - margin, section_top + section_height), radius=18, fill=yellow)
+        draw.text((margin + 28, section_top + 20), category["title"].upper(), fill=ink, font=section_font)
+        if category.get("description"):
+            draw.text((margin + 28, section_top + 57), category["description"], fill=ink, font=desc_font)
+        y += section_height
+
+        for item in category.get("items", []):
+            item, item_lines, desc_lines, row_height = row_data[row_index]
+            row_index += 1
+            draw.rectangle((margin, y, width - margin, y + row_height), fill=(255, 255, 255))
+            draw.line((margin, y, width - margin, y), fill=border, width=2)
+
+            text_y = y + 18
+            for line in item_lines:
+                draw.text((margin + 28, text_y), line, fill=ink, font=item_font)
+                text_y += 38
+
+            if item.get("price"):
+                price_bbox = draw.textbbox((0, 0), item["price"], font=price_font)
+                draw.text((width - margin - 28 - (price_bbox[2] - price_bbox[0]), y + 20), item["price"], fill=ink, font=price_font)
+
+            for line in desc_lines:
+                draw.text((margin + 28, text_y), line, fill=muted, font=desc_font)
+                text_y += 28
+
+            y += row_height
+
+        y += 28
+
+    output = io.BytesIO()
+    image.save(output, format="JPEG", quality=92)
+    return output.getvalue()
+
+
+def _requests_cookies_for_url(image_url: str) -> Dict[str, str]:
+    if "facebook.com" not in image_url:
+        return {}
+    cookie_path = os.path.join(script_dir(), "cookies.txt")
+    cookies = {}
+    for cookie in load_facebook_cookies(cookie_path):
+        name = cookie.get("name")
+        value = cookie.get("value")
+        if name and value:
+            cookies[name] = value
+    return cookies
+
+
+def download_image(image_url: str) -> bytes:
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        )
+    }
+    response = requests.get(
+        image_url,
+        headers=headers,
+        cookies=_requests_cookies_for_url(image_url),
+        timeout=30,
+    )
+    response.raise_for_status()
+    return response.content
+
+
+def crop_fantasia_chalkboard(image_bytes: bytes) -> bytes:
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+    if width < 100 or height < 100:
+        return image_bytes
+
+    x_start = int(width * 0.08)
+    x_end = int(width * 0.92)
+    step = max(1, (x_end - x_start) // 180)
+    dark_rows = []
+
+    for y in range(height):
+        total = 0
+        dark = 0
+        for x in range(x_start, x_end, step):
+            r, g, b = image.getpixel((x, y))
+            if r < 105 and g < 105 and b < 105:
+                dark += 1
+            total += 1
+        if total and dark / total >= 0.55:
+            dark_rows.append(y)
+
+    if not dark_rows:
+        return image_bytes
+
+    top = max(0, min(dark_rows) - 45)
+    bottom = min(height, max(dark_rows) + 36)
+    if bottom - top < height * 0.45 or bottom - top > height * 0.95:
+        return image_bytes
+
+    output = io.BytesIO()
+    image.crop((0, top, width, bottom)).save(output, format="JPEG", quality=92)
+    return output.getvalue()
+
+
+def add_date_footer(image_bytes: bytes, published_at: str) -> bytes:
+    """Aggiunge sotto la foto una fascia bianca con la data del menu,
+    allungando l'immagine invece di sovrapporsi al contenuto: utile quando
+    la lavagna fotografata non riporta la data. La scritta viene
+    dimensionata in proporzione alla larghezza della foto (circa il 70%
+    della larghezza), cosi' resta leggibile sia sulle foto piccole sia su
+    quelle molto grandi (es. l'avviso ferie di Michela)."""
+    date_text = format_menu_date(published_at)
+    if not date_text:
+        return image_bytes
+
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+
+    # Calcoliamo il font in modo che il testo della data occupi circa il
+    # 70% della larghezza della foto, invece di dipendere solo
+    # dall'altezza: su una foto molto grande (es. l'avviso ferie di
+    # Michela) la scritta risultava troppo piccola rispetto al disegno.
+    probe = Image.new("RGB", (10, 10))
+    probe_draw = ImageDraw.Draw(probe)
+    target_text_width = width * 0.70
+    probe_size = 100
+    probe_font = _load_bold_font(probe_size)
+    probe_bbox = probe_draw.textbbox((0, 0), date_text, font=probe_font)
+    probe_width = probe_bbox[2] - probe_bbox[0]
+    if probe_width > 0:
+        font_size = max(18, int(probe_size * target_text_width / probe_width))
+    else:
+        font_size = max(18, height // 14)
+    font = _load_bold_font(font_size)
+    while font_size > 12:
+        bbox = probe_draw.textbbox((0, 0), date_text, font=font)
+        if bbox[2] - bbox[0] <= width - 12:
+            break
+        font_size -= 1
+        font = _load_bold_font(font_size)
+    bar_height = max(42, min(86, int(font_size / 0.45)))
+
+    # Stesso giallo usato nelle card di Pane&Co (255, 214, 65), cosi' la
+    # fascia con la data ha lo stesso stile in tutte le rosticcerie.
+    canvas = Image.new("RGB", (width, height + bar_height), (255, 214, 65))
+    canvas.paste(image, (0, 0))
+    draw = ImageDraw.Draw(canvas)
+    # Cornice grigia attorno alla fascia gialla, per staccarla dalla foto.
+    draw.rectangle(
+        (0, height, width - 1, height + bar_height - 1),
+        outline=(120, 120, 120),
+        width=3,
+    )
+    bbox = draw.textbbox((0, 0), date_text, font=font)
+    text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    x = (width - text_w) / 2 - bbox[0]
+    y = height + (bar_height - text_h) / 2 - bbox[1]
+    draw.text((x, y), date_text, fill=(16, 16, 16), font=font)
+    output = io.BytesIO()
+    canvas.save(output, format="JPEG", quality=92)
+    return output.getvalue()
+
+
+def add_white_border(image_bytes: bytes, border: int = 10) -> bytes:
+    """Aggiunge un bordo bianco attorno alla foto del menu."""
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+    canvas = Image.new("RGB", (width + border * 2, height + border * 2), (255, 255, 255))
+    canvas.paste(image, (border, border))
+    output = io.BytesIO()
+    canvas.save(output, format="JPEG", quality=92)
+    return output.getvalue()
+
+
+def _widest_dark_column_run(
+    image: Image.Image,
+    dark_threshold: int = 130,
+    min_dark_ratio: float = 0.45,
+) -> Optional[Tuple[int, int]]:
+    """Individua il blocco contiguo di colonne scure piu' ampio nell'immagine
+    (tipicamente la lavagna). Restituisce (inizio, fine) oppure None se non
+    trova nulla di sufficientemente scuro."""
+    width, height = image.size
+    y_start = int(height * 0.1)
+    y_end = int(height * 0.9)
+    step = max(1, (y_end - y_start) // 300)
+
+    is_dark_col = []
+    for x in range(width):
+        dark_pixels = 0
+        total_pixels = 0
+        for y in range(y_start, y_end, step):
+            r, g, b = image.getpixel((x, y))
+            if (r + g + b) / 3 < dark_threshold:
+                dark_pixels += 1
+            total_pixels += 1
+        is_dark_col.append(total_pixels > 0 and (dark_pixels / total_pixels) >= min_dark_ratio)
+
+    # Riempie piccoli buchi (rumore) tra colonne scure per unire un blocco continuo
+    max_gap = max(5, width // 100)
+    filled = list(is_dark_col)
+    x = 0
+    while x < width:
+        if not filled[x]:
+            gap_start = x
+            while x < width and not filled[x]:
+                x += 1
+            gap_len = x - gap_start
+            if gap_start > 0 and x < width and gap_len <= max_gap:
+                for gx in range(gap_start, x):
+                    filled[gx] = True
+        else:
+            x += 1
+
+    # Individua il blocco contiguo di colonne scure più lungo: è la lavagna.
+    # (Ignora così macchie scure isolate altrove nella foto, come finestre o ombre,
+    # che in precedenza allargavano il ritaglio ben oltre i bordi reali della lavagna.)
+    best_start = None
+    best_end = None
+    best_len = 0
+    run_start = None
+    for x in range(width):
+        if filled[x]:
+            if run_start is None:
+                run_start = x
+        else:
+            if run_start is not None and x - run_start > best_len:
+                best_len = x - run_start
+                best_start, best_end = run_start, x
+            run_start = None
+    if run_start is not None and width - run_start > best_len:
+        best_start, best_end = run_start, width
+        best_len = width - run_start
+
+    if best_start is None:
+        return None
+    return best_start, best_end
+
+
+CLOSURE_NOTICE_PATTERN = re.compile(
+    r"\bchius[oi]\b|\bchiusura\b|\briapr\w*\b|\bferie\b|\bresteremo\s+chius\w*\b"
+    r"|\bsaremo\s+chius\w*\b|\bsiamo\s+tornat[io]\b"
+    r"|\bnuovamente\s+apert[io]\b|\bdi\s+nuovo\s+apert[io]\b"
+    r"|\babbiamo\s+ricaricat\w*\s+le\s+energie\b"
+    r"|\bsiamo\s+pront[ioe]\b|\bti\s+aspettiamo\b",
+    re.IGNORECASE,
+)
+
+MENU_NOTICE_PATTERN = re.compile(
+    r"\bmen[uù]\b|\bmenu\b|\bprimi\b|\bsecondi\b|\bcontorni\b|\bantipasti\b|\bpiatti\b",
+    re.IGNORECASE,
+)
+
+REAL_MENU_PATTERN = re.compile(
+    r"\bmen[uù]\s+(?:del\s+giorno|di)\b"
+    r"|\bprimi\s+piatti\b|\bsecondi\s+piatti\b|\bcontorni\b|\bantipasti\b",
+    re.IGNORECASE,
+)
+
+
+def looks_like_closure_notice(text: str) -> bool:
+    """Riconosce un post/cartello che avvisa di una chiusura per ferie o
+    simili (es. "chiusi da venerdì a lunedì", "riapriamo martedì"), cosi'
+    da poter evitare di trattarlo come una normale lavagna del menu del
+    giorno."""
+    return bool(CLOSURE_NOTICE_PATTERN.search(text or ""))
+
+
+def looks_like_menu_notice(text: str) -> bool:
+    return bool(MENU_NOTICE_PATTERN.search(text or ""))
+
+
+def looks_like_real_menu(text: str) -> bool:
+    """Distingue un menu effettivo da un annuncio che cita genericamente i menu."""
+    return bool(REAL_MENU_PATTERN.search(text or ""))
+
+
+def menu_photo_score(text: str) -> int:
+    """Assegna un punteggio a una foto candidata: positivo per menu veri,
+    negativo per avvisi di chiusura/riapertura."""
+    value = (text or "").lower()
+    if not value:
+        return 0
+
+    if looks_like_closure_notice(value) and not looks_like_real_menu(value):
+        return -1000
+
+    score = 0
+    if looks_like_real_menu(value):
+        score += 1000
+    if re.search(r"\bmen[uù]\b|\bmenu\b", value, re.IGNORECASE):
+        score += 200
+    for term in ("antipasti", "primi", "secondi", "contorni"):
+        if term in value:
+            score += 120
+    if re.search(r"\b\d{1,2}\s*/\s*\d{1,2}\b", value):
+        score += 80
+    return score
+
+
+def clean_facebook_alt_text(alt: str) -> str:
+    """Ripulisce il testo alternativo generato automaticamente da Facebook
+    per un'immagine, estraendo la frase citata quando presente (es.
+    "L'immagine può contenere: testo che dice 'AVVISIAMO...'") e scartando
+    le descrizioni generiche prive di informazioni utili."""
+    alt = (alt or "").strip()
+    if not alt:
+        return ""
+    match = re.search(
+        r"(?:testo che dice|text that says|raffigurante il seguente testo)"
+        r"\s*[:\s]*[\"'“](.+?)[\"'”]",
+        alt,
+        re.IGNORECASE,
+    )
+    if match:
+        return match.group(1).strip()
+    if re.search(
+        r"nessuna descrizione|may be an image|image may contain|no photo description",
+        alt,
+        re.IGNORECASE,
+    ):
+        return ""
+    return alt
+
+
+def parse_closure_date_range(text: str, reference_date: datetime.date):
+    """Cerca nel testo un intervallo del tipo "da venerdi' 4 (settembre) a
+    lunedi' 7 settembre" e restituisce (data_inizio, data_fine), usando
+    l'anno della data di riferimento. Restituisce None se non trova un
+    intervallo valido o riconoscibile."""
+    if not text:
+        return None
+    lower = text.lower()
+    month_pattern = "|".join(ITALIAN_MONTHS.keys())
+    match = re.search(
+        rf"da\s+(?:\w+\s+)?(\d{{1,2}})(?:\s+({month_pattern}))?\s+a\s+"
+        rf"(?:\w+\s+)?(\d{{1,2}})\s+({month_pattern})",
+        lower,
+    )
+    if not match:
+        return None
+
+    start_day = int(match.group(1))
+    start_month_name = match.group(2)
+    end_day = int(match.group(3))
+    end_month_name = match.group(4)
+    end_month = ITALIAN_MONTHS.get(end_month_name)
+    start_month = ITALIAN_MONTHS.get(start_month_name) if start_month_name else end_month
+    if not start_month or not end_month:
+        return None
+
+    year = reference_date.year
+    try:
+        start_date = datetime.date(year, start_month, start_day)
+        end_date = datetime.date(year, end_month, end_day)
+    except ValueError:
+        return None
+    if end_date < start_date:
+        # L'intervallo attraversa il cambio di anno (es. dicembre -> gennaio).
+        end_date = datetime.date(year + 1, end_month, end_day)
+    return start_date, end_date
+
+
+def build_photos_tab_url(facebook_url: str) -> str:
+    """Costruisce l'URL della scheda "Foto" di una pagina Facebook."""
+    if "sk=photos" in facebook_url:
+        return facebook_url
+    separator = "&" if "?" in facebook_url else "?"
+    return f"{facebook_url}{separator}sk=photos"
+
+
+def find_active_closure_post_via_photos(context, facebook_url: str):
+    """Scandisce la scheda "Foto" della pagina (consultabile anche senza
+    login, a differenza del feed principale) alla ricerca di un avviso di
+    chiusura per ferie ancora valido oggi, anche se nel frattempo e' stato
+    pubblicato un post piu' recente (es. il menu del giorno di un giorno
+    prima dell'inizio della chiusura). Si basa sul testo alternativo che
+    Facebook genera automaticamente per ogni foto, che include spesso il
+    testo scritto su un cartello fotografato. Restituisce None se non trova
+    nulla di pertinente, cosi' che il chiamante possa proseguire con
+    l'estrazione normale."""
+    today = rome_now().date()
+    try:
+        photos_page = context.new_page()
+    except Exception:
+        return None
+
+    try:
+        photos_page.goto(build_photos_tab_url(facebook_url), wait_until="domcontentloaded", timeout=60000)
+        photos_page.wait_for_timeout(3500)
+        try:
+            photos_page.get_by_role("button", name="Consenti tutti i cookie").click(timeout=3000)
+        except Exception:
+            pass
+
+        try:
+            anchors = photos_page.locator('a[href*="/photo"]').all()
+        except Exception:
+            anchors = []
+
+        for anchor in anchors[:15]:
+            try:
+                image = anchor.locator("img").first
+                alt_text = (image.get_attribute("alt") or "").strip()
+            except Exception:
+                continue
+            if not alt_text or not looks_like_closure_notice(alt_text):
+                continue
+            date_range = parse_closure_date_range(alt_text, today)
+            if not date_range or not (date_range[0] <= today <= date_range[1]):
+                continue
+
+            try:
+                href = anchor.get_attribute("href") or ""
+            except Exception:
+                href = ""
+            try:
+                image_url = image.get_attribute("src") or ""
+            except Exception:
+                image_url = ""
+
+            published_at = ""
+            published_at_raw = ""
+
+            if href:
+                # Nota importante: NON apriamo la foto con una navigazione a
+                # se stante (context.new_page().goto(href)) verso l'URL
+                # /photo.php. In ambiente headless/anonimo (GitHub Actions)
+                # una richiesta "a freddo" di quel tipo viene rediretta da
+                # Facebook alla pagina di login, mentre la stessa richiesta
+                # fatta da un browser interattivo normale funziona senza
+                # problemi: e' un blocco anti-bot legato al modo in cui la
+                # pagina viene raggiunta, non al contenuto in se'. Simuliamo
+                # invece il comportamento di un utente reale: clicchiamo la
+                # foto direttamente nella griglia "Foto" gia' caricata, cosi'
+                # Facebook la apre nel proprio visualizzatore integrato
+                # (aggiornamento lato client della stessa pagina, senza un
+                # nuovo caricamento completo) e non scatta il redirect al
+                # login.
+                try:
+                    clicked = False
+                    for _ in range(2):
+                        try:
+                            anchor.click(timeout=5000)
+                            clicked = True
+                            break
+                        except Exception:
+                            photos_page.wait_for_timeout(500)
+                    if not clicked:
+                        # Non siamo riusciti ad aprire il visualizzatore: teniamo
+                        # l'URL della miniatura gia' raccolto (verra' comunque
+                        # scartato piu' sotto se troppo piccolo) invece di
+                        # rinunciare subito a questa foto.
+                        raise RuntimeError("click sulla foto non riuscito")
+                    photos_page.wait_for_timeout(2500)
+
+                    try:
+                        og_image_url = (
+                            photos_page.locator('meta[property="og:image"]')
+                            .first.get_attribute("content", timeout=2000)
+                            or ""
+                        )
+                    except Exception:
+                        og_image_url = ""
+                    if og_image_url:
+                        image_url = og_image_url
+                    else:
+                        for _ in range(6):
+                            larger_image_url = find_largest_visible_image_url(photos_page)
+                            if larger_image_url:
+                                image_url = larger_image_url
+                                break
+                            photos_page.wait_for_timeout(1000)
+
+                    # Data di pubblicazione reale dell'avviso (non la data
+                    # odierna): cerchiamo un'etichetta di tempo nel
+                    # visualizzatore appena aperto, come gia' si fa per i
+                    # post di testo normali.
+                    raw_time = ""
+                    for _ in range(4):
+                        try:
+                            raw_time = best_published_time_from_post(photos_page.locator("body"))
+                        except Exception:
+                            raw_time = ""
+                        if raw_time:
+                            break
+                        photos_page.wait_for_timeout(800)
+                    if raw_time:
+                        published_at_raw = raw_time
+                        published_at = normalize_facebook_time(raw_time)
+
+                    # Richiudiamo il visualizzatore prima di eventualmente
+                    # proseguire con le altre foto della griglia.
+                    try:
+                        photos_page.keyboard.press("Escape")
+                        photos_page.wait_for_timeout(500)
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+
+            if not image_url:
+                continue
+
+            # Sicurezza: nonostante il tentativo sopra di aprire la foto in
+            # grande, a volte resta comunque l'URL di una piccola miniatura
+            # (es. l'anteprima nella griglia "Foto"), che una volta
+            # scaricata risulta visibilmente ritagliata ai lati (il testo
+            # del cartello viene tagliato a meta' parola). Scartiamo quindi
+            # le immagini troppo piccole per essere la foto intera e
+            # proviamo con la prossima nella griglia, invece di pubblicare
+            # un avviso illeggibile.
+            try:
+                probe_bytes = download_image(image_url)
+                probe_image = Image.open(io.BytesIO(probe_bytes))
+                if min(probe_image.size) < 380:
+                    print(
+                        "Le delizie di Michela: immagine avviso troppo piccola "
+                        f"({probe_image.size[0]}x{probe_image.size[1]}), probabile "
+                        "miniatura ritagliata: la scarto e provo la prossima foto."
+                    )
+                    continue
+            except Exception:
+                pass
+
+            if not published_at:
+                # Ultima risorsa, se non troviamo la data reale di
+                # pubblicazione dell'avviso: usiamo il giorno prima
+                # dell'inizio della chiusura (l'ultimo giorno di apertura)
+                # invece della data odierna. Con la chiusura gia' in corso,
+                # mostrare "oggi" nella fascia sotto la foto farebbe
+                # sembrare quella la data del menu, quando in realta' il
+                # locale e' chiuso da giorni.
+                if date_range:
+                    fallback_date = date_range[0] - datetime.timedelta(days=1)
+                    published_at = fallback_date.strftime("%d/%m/%Y circa")
+                else:
+                    published_at = rome_now().strftime("%d/%m/%Y circa")
+
+            caption = clean_facebook_alt_text(alt_text) or alt_text
+            return {
+                "image_url": image_url,
+                "photo_url": href,
+                "text": caption,
+                "image_alt": alt_text,
+                "published_at": published_at,
+                "published_at_raw": published_at_raw,
+            }
+    except Exception:
+        pass
+    finally:
+        try:
+            photos_page.close()
+        except Exception:
+            pass
+
+    return None
+
+
+def crop_michela_chalkboard(image_bytes: bytes) -> bytes:
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = image.size
+    if width < 100 or height < 100:
+        return image_bytes
+
+    bounds = _widest_dark_column_run(image, dark_threshold=100, min_dark_ratio=0.25)
+    if bounds is None:
+        return image_bytes
+    best_start, best_end = bounds
+    best_len = best_end - best_start
+    if best_len < max(width * 0.15, 150) or best_len >= width * 0.85:
+        # Se il blocco scuro rilevato e' troppo stretto per essere una vera
+        # lavagna leggibile (o copre gia' quasi tutta la foto), meglio
+        # tenere la foto intera piuttosto che un ritaglio inutile o illeggibile.
+        return image_bytes
+
+    # Michela pubblica spesso lavagnette alte e strette: anche pochi pixel di
+    # parete laterale rubano spazio utile al testo. Usiamo quindi un margine
+    # molto piccolo, a differenza del ritaglio piu' permissivo usato altrove.
+    margin = max(3, min(8, width // 90))
+    left = max(0, best_start - margin)
+    right = min(width, best_end + margin)
+    cropped = image.crop((left, 0, right, height))
+
+    # Rifinitura: sul ritaglio appena ottenuto puo' restare ancora del muro o
+    # un infisso scuro vicino alla lavagna (es. una porta), che il primo
+    # passaggio include per via del margine. Rilancia la stessa rilevazione
+    # su questo ritaglio piu' piccolo: se individua un blocco scuro
+    # chiaramente piu' stretto e ben centrato, restringe ulteriormente,
+    # eliminando i bordi inutili rimasti ai lati.
+    cropped_width = cropped.size[0]
+    refine_bounds = _widest_dark_column_run(cropped, dark_threshold=100, min_dark_ratio=0.25)
+    if refine_bounds is not None:
+        r_start, r_end = refine_bounds
+        r_len = r_end - r_start
+        if max(cropped_width * 0.15, 120) <= r_len < cropped_width * 0.95:
+            r_left = max(0, r_start - margin)
+            r_right = min(cropped_width, r_end + margin)
+            cropped = cropped.crop((r_left, 0, r_right, height))
+
+    output = io.BytesIO()
+    cropped.save(output, format="JPEG", quality=92)
+    trimmed_bytes = output.getvalue()
+
+    # Applica poi lo stesso ritaglio verticale usato per Fantasia.
+    return crop_fantasia_chalkboard(trimmed_bytes)
+
+
+def save_image(image_bytes: bytes, filename: str) -> str:
+    image_path = os.path.join(script_dir(), filename)
+    with open(image_path, "wb") as image_file:
+        image_file.write(image_bytes)
+    return image_path
+
+
+def publish_dir() -> str:
+    path = os.path.join(script_dir(), PUBLISH_DIR)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def safe_file_name(name: str) -> str:
+    replacements = {
+        "ì": "i",
+        "Ì": "I",
+        "à": "a",
+        "è": "e",
+        "é": "e",
+        "ò": "o",
+        "ù": "u",
+    }
+    for source, target in replacements.items():
+        name = name.replace(source, target)
+    return "".join(char if char.isalnum() else "_" for char in name).strip("_")
+
+
+def parse_status_date(value: str) -> Optional[datetime.date]:
+    match = re.search(r"(\d{1,2})/(\d{1,2})/(\d{4})", value or "")
+    if not match:
+        return None
+
+    try:
+        return datetime.date(int(match.group(3)), int(match.group(2)), int(match.group(1)))
+    except ValueError:
+        return None
+
+
+def infer_date_from_text(text: str) -> str:
+    text = text or ""
+
+    match = re.search(r"(\d{1,2})/(\d{1,2})/(\d{2,4})", text)
+    if match:
+        year = int(match.group(3))
+        if year < 100:
+            year += 2000
+
+        try:
+            return datetime.date(year, int(match.group(2)), int(match.group(1))).strftime("%d/%m/%Y")
+        except ValueError:
+            pass
+
+    # Fallback
+    month_pattern = "|".join(ITALIAN_MONTHS.keys())
+    match = re.search(
+        rf"(\d{{1,2}})\s+({month_pattern})(?:\s+(\d{{4}}))?",
+        text,
+        re.IGNORECASE,
+    )
+    if match:
+        day = int(match.group(1))
+        month = ITALIAN_MONTHS.get(match.group(2).lower())
+        year = int(match.group(3)) if match.group(3) else rome_now().year
+        if month:
+            try:
+                return datetime.date(year, month, day).strftime("%d/%m/%Y")
+            except ValueError:
+                return ""
+
+    return ""
+
+
+def panel_published_at(panel: Dict) -> str:
+    return panel.get("published_at") or infer_date_from_text(panel.get("text", ""))
+
+
+def existing_publish_panel_if_today(name: str, require_today: bool = True) -> Optional[Dict]:
+    output_dir = publish_dir()
+    status_path = os.path.join(output_dir, "status.json")
+    if not os.path.exists(status_path):
+        return None
+
+    try:
+        with open(status_path, "r", encoding="utf-8") as status_file:
+            status = json.load(status_file)
+    except Exception:
+        return None
+
+    for page_status in status.get("pages", []):
+        if page_status.get("name") != name:
+            continue
+        published_at = page_status.get("published_at", "") or infer_date_from_text(page_status.get("text", ""))
+        if require_today and parse_status_date(published_at) != rome_now().date():
+            return None
+
+        image_name = page_status.get("image") or f"{safe_file_name(name)}.jpg"
+        image_path = os.path.join(output_dir, image_name)
+        if not os.path.exists(image_path):
+            return None
+
+        text_name = page_status.get("publish_text") or f"{safe_file_name(name)}.txt"
+        text_path = os.path.join(output_dir, text_name)
+        text = page_status.get("text", "")
+        if os.path.exists(text_path):
+            try:
+                with open(text_path, "r", encoding="utf-8") as text_file:
+                    text = text_file.read()
+            except Exception:
+                pass
+
+        if not text.strip():
+            # Voce salvata senza testo valido: non riproporla all'infinito.
+            return None
+
+        with open(image_path, "rb") as image_file:
+            image_bytes = image_file.read()
+
+        return {
+            "name": name,
+            "image_bytes": image_bytes,
+            "text": text,
+            "published_at": published_at,
+            "published_at_raw": page_status.get("published_at_raw", ""),
+            "publish_image": image_name,
+            "publish_text": text_name,
+            "reused": True,
+        }
+
+    return None
+
+
+def save_publish_files(panels: List[Dict]) -> str:
+    output_dir = publish_dir()
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+    newly_published: List[str] = []
+
+    for panel in panels:
+        if "error" in panel:
+            continue
+
+        base_name = safe_file_name(panel["name"])
+        latest_name = f"{base_name}.jpg"
+        archive_name = f"{base_name}_{timestamp}.jpg"
+        panel["publish_image"] = panel.get("publish_image") or latest_name
+        panel["publish_text"] = panel.get("publish_text") or f"{base_name}.txt"
+
+        if panel.get("reused"):
+            continue
+
+        # Confronto con l'immagine gia' pubblicata (se presente) PRIMA di
+        # sovrascriverla: solo un contenuto realmente diverso conta come
+        # "nuovo menu pubblicato" ai fini della notifica push qui sotto. Senza
+        # questo controllo, pannelli come quello di Michela - che vengono
+        # rigenerati a ogni giro anche quando la foto e' sempre la stessa
+        # (import locale valido per l'intera giornata) - manderebbero una
+        # notifica ogni 10 minuti invece che una sola volta.
+        latest_path = os.path.join(output_dir, latest_name)
+        previous_bytes = None
+        if os.path.exists(latest_path):
+            try:
+                with open(latest_path, "rb") as previous_file:
+                    previous_bytes = previous_file.read()
+            except OSError:
+                previous_bytes = None
+        if previous_bytes != panel["image_bytes"]:
+            newly_published.append(panel["name"])
+
+        for filename in (latest_name, archive_name):
+            path = os.path.join(output_dir, filename)
+            with open(path, "wb") as image_file:
+                image_file.write(panel["image_bytes"])
+
+        text_path = os.path.join(output_dir, f"{base_name}.txt")
+        with open(text_path, "w", encoding="utf-8") as text_file:
+            text_file.write(panel.get("text", ""))
+
+        panel["publish_image"] = latest_name
+        panel["publish_text"] = f"{base_name}.txt"
+
+    write_publish_index(panels, output_dir)
+    write_publish_status(panels, output_dir)
+    if newly_published:
+        notify_new_menus(newly_published)
+    return output_dir
+
+
+def notify_new_menus(names: List[str]) -> None:
+    """Manda una notifica push (con suono) al cellulare tramite ntfy.sh
+    quando una o piu' rosticcerie pubblicano il menu del giorno. L'argomento
+    'topic' di ntfy.sh funziona come una password: chi lo conosce puo'
+    ricevere (e mandare) notifiche su quel canale, quindi NON va scritto qui
+    nel codice (questo repository e' pubblico) ma letto dalla variabile
+    d'ambiente NTFY_TOPIC - impostata come secret di GitHub Actions per le
+    esecuzioni automatiche, ed eventualmente come variabile d'ambiente locale
+    per le esecuzioni manuali. Se la variabile non e' impostata, la funzione
+    non fa nulla: niente notifiche finche' non viene configurata, ma la
+    pubblicazione dei menu continua normalmente."""
+    topic = os.environ.get("NTFY_TOPIC", "").strip()
+    if not topic:
+        print("Notifica non inviata: variabile NTFY_TOPIC non impostata.")
+        return
+    if len(names) == 1:
+        title = f"{names[0]}: nuovo menu"
+        body = f"{names[0]} ha pubblicato il menu di oggi."
+    else:
+        title = "Nuovi menu pubblicati"
+        body = ", ".join(names) + " hanno pubblicato il menu di oggi."
+    try:
+        requests.post(
+            f"https://ntfy.sh/{topic}",
+            data=body.encode("utf-8"),
+            headers={
+                "Title": title.encode("utf-8"),
+                "Tags": "bell,fork_and_knife",
+                "Priority": "default",
+            },
+            timeout=10,
+        )
+    except Exception as exc:
+        # Una notifica fallita non deve mai interrompere la pubblicazione.
+        print(f"Notifica push non inviata: {exc}")
+
+
+def write_publish_status(panels: List[Dict], output_dir: str) -> None:
+    status = {
+        "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
+        "pages": [
+            {
+                "name": panel["name"],
+                "image": panel.get("publish_image"),
+                "text": panel.get("text", ""),
+                "published_at": panel_published_at(panel),
+                "published_at_raw": panel.get("published_at_raw", ""),
+                "error": panel.get("error"),
+            }
+            for panel in panels
+        ],
+    }
+    status_path = os.path.join(output_dir, "status.json")
+    with open(status_path, "w", encoding="utf-8") as status_file:
+        json.dump(status, status_file, ensure_ascii=False, indent=2)
+
+
+def _load_bold_font(size: int):
+    candidates = []
+    if os.name == "nt":
+        windir = os.environ.get("WINDIR", "C:\\Windows")
+        candidates.extend(
+            [
+                os.path.join(windir, "Fonts", "arialbd.ttf"),
+                os.path.join(windir, "Fonts", "segoeuib.ttf"),
+            ]
+        )
+    candidates.extend([
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    ])
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                return ImageFont.truetype(path, size)
+            except Exception:
+                pass
+    return ImageFont.load_default()
+
+
+def add_phone_overlay(image_bytes: bytes, phone_number: str) -> bytes:
+    """Disegna il numero di telefono direttamente sull'immagine (fascia in
+    basso, verde brillante) cosi' l'informazione resta dentro l'immagine
+    invece che come testo HTML separato."""
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+    width, height = image.size
+    bar_height = max(56, height // 10)
+    overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    draw.rectangle([0, height - bar_height, width, height], fill=(0, 0, 0, 190))
+    font = _load_bold_font(int(bar_height * 0.5))
+    bbox = draw.textbbox((0, 0), phone_number, font=font)
+    text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    x = (width - text_w) / 2 - bbox[0]
+    y = height - bar_height + (bar_height - text_h) / 2 - bbox[1]
+    draw.text((x, y), phone_number, fill=(0, 200, 83, 255), font=font)
+    combined = Image.alpha_composite(image, overlay).convert("RGB")
+    output = io.BytesIO()
+    combined.save(output, format="JPEG", quality=90)
+    return output.getvalue()
+
+
+def write_publish_index(panels: List[Dict], output_dir: str) -> None:
+    today_label = italian_long_date(rome_now().date())
+    phone_numbers = {
+        "Fantasia": "080-405.41.39",
+        "Cibària": "080-645.07.99",
+        "Impastamò": "392-536.15.36",
+        "Le delizie di Michela": "080-521.42.33",
+        "Santoro (Castellana)": "080-859.83.13",
+        "Pane & Co": "080-405.49.00",
+        "Bollenti piatti": "334-318.58.44",
+        "Aufer": "368-38.30.313",
+    }
+    logo_files = {
+        "Fantasia": "Logo-Fantasia.jpg",
+        "Cibària": "Logo-Cibaria.jpg",
+        "Impastamò": "Logo-Impastamo.jpg",
+        "Le delizie di Michela": "Logo-Michela.jpg",
+        "Santoro (Castellana)": "Logo-Santoro.jpg",
+        "Pane & Co": "Logo-pane.jpg",
+        "Bollenti piatti": "Logo-Bollent.jpg",
+        "Aufer": "Logo-Aufer.jpg",
+    }
+    # Nome mostrato nell'interfaccia (card, titolo dettaglio) quando diverso
+    # dal nome interno usato sopra/sotto per contatori, stato salvato,
+    # ordine personalizzato, ecc.: aggiungere una voce qui non richiede di
+    # toccare nient'altro, perche' il nome interno resta invariato ovunque.
+    display_names = {
+        "Aufer": "Aufer Gastronomia",
+    }
+    map_addresses = {
+        "Fantasia":              "Via Nicola Losavio 10, Putignano",
+        "Bollenti piatti":       "Via Noci 48, Putignano",
+        "Pane & Co":             "Viale Federico II 49, Putignano",
+        "Cibària":               "Estrad. a Levante 11, Putignano",
+        "Le delizie di Michela": "Corso Umberto I 87, Putignano",
+        "Impastamò":             "Via Conversano 34, Putignano",
+        "Santoro (Castellana)":  "Via Mazzini 28, Castellana Grotte",
+        "Aufer":                 "Estrad. a Mezzogiorno 83, Putignano",
+    }
+    today = rome_now().date()
+    panels_data = []
+
+    # Rosticcerie aggiunte di recente: al posto della data/ora sul bottone
+    # mostrano un confetto verde con scritta "NEW" che lampeggia piano, per
+    # farle notare. Quando non sono piu' una novita', basta togliere il nome
+    # da questo insieme (o svuotarlo) per tornare al badge normale.
+    # Aufer non e' piu' una novita', quindi il meccanismo resta disattivato
+    # (insieme vuoto); si riattiva per una futura rosticceria cosi':
+    # NEW_ARRIVALS = {"NomeInterno"}
+    NEW_ARRIVALS = set()
+
+    for panel in panels:
+        name = panel["name"]
+        display_name = display_names.get(name, name)
+        phone_number = phone_numbers.get(name, "")
+        phone_tel = re.sub(r"[^0-9+]", "", phone_number) if phone_number else ""
+        error = panel.get("error")
+
+        image_url = ""
+        is_updated = False
+        updated_label = today_label
+        published_at = ""
+        if error:
+            error = str(error)
+        else:
+            image_name = panel.get("publish_image", "")
+            if image_name:
+                image_url = f"{html.escape(image_name)}?v={int(time.time())}"
+            published_at = panel_published_at(panel)
+            is_updated = parse_status_date(published_at) == today
+            updated_label = format_menu_date(published_at) or today_label
+
+        panels_data.append({
+            "name": name,
+            "card_label": display_name,
+            "detail_title": display_name,
+            "logo": f"../../{html.escape(logo_files[name])}?v={int(time.time())}" if name in logo_files else "",
+            "phone_display": phone_number,
+            "phone_tel": phone_tel,
+            "image": image_url,
+            "error": error or "",
+            "updated": is_updated,
+            "updated_label": updated_label,
+            "card_reference": format_card_badge(published_at, is_updated),
+            "menu_date": parse_status_date(published_at).isoformat() if parse_status_date(published_at) else "",
+            "url": SOURCE_URLS.get(name, ""),
+            "counter_enabled": True,
+            "badge_new": name in NEW_ARRIVALS,
+        })
+
+    panels_data.append({
+        "name": "Suggerimenti",
+        "card_label": "Suggerimenti",
+        "detail_title": "Info",
+        "phone_display": "",
+        "phone_tel": "",
+        "image": f"Rosticcerie-Home.jpg?v={int(time.time())}",
+        "error": "",
+        "updated": True,
+        "updated_label": today_label,
+        "url": "",
+        "counter_enabled": False,
+        "card_border": "#49a95c",
+        "card_bg": "#eaf7ea",
+        "card_name_color": "#111",
+    })
+
+    panels_json = json.dumps(panels_data, ensure_ascii=False)
+
+    cards = []
+    for i, p in enumerate(panels_data):
+        border_color = p.get("card_border") or ("#ffd641" if p["updated"] else "#ffffff")
+        bg_color = p.get("card_bg") or ("#fff7de" if p["updated"] else "#ffffff")
+        name_color = p.get("card_name_color") or "#111"
+        counter_html = (
+            f'<span class="card-counter" id="card-counter-{i}"></span>'
+            if p.get("counter_enabled", True)
+            else ""
+        )
+        if p.get("badge_new"):
+            reference_html = '<span class="card-reference badge-new">NEW</span>'
+        else:
+            reference_html = (
+                f'<span class="card-reference">{html.escape(p.get("card_reference", ""))}</span>'
+                if p.get("card_reference")
+                else ""
+            )
+        if p["name"] == "Suggerimenti":
+            # Pulsante "Info": fa quello che faceva la meta' "Info" del
+            # vecchio pulsante diviso con il PDF (rimosso insieme a tutta
+            # la sua gestione) - immagine + pulsante di condivisione del
+            # sito, gestiti da renderDetail().
+            cards.append(f"""
+            <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color};position:relative" onclick="recordExtraHit('Info'); cardClicked({i})">
+                <span class="card-name">Info<span class="info-access-count" id="info-access-count"></span></span><span class="card-counter" id="extra-counter-info"></span>
+                {reference_html}
+                <span class="db-badge" onclick="event.stopPropagation(); window.open('https://docs.google.com/spreadsheets/d/19CecVlwBvdE1KBkTY-lvZe2A3poQ5icc-vhC3Y6D6I4/edit?gid=2108863093#gid=2108863093','_blank','noopener')">DB</span>
+            </button>
+            """)
+            continue
+        title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
+        address = map_addresses.get(p["name"], "")
+        maps_url = (
+            "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote(address)
+            if address else ""
+        )
+        pin_html = (
+            f'<span class="map-pin" title="{html.escape(address)}"'
+            f' onclick="event.stopPropagation();showMapPopup({html.escape(json.dumps(address))},{html.escape(json.dumps(maps_url))})">'
+            f'📍</span>'
+            if address else ""
+        )
+        cards.append(f"""
+        <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="handleCardClick({i})">
+            <span class="card-name" style="color:{name_color}">{title}</span>
+            {reference_html}
+            {counter_html}
+            {pin_html}
+        </button>
+        """)
+
+    site_url = "https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/"
+
+    index_html = f"""<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Rosticcerie">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <script>
+    (() => {{
+      const manifest = document.createElement('link');
+      manifest.rel = 'manifest';
+      manifest.href = new URLSearchParams(window.location.search).get('v') === '57'
+        ? 'manifest-admin.webmanifest' : 'manifest.webmanifest';
+      document.head.appendChild(manifest);
+    }})();
+  </script>
+  <meta name="theme-color" content="#111111">
+  <meta property="og:title" content="Rosticcerie">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{site_url}Rosticcerie.html">
+  <meta property="og:image" content="{site_url}apple-touch-icon.png">
+  <title>Rosticcerie</title>
+  <style>
+    body {{
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }}
+    /* Fascia nera superiore */
+    header {{
+      background: #000;
+      padding: 18px 16px;
+      border-bottom: 1px solid #333;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      text-align: center;
+    }}
+    h1#main-title {{
+      margin: 0;
+      font-size: 32px;
+      color: #00c853; /* Verde brillante */
+      cursor: pointer;
+    }}
+    .updated {{
+      margin: 4px 0 0;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }}
+    .signature {{
+      margin: 2px 0 0;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }}
+
+    #identity-block {{ display: flex; align-items: center; justify-content: center; gap: 16px; width: fit-content; max-width: 100%; margin: 0 auto; }}
+    #identity-logo {{ cursor: pointer; display: none; width: 88px; height: 88px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }}
+    #identity-block.has-logo:not(.home-identity) #main-title {{ color: #fff; }}
+    #identity-block.home-identity #identity-logo {{ cursor: pointer; }}
+    #identity-text {{ min-width: 0; }}
+    #identity-block.has-logo #identity-text {{ text-align: left; }}
+    #identity-block.has-logo #phone-line {{ text-align: left; padding: 8px 0 0; }}
+    @media (max-width: 480px) {{
+      #identity-block {{ gap: 12px; }}
+      #identity-logo {{ width: 72px; height: 72px; }}
+      #identity-block.has-logo #main-title {{ font-size: 25px; }}
+    }}
+    /* Nome + telefono mostrati sopra all'immagine nel dettaglio */
+    #phone-line {{
+      display: none;
+      text-align: center;
+      padding: 10px 16px 0;
+    }}
+    #phone-line a {{
+      color: #00c853;
+      font-size: 20px;
+      font-weight: bold;
+      text-decoration: none;
+    }}
+    /* Griglia dei bottoni iniziali: distanziati di 10px tra loro e dai margini */
+    main {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      padding: 10px;
+      box-sizing: border-box;
+    }}
+    .card {{
+      position: relative;
+      appearance: none;
+      -webkit-appearance: none;
+      font: inherit;
+      background: #ffffff; /* Giallo tenue per i menu aggiornati, bianco per gli altri */
+      box-sizing: border-box;
+      cursor: pointer;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px 10px;
+      border: 4px solid #ffffff; /* Giallo se aggiornata oggi, bianco altrimenti */
+      border-radius: 12px;
+      /* Evita che una pressione prolungata (usata per riordinare le
+         caselle) selezioni il testo o apra il menu contestuale del
+         browser/telefono. "none" (non "manipulation") e' necessario:
+         altrimenti il browser puo' interpretare il primo piccolo
+         movimento del dito, durante l'attesa della pressione lunga,
+         come l'inizio di uno scorrimento nativo della pagina, che poi
+         "cattura" il gesto e blocca il trascinamento successivo. */
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }}
+    .card .card-name {{
+      font-size: clamp(16px, 5vw, 26px);
+      color: #111; /* Nomi neri */
+      font-weight: bold;
+      line-height: 1.1;
+      width: 100%;
+      overflow-wrap: anywhere;
+    }}
+    .card-counter {{
+      display: none;
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      font-size: 16px;
+      font-weight: normal;
+      color: #000;
+    }}
+    .card-reference {{
+      position: absolute;
+      top: 6px;
+      left: 10px;
+      font-size: 14px;
+      font-weight: normal;
+      color: #000;
+    }}
+    .card.is-updated .card-reference {{
+      color: #fff;
+      background: #00863b;
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 18px;
+    }}
+    /* Confetto "NEW" per le rosticcerie aggiunte di recente (vedi
+       NEW_ARRIVALS in write_publish_index): rosso invece del verde usato
+       per il confetto "aggiornato" qui sopra, cosi' si distingue bene, con
+       un lampeggio per farlo notare. Il "background" e' ripetuto anche con
+       !important perche' ".card.is-updated .card-reference" (piu' classi,
+       quindi piu' specifico) altrimenti vince e lo ricolora di verde
+       quando la rosticceria e' anche aggiornata oggi. */
+    .card-reference.badge-new {{
+      color: #fff !important;
+      background: #d32f2f !important;
+      border-radius: 999px;
+      padding: 2px 8px;
+      line-height: 18px;
+      animation: badgeNewBlink 1.2s ease-in-out infinite;
+    }}
+    @keyframes badgeNewBlink {{
+      0%, 100% {{ opacity: 1; }}
+      50% {{ opacity: 0.35; }}
+    }}
+    .site-note {{
+      grid-column: 1 / -1;
+      color: #ccc;
+      font-size: 16px;
+      line-height: 1.4;
+      text-align: center;
+      padding: 4px 12px 2px;
+      margin: 0;
+    }}
+    /* Riordino personalizzato delle caselle iniziali (stile iOS/Android):
+       tenendo premuta una casella, tutte "tremano" leggermente e quella
+       tenuta premuta lampeggia con la cornice; trascinandola sopra
+       un'altra le due si scambiano di posto. L'ordine scelto viene
+       salvato sul dispositivo (localStorage), non e' condiviso tra
+       dispositivi diversi. */
+    @keyframes cardJiggle {{
+      0%, 100% {{ transform: rotate(-1deg); }}
+      50% {{ transform: rotate(1deg); }}
+    }}
+    @keyframes cardBlink {{
+      0%, 100% {{ box-shadow: 0 0 0 0 rgba(0,123,255,0); }}
+      50% {{ box-shadow: 0 0 0 6px rgba(0,123,255,0.65); }}
+    }}
+    .card.jiggling {{
+      animation: cardJiggle 0.24s ease-in-out infinite;
+    }}
+    .card.dragging {{
+      animation: cardBlink 0.6s ease-in-out infinite;
+      cursor: grabbing;
+      z-index: 10;
+    }}
+    #reorder-actions {{
+      display: none;
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      gap: 8px;
+    }}
+    #reorder-actions button {{
+      border: none;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }}
+    #reorder-reset-btn {{
+      background: #e9ecef;
+      color: #333;
+    }}
+    #reorder-done-btn {{
+      background: #007bff;
+      color: #fff;
+    }}
+    .error {{
+      color: #ffd0d0;
+      font-size: 16px;
+      text-align: center;
+      padding: 20px;
+    }}
+
+    /* Layout per monitor normali/piccoli */
+    @media (max-width: 1200px) {{
+      main {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }}
+    }}
+
+    /* Dettaglio a tutto schermo */
+    #detail-view {{
+      display: none;
+      padding-bottom: 85px; /* Spazio per la fascia con le frecce */
+    }}
+    #detail-content {{
+      padding: 0;
+      cursor: pointer; /* Toccare l'immagine (o il messaggio) torna all'elenco */
+    }}
+    #detail-content img {{
+      width: 100vw;
+      max-width: 100vw;
+      max-height: none;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }}
+    #detail-content img.michela-menu {{
+      border: 4px solid #ffd641;
+      box-sizing: border-box;
+    }}
+    .share-panel {{
+      width: min(100%, 520px);
+      margin: 0 auto 16px;
+      text-align: center;
+    }}
+    .share-button {{
+      appearance: none;
+      -webkit-appearance: none;
+      border: 2px solid #49a95c;
+      border-radius: 8px;
+      background: #eaf7ea;
+      color: #111;
+      padding: 12px 22px;
+      font: inherit;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }}
+    .share-button .share-symbol {{
+      font-size: 24px;
+      margin-right: 8px;
+    }}
+    .share-help {{
+      margin: 10px 12px 0;
+      color: #111;
+      font-size: 16px;
+    }}
+    .weekday-chart {{
+      width: min(100%, 520px);
+      margin: 20px auto 0;
+      padding: 0 12px 20px;
+      box-sizing: border-box;
+    }}
+    .weekday-chart-first {{
+      margin-top: 40px;
+    }}
+    .weekday-chart-title {{
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 12px;
+      text-align: center;
+    }}
+    .weekday-row {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }}
+    .weekday-label {{
+      flex: 0 0 64px;
+      font-size: 14px;
+      color: #fff;
+      text-align: right;
+    }}
+    .weekday-bar-track {{
+      flex: 1 1 auto;
+      background: #fef3c7;
+      border-radius: 4px;
+      height: 18px;
+      overflow: hidden;
+    }}
+    .weekday-bar-fill {{
+      height: 100%;
+      background: #49a95c;
+      border-radius: 4px;
+    }}
+    .weekday-percent {{
+      flex: 0 0 40px;
+      font-size: 13px;
+      color: #fff;
+      text-align: left;
+    }}
+
+    /* Tabella accessi per bottone (admin) */
+    .date-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      color: #fff;
+    }}
+    .date-table td, .date-table th {{
+      padding: 4px 2px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }}
+    .bst-name {{
+      text-align: left;
+      font-weight: normal;
+    }}
+    .bst-num {{
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      min-width: 44px;
+    }}
+    .date-table thead th {{
+      font-weight: 600;
+      opacity: 0.7;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }}
+    /* Confetto DB (link archivio Google Sheet) nel riquadro Info — solo admin */
+    .db-badge {{
+      display: none;
+      position: absolute;
+      bottom: 7px;
+      right: 7px;
+      background: #2196f3;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-decoration: none;
+      line-height: 1.4;
+      z-index: 10;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }}
+    .db-badge:active {{ background: #1565c0; }}
+    body.is-admin .db-badge {{ display: inline-block; }}
+    .map-pin {{
+      position: absolute; bottom: 6px; right: 3px;
+      font-size: 24px; opacity: 0.75; z-index: 9;
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+    }}
+    .map-pin:active {{ opacity: 1; transform: scale(1.3); }}
+    body.is-admin .card .map-pin {{ right: 44px; }}
+    #map-popup {{
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      align-items: flex-end; justify-content: center;
+    }}
+    #map-popup.open {{ display: flex; }}
+    #map-popup-backdrop {{ position: absolute; inset: 0; background: rgba(0,0,0,0.45); }}
+    #map-popup-box {{
+      position: relative; z-index: 1; width: min(420px, 94vw);
+      margin-bottom: 32px; background: #fff; border-radius: 18px;
+      padding: 22px 20px 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+    }}
+    #map-popup-addr {{ font-size: 16px; font-weight: 600; color: #222; margin-bottom: 16px; text-align: center; }}
+    #map-popup-open {{
+      display: block; width: 100%; padding: 13px 0; background: #4285f4;
+      color: #fff; border: none; border-radius: 12px; font-size: 15px;
+      font-weight: 600; cursor: pointer; margin-bottom: 10px;
+    }}
+    #map-popup-open:active {{ background: #1a73e8; }}
+    #map-popup-close {{
+      display: block; width: 100%; padding: 11px 0; background: #f0f0f0;
+      color: #444; border: none; border-radius: 12px; font-size: 15px;
+      font-weight: 600; cursor: pointer;
+    }}
+    #map-popup-close:active {{ background: #d8d8d8; }}
+
+    /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
+    @media (min-width: 900px) {{
+      #detail-content img {{
+        width: 33.333vw;
+        max-width: 33.333vw;
+      }}
+    }}
+
+    /* Fascia nera inferiore con le frecce di navigazione */
+    #nav-bar {{
+      display: none;
+      background: #000;
+      padding: 14px 24px;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      z-index: 100;
+      border-top: 1px solid #333;
+      box-sizing: border-box;
+    }}
+    #nav-bar button {{
+      appearance: none;
+      -webkit-appearance: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 30px;
+      line-height: 1;
+      padding: 6px 24px;
+      cursor: pointer;
+    }}
+    #nav-position {{
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+    }}
+    #nav-position-group {{
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }}
+    #nav-bar #nav-home-btn {{
+      font-size: 22px;
+      padding: 4px;
+    }}
+    #nav-bar #nav-share-btn {{
+      padding: 4px;
+      display: flex;
+      align-items: center;
+    }}
+    #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }}
+    #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
+    #waiting-update-dialog p {{ margin: 0 0 24px; font-size: 24px; line-height: 1.35; text-align: center; }}
+    #waiting-update-dialog button {{ font-size: 18px; padding: 8px 30px; border: 1px solid #aaa; border-radius: 7px; cursor: pointer; }}
+    #michela-notice {{ text-align: center; width: min(88vw, 420px); max-height: 80vh; overflow: auto; box-sizing: border-box; border: 1px solid #555; border-radius: 14px; padding: 24px; background: #111; color: #fff; font-family: Arial, sans-serif; }}
+    #michela-notice::backdrop {{ background: rgba(0, 0, 0, 0.72); }}
+    #michela-notice h2 {{ margin: 0 0 16px; color: #00c853; font-size: 22px; }}
+    #michela-notice-text {{ white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }}
+    #michela-notice-ok {{ display: block; margin: 20px auto 0; padding: 10px 32px; border: 0; border-radius: 8px; background: #00c853; color: #111; font-size: 18px; cursor: pointer; }}
+    #identity-block {{ position: relative; }}
+    .audio-counter-wrap {{ display: none; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); align-items: center; gap: 6px; }}
+    .home-identity .audio-counter-wrap {{ display: flex; }}
+    .audio-hint-stack {{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-right: 2mm; }}
+    .audio-play-counter {{ display: none; font-size: 13px; font-weight: bold; color: #00c853; min-width: 1em; text-align: right; }}
+    .home-identity.audio-playing .audio-play-counter {{ display: none !important; }}
+    .audio-hint-arrow {{ display: none; align-items: center; color: #00c853; }}
+    .home-identity:not(.audio-playing) .audio-hint-arrow {{ display: inline-flex; animation: audio-hint-move 1.1s ease-in-out infinite; }}
+    @keyframes audio-hint-move {{
+      0%, 100% {{ transform: translateX(0); }}
+      50% {{ transform: translateX(6px); }}
+    }}
+    .audio-hint-text {{ display: none; line-height: 1.05; font-size: 14px; font-weight: bold; color: #00c853; text-align: right; }}
+    .home-identity:not(.audio-playing) .audio-hint-text.show-hint {{ display: inline-block; }}
+    .sound-waves {{ display: none; width: clamp(28px, 10vw, 44px); height: 88px; pointer-events: none; color: #00c853; overflow: visible; }}
+    .home-identity.audio-playing .sound-waves {{ display: block; }}
+    .sound-waves path {{ fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; transform-origin: 44px 44px; animation: sound-wave-out 1.8s linear infinite; opacity: 0; }}
+    .sound-waves path:nth-child(2) {{ animation-delay: -0.6s; }}
+    .sound-waves path:nth-child(3) {{ animation-delay: -1.2s; }}
+    @keyframes sound-wave-out {{
+      0% {{ transform: translateX(0) scaleY(0.65); opacity: 0; }}
+      15% {{ opacity: 0.9; }}
+      75% {{ opacity: 0.55; }}
+      100% {{ transform: translateX(-30px) scaleY(2); opacity: 0; }}
+    }}
+    @media (prefers-reduced-motion: reduce) {{
+      .audio-hint-arrow {{ animation: none; }}
+      .sound-waves path {{ animation: none; opacity: 0.7; }}
+      .sound-waves path:nth-child(2) {{ transform: translateX(-12px) scaleY(1.4); }}
+      .sound-waves path:nth-child(3) {{ transform: translateX(-24px) scaleY(1.8); }}
+    }}
+  </style>
+  <script>
+    const PANELS = {panels_json};
+    const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
+    if (hardReloadToken) {{
+        PANELS.forEach(panel => {{
+            ['image', 'logo'].forEach(key => {{
+                if (!panel[key]) return;
+                const url = new URL(panel[key], window.location.href);
+                url.searchParams.set('reload', hardReloadToken);
+                panel[key] = url.href;
+            }});
+        }});
+    }}
+    let currentIndex = -1;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get('v') === '57';
+    // Lo script e' nell'head: body esiste solo dopo il parsing del DOM.
+    document.addEventListener('DOMContentLoaded', () => {{
+        document.body.classList.toggle('is-admin', isAdmin);
+    }});
+    // Uso un'API globale gratuita per il contatore, un contatore separato per ogni rosticceria
+    const ABACUS_BASE = 'https://abacus.jasoncameron.dev';
+    const COUNTER_NAMESPACE = 'rosticcerie-fantasia';
+
+    function slugify(s) {{
+        return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }}
+    function counterKeyFor(name) {{ return 'menu-views-' + slugify(name); }}
+    // La chiave di azzeramento (offset) puo' restare "avvelenata" (offset
+    // superiore al totale reale) se un azzeramento globale viene lanciato
+    // una seconda volta mentre il primo sta ancora completando i suoi
+    // "colpi" in background (vedi il guardiano "resetInProgress" piu'
+    // sotto, aggiunto apposta per evitare che questo si ripeta): i due
+    // azzeramenti sovrapposti incrementano la STESSA chiave sul server,
+    // che supera cosi' il totale vero. Dato che l'API del contatore
+    // permette solo di FAR CRESCERE l'offset (mai di farlo scendere), non
+    // e' possibile "correggerlo" con un nuovo azzeramento una volta
+    // avvenuto. L'unico modo per farlo tornare a funzionare e' passare,
+    // per la rosticceria/contatore colpito, a una chiave di azzeramento
+    // mai usata prima (che l'API legge come 0 tramite il 404 gestito da
+    // missingIsZero), cosi' il numero mostrato torna a riflettere il
+    // totale reale delle aperture invece di restare bloccato.
+    // Il 22/09/2026 questo e' successo a TUTTI i contatori tranne "Audio"
+    // (Fantasia, Cibaria, Impastamo, Le delizie di Michela, Aufer,
+    // Santoro, Bollenti piatti, Pane & Co e anche l'extra "Info"): da qui
+    // le chiavi "-r2" (e "-r3" per Pane & Co, che aveva gia' una "-r2"
+    // anch'essa avvelenata dallo stesso problema).
+    const OFFSET_KEY_OVERRIDES = {{
+        'Fantasia': 'fantasia-r2',
+        'Cibària': 'cibaria-r2',
+        'Impastamò': 'impastamo-r2',
+        'Le delizie di Michela': 'le-delizie-di-michela-r2',
+        'Aufer': 'aufer-r2',
+        'Santoro (Castellana)': 'santoro-castellana-r2',
+        'Bollenti piatti': 'bollenti-piatti-r2',
+        'Pane & Co': 'pane-co-r3',
+        'Info': 'info-r2',
+    }};
+    function offsetKeyFor(name) {{ return 'menu-views-offset-' + (OFFSET_KEY_OVERRIDES[name] || slugify(name)); }}
+    function counterGetUrlFor(name) {{ return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }}
+    function counterHitUrlFor(name) {{ return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + counterKeyFor(name); }}
+    function offsetGetUrlFor(name) {{ return ABACUS_BASE + '/get/' + COUNTER_NAMESPACE + '/' + offsetKeyFor(name); }}
+    function offsetHitUrlFor(name) {{ return ABACUS_BASE + '/hit/' + COUNTER_NAMESPACE + '/' + offsetKeyFor(name); }}
+
+    function fetchWithRetry(url, attempts) {{
+        return fetch(url).catch(err => {{
+            if (attempts > 1) {{
+                return new Promise(resolve => setTimeout(resolve, 800)).then(() => fetchWithRetry(url, attempts - 1));
+            }}
+            throw err;
+        }});
+    }}
+
+    function sleep(ms) {{
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }}
+
+    function currentItalianDateLabel() {{
+        const now = new Date();
+        const weekdays = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+        const months = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+        return weekdays[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()];
+    }}
+
+    function refreshMenuDates(now = new Date()) {{
+        const parts = new Intl.DateTimeFormat('en-GB', {{timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'}}).formatToParts(now);
+        const datePart = type => parts.find(p => p.type === type).value;
+        const today = datePart('year') + '-' + datePart('month') + '-' + datePart('day');
+        document.querySelectorAll('.card[data-pid]').forEach(card => {{
+            const panel = PANELS[Number(card.dataset.pid)];
+            if (!panel || panel.card_border) return;
+            panel.updated = Boolean(panel.menu_date && panel.menu_date === today && !panel.error);
+            card.classList.toggle('is-updated', panel.updated && Boolean((panel.card_reference || '').trim()));
+            card.style.borderColor = panel.updated ? '#ffd641' : '#ffffff';
+            card.style.backgroundColor = panel.updated ? '#fff7de' : '#ffffff';
+            card.querySelector('.card-name').style.color = '#111';
+            const reference = card.querySelector('.card-reference');
+            if (reference && panel.menu_date && !panel.badge_new) {{
+                // Se il menu e' di oggi ma non abbiamo un orario preciso (es.
+                // Pane & Co, che sul sito riporta solo la data), mostriamo
+                // comunque la data invece di svuotare il confetto verde:
+                // prima questo ricalcolo lato client (che gira ogni secondo
+                // per tenere la pagina aggiornata senza ricaricarla)
+                // sovrascriveva con '' il testo gia' corretto generato dal
+                // programma, facendo sparire il confetto poco dopo il
+                // caricamento della pagina.
+                const dateLabel = new Intl.DateTimeFormat('it-IT', {{timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+                const hasTime = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(panel.card_reference || '');
+                reference.innerText = (panel.updated && hasTime) ? panel.card_reference : dateLabel;
+            }}
+        }});
+    }}
+    document.addEventListener('DOMContentLoaded', refreshMenuDatesOnEvent);
+    function refreshMenuDatesOnEvent() {{ refreshMenuDates(); }}
+    window.addEventListener('focus', refreshMenuDatesOnEvent);
+    document.addEventListener('visibilitychange', refreshMenuDatesOnEvent);
+    setInterval(refreshMenuDatesOnEvent, 1000);
+
+    function refreshReferenceDate() {{
+        const el = document.getElementById('main-updated');
+        if (el) el.innerText = currentItalianDateLabel();
+    }}
+
+    function parseRetryAfterSeconds(text) {{
+        const match = /try again in\s*([\d.]+)\s*s/i.exec(text || '');
+        return match ? Math.ceil(parseFloat(match[1])) : 10;
+    }}
+
+    // A differenza di fetchWithRetry, questa funzione controlla anche lo
+    // stato HTTP e il contenuto della risposta: l'API gratuita di Abacus,
+    // se interrogata troppo rapidamente (es. azzerando un contatore con
+    // molte visualizzazioni), risponde con HTTP 429 e un corpo tipo
+    // {{"error": "Too many requests..."}}. fetch() non considera questo un
+    // errore di rete, quindi senza questo controllo il codice leggeva
+    // "value" da una risposta di errore, lo interpretava come 0 e
+    // azzerava il contatore solo sullo schermo, senza aver davvero
+    // azzerato nulla sul server: al ricaricamento della pagina il valore
+    // precedente ricompariva.
+    async function fetchJsonWithRetry(url, attempts, missingIsZero = false) {{
+        for (let attempt = 1; attempt <= attempts; attempt++) {{
+            let response;
+            try {{
+                response = await fetch(url, {{cache:'no-store'}});
+            }} catch (err) {{
+                if (attempt === attempts) {{
+                    throw err;
+                }}
+                await sleep(1000);
+                continue;
+            }}
+
+            if (response.status === 404 && missingIsZero) return {{value:0}};
+            if (response.status === 429) {{
+                const body = await response.text();
+                if (attempt === attempts) {{
+                    throw new Error('Troppe richieste: ' + body);
+                }}
+                await sleep((parseRetryAfterSeconds(body) + 1) * 1000);
+                continue;
+            }}
+
+            if (!response.ok) {{
+                if (attempt === attempts) {{
+                    throw new Error('Risposta HTTP ' + response.status);
+                }}
+                await sleep(800);
+                continue;
+            }}
+
+            const data = await response.json();
+            if (typeof data.value !== 'number') {{
+                if (attempt === attempts) {{
+                    throw new Error('Risposta senza "value": ' + JSON.stringify(data));
+                }}
+                await sleep(800);
+                continue;
+            }}
+            return data;
+        }}
+        throw new Error('fetchJsonWithRetry: tentativi esauriti per ' + url);
+    }}
+
+    let totalClicksByPanel = [];
+    let offsetClicksByPanel = [];
+    let todayCountByPanel = [];  // Accessi di oggi per riquadro (solo admin, da Google Sheet)
+
+    function visibleCounter(i) {{
+        const total = totalClicksByPanel[i];
+        const offset = offsetClicksByPanel[i];
+        if (!Number.isFinite(total) || !Number.isFinite(offset)) return null;
+        // An impossible reset baseline must not hide real recorded openings.
+        return offset > total ? total : total - offset;
+    }}
+    let counterLoadRunning = false;
+    let counterHitQueue = Promise.resolve();
+
+    // Registrazione dei click su un foglio Google, per sapere quando e da
+    // dove viene aperta ciascuna rosticceria (oltre ai contatori pubblici
+    // gia' visti sopra). Data e ora sono aggiunte lato server (Apps
+    // Script, fuso orario Europe/Rome): qui mandiamo solo il nome del
+    // pulsante, un'etichetta sintetica del dispositivo e una posizione
+    // approssimativa ricavata dall'indirizzo IP (mai dati precisi di
+    // geolocalizzazione del dispositivo, che richiederebbero un permesso
+    // esplicito al visitatore).
+    const SHEET_LOG_URL = 'https://script.google.com/macros/s/AKfycbxD0bXOZ-bmVjhOCH8NhUNa2oao8XxEEkFJeArTbZk-1VQ3_1UFZlVV0P7WXVjo6VhnhA/exec';
+    // URL del foglio Google con lo storico dei click (visibile solo all'admin).
+    // Aprilo da Google Drive e copia l'indirizzo dalla barra del browser.
+    const SHEET_ARCHIVE_URL = 'https://docs.google.com/spreadsheets/d/19CecVlwBvdE1KBkTY-lvZe2A3poQ5icc-vhC3Y6D6I4/edit?gid=2108863093#gid=2108863093';
+
+    function detectDeviceLabel() {{
+        const ua = navigator.userAgent || '';
+        let os = 'Altro';
+        if (/iPad/.test(ua)) os = 'iPad';
+        else if (/iPhone/.test(ua)) os = 'iPhone';
+        else if (/Android/.test(ua)) os = 'Android';
+        else if (/Macintosh/.test(ua)) os = 'Mac';
+        else if (/Windows/.test(ua)) os = 'Windows';
+        else if (/Linux/.test(ua)) os = 'Linux';
+        let browser = 'Altro';
+        if (/Edg\//.test(ua)) browser = 'Edge';
+        else if (/OPR\//.test(ua) || /Opera/.test(ua)) browser = 'Opera';
+        else if (/CriOS\//.test(ua) || (/Chrome\//.test(ua) && !/Edg\//.test(ua))) browser = 'Chrome';
+        else if (/FxiOS\//.test(ua) || /Firefox\//.test(ua)) browser = 'Firefox';
+        else if (/Safari\//.test(ua) && !/Chrome\//.test(ua) && !/CriOS\//.test(ua)) browser = 'Safari';
+        return os + ' / ' + browser;
+    }}
+
+    // La posizione approssimativa (citta'/regione dedotta dall'IP) e'
+    // sempre la stessa durante la visita: la richiediamo una sola volta e
+    // riusiamo il risultato per tutti i click successivi, invece di
+    // interrogare il servizio esterno ad ogni singolo click.
+    let approxLocationPromise = null;
+    function getApproxLocation() {{
+        if (!approxLocationPromise) {{
+            approxLocationPromise = fetch('https://ipwho.is/', {{cache:'no-store'}})
+                .then(r => r.json())
+                .then(data => {{
+                    if (!data || data.success === false) return '';
+                    return [data.city, data.region, data.country_code].filter(Boolean).join(', ');
+                }})
+                .catch(() => '');
+        }}
+        return approxLocationPromise;
+    }}
+
+    function logClickToSheet(name) {{
+        getApproxLocation().then(posizione => {{
+            const payload = {{ pulsante: name, dispositivo: detectDeviceLabel(), posizione: posizione }};
+            try {{
+                fetch(SHEET_LOG_URL, {{ method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }});
+            }} catch (err) {{
+                console.error('Log su Google Sheets non riuscito', err);
+            }}
+        }});
+    }}
+
+    // Numero di "cambi di localita'" registrati oggi nello storico degli
+    // accessi (vedi contaCambiLocalitaOggi in Apps Script): mostrato accanto
+    // al pulsante Info come "Info (N)", visibile a tutti i visitatori e
+    // ricalcolato ad ogni refresh della pagina (vedi forceFreshReload).
+    function loadInfoAccessCount() {{
+        fetch(SHEET_LOG_URL + '?action=infoCount', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('info-access-count');
+                if (el && Number.isFinite(data.count)) el.textContent = ' (' + data.count + ')';
+            }})
+            .catch(err => console.error('Conteggio accessi di oggi non disponibile', err));
+    }}
+
+    // Istogramma "accessi per giorno della settimana" mostrato nella scheda
+    // Info, sotto le istruzioni per aggiungere il sito alla Home: usa lo
+    // stesso storico e lo stesso criterio (cambio di localita') del
+    // conteggio "Info (N)", ma aggregato su tutte le date per giorno della
+    // settimana invece che solo su oggi. Ricalcolato ogni volta che si apre
+    // la scheda Info o che la pagina fa un refresh (vedi forceFreshReload,
+    // che richiama renderDetail se la scheda Info e' quella aperta).
+    function loadWeekdayChart() {{
+        fetch(SHEET_LOG_URL + '?action=weekdayStats', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('weekday-bars');
+                // Apps Script restituisce {{ weekday: [dom,lun,mar,mer,gio,ven,sab] }}
+                // dove l'indice e' calcolato con (u % 7): 0=dom, 1=lun..., 6=sab.
+                if (!el || !Array.isArray(data.weekday)) return;
+                const raw = data.weekday; // [0]=dom, [1]=lun, ..., [6]=sab
+                // Ordine visualizzazione: Lun-Dom (indici Apps Script: 1,2,3,4,5,6,0)
+                const order = [1, 2, 3, 4, 5, 6, 0];
+                const labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+                const totale = order.reduce((s, i) => s + (raw[i] || 0), 0) || 1;
+                const SCALA_MASSIMA = 50;
+                el.innerHTML = labels.map((label, j) => {{
+                    const cnt = raw[order[j]] || 0;
+                    const pct = Math.round(cnt / totale * 100);
+                    const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
+                    return '<div class="weekday-row"><span class="weekday-label">' + label + '.</span>'
+                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
+                        + '<span class="weekday-percent">' + pct + '%</span></div>';
+                }}).join('');
+            }})
+            .catch(err => console.error('Statistiche settimanali non disponibili', err));
+    }}
+
+    // Istogramma "accessi per ora del giorno" mostrato subito sotto quello
+    // settimanale, nella stessa scheda Info: stesso storico e stesso
+    // criterio (cambio di localita'), ma aggregato per ora anziche' per
+    // giorno della settimana. Le ore vanno etichettate da 01 a 24 (l'ora
+    // "24" corrisponde alla fascia 00:00-00:59, secondo la convenzione
+    // italiana di contare le ore da 1 a 24 invece che da 0 a 23).
+    function loadHourlyChart() {{
+        fetch(SHEET_LOG_URL + '?action=hourlyStats', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('hourly-bars');
+                // Apps Script restituisce {{ hourly: {{ "0": cnt, "1": cnt, ..., "23": cnt }} }}
+                if (!el || !data.hourly || typeof data.hourly !== 'object') return;
+                const h = data.hourly;
+                // Etichette italiane 01-24: ora 1=label 01, ..., ora 23=label 23, ora 0=label 24
+                const hoursOrder = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,0];
+                const labels = ['01','02','03','04','05','06','07','08','09','10','11','12',
+                    '13','14','15','16','17','18','19','20','21','22','23','24'];
+                const totale = hoursOrder.reduce((s, i) => s + (Number(h[i]) || 0), 0) || 1;
+                const SCALA_MASSIMA = 30;
+                el.innerHTML = labels.map((label, j) => {{
+                    const cnt = Number(h[hoursOrder[j]]) || 0;
+                    const pct = Math.round(cnt / totale * 100);
+                    const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
+                    return '<div class="weekday-row"><span class="weekday-label">' + label + '</span>'
+                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
+                        + '<span class="weekday-percent">' + pct + '%</span></div>';
+                }}).join('');
+            }})
+            .catch(err => console.error('Statistiche orarie non disponibili', err));
+    }}
+
+    // Istogramma "distribuzione per dispositivo" mostrato subito sotto
+    // quello orario, nella stessa scheda Info: a differenza degli altri due,
+    // qui si conta OGNI riga della tabella (nessuna deduplicazione per
+    // sessione/nuovo accesso), perche' l'obiettivo e' sapere da quali
+    // sistemi operativi arrivano tutte le richieste registrate. La scala va
+    // da 0 a 70% (non da 0 a 100%): cosi' anche i valori piu' comuni restano
+    // ben distinti invece di schiacciarsi tutti sulla sinistra.
+    function loadDeviceChart() {{
+        fetch(SHEET_LOG_URL + '?action=deviceStats', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('device-bars');
+                // Apps Script restituisce {{ devices: {{ "iPhone 14": 5, "Windows PC": 2, ... }} }}
+                if (!el || !data.devices || typeof data.devices !== 'object') return;
+                const raw = data.devices;
+                // Raggruppa in 4 categorie: iPhone, Android, Windows, Altro
+                const groups = {{ 'iPhone': 0, 'Android': 0, 'Windows': 0, 'Altro': 0 }};
+                Object.keys(raw).forEach(dev => {{
+                    const n = Number(raw[dev]) || 0;
+                    const d = dev.toLowerCase();
+                    if (d.includes('iphone') || d.includes('ios') || d.includes('ipad') || d.includes('mac')) groups['iPhone'] += n;
+                    else if (d.includes('android')) groups['Android'] += n;
+                    else if (d.includes('windows') || d.includes('win')) groups['Windows'] += n;
+                    else groups['Altro'] += n;
+                }});
+                const labels = ['iPhone', 'Android', 'Windows', 'Altro'];
+                const totale = labels.reduce((s, l) => s + groups[l], 0) || 1;
+                const SCALA_MASSIMA = 70;
+                el.innerHTML = labels.map(label => {{
+                    const pct = Math.round(groups[label] / totale * 100);
+                    const barWidth = Math.min((pct / SCALA_MASSIMA) * 100, 100);
+                    return '<div class="weekday-row"><span class="weekday-label">' + label + '</span>'
+                        + '<div class="weekday-bar-track"><div class="weekday-bar-fill" style="width:' + barWidth + '%"></div></div>'
+                        + '<span class="weekday-percent">' + pct + '%</span></div>';
+                }}).join('');
+            }})
+            .catch(err => console.error('Statistiche per dispositivo non disponibili', err));
+    }}
+
+    // Tabella "accessi per bottone" (admin): mostra oggi/mese/anno per ogni pannello.
+    function loadButtonStatsTable() {{
+        if (!isAdmin) return;
+        fetch(SHEET_LOG_URL + '?action=buttonStats', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                const el = document.getElementById('button-stats-body');
+                if (!el || !data.buttons) return;
+                const panelNames = PANELS
+                    .filter(p => p.counter_enabled !== false)
+                    .map(p => p.name);
+                el.innerHTML = panelNames.map(name => {{
+                    // I click Info sono loggati come 'Info' ma il pannello e' 'Suggerimenti'
+                    const key = name === 'Suggerimenti' ? 'Info' : name;
+                    const s = data.buttons[key] || {{ today: 0, month: 0, year: 0 }};
+                    return '<tr>'
+                        + '<td class="bst-name">' + name + '</td>'
+                        + '<td class="bst-num">' + (s.today || 0) + '</td>'
+                        + '<td class="bst-num">' + (s.month || 0) + '</td>'
+                        + '<td class="bst-num">' + (s.year  || 0) + '</td>'
+                        + '</tr>';
+                }}).join('');
+            }})
+            .catch(err => console.error('Tabella per bottone non disponibile', err));
+    }}
+
+    // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
+    // anche l'audio della Home o la scheda Info): stessa logica di
+    // ritentativo/coda usata gia' per i menu, cosi' tutti i contatori sono
+    // salvati allo stesso modo (persistenti e comuni a tutti i dispositivi,
+    // non solo sul telefono di chi clicca).
+    function recordExtraHit(name) {{
+        if (isAdmin) return;
+        logClickToSheet(name);
+        counterHitQueue = counterHitQueue.then(async () => {{
+            for (let attempt = 0; attempt < 4; attempt++) {{
+                // Do not repeat an ambiguous network failure: it may have counted.
+                const response = await fetch(counterHitUrlFor(name), {{cache:'no-store', keepalive:true}});
+                if (response.status === 429 && attempt < 3) {{
+                    await sleep((parseRetryAfterSeconds(await response.text()) + 1) * 1000);
+                    continue;
+                }}
+                if (!response.ok) throw new Error('Registrazione HTTP ' + response.status);
+                const data = await response.json();
+                if (!Number.isFinite(data.value)) throw new Error('Registrazione non confermata');
+                return;
+            }}
+        }}).catch(error => console.error('Apertura non confermata: ' + name, error));
+    }}
+    function recordCurrentView() {{
+        const panel = PANELS[order[currentIndex]];
+        if (!panel || panel.counter_enabled === false) return;
+        recordExtraHit(panel.name);
+    }}
+
+    // Contatori "extra" (non legati a una rosticceria): riproduzioni audio
+    // della Home, apertura della scheda Info. Visibili solo in modalita'
+    // amministratore (?v=57), con lo stesso meccanismo (Abacus + offset di
+    // azzeramento) dei contatori dei menu.
+    const EXTRA_COUNTERS = [
+        // sheet:true → il valore giornaliero arriva da loadTodayCardStats (foglio Google),
+        // NON da Abacus, così si azzera automaticamente a mezzanotte.
+        {{ name: 'Audio', elId: 'audio-play-counter', display: 'inline-block', sheet: true }},
+    ];
+    let extraCounterState = {{}};
+    function extraVisibleCounter(name) {{
+        const s = extraCounterState[name];
+        if (!s || !Number.isFinite(s.total) || !Number.isFinite(s.offset)) return null;
+        return s.offset > s.total ? s.total : s.total - s.offset;
+    }}
+    function updateExtraCounters() {{
+        EXTRA_COUNTERS.forEach(({{name, elId, display}}) => {{
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (!isAdmin) {{ el.style.display = 'none'; return; }}
+            const val = extraVisibleCounter(name);
+            el.innerText = val === null ? '0' : formatCounter(val);
+            el.style.display = display;
+        }});
+        updateAdminTitle();
+    }}
+    async function loadExtraCounters() {{
+        if (!isAdmin) return;
+        updateExtraCounters();
+        for (const {{name, sheet}} of EXTRA_COUNTERS) {{
+            // I contatori con sheet:true ricevono il valore giornaliero da
+            // loadTodayCardStats: non sovrascrivere con il totale Abacus.
+            if (sheet) continue;
+            try {{
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(name), 4, true);
+                await sleep(150);
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(name), 4, true);
+                extraCounterState[name] = {{ total: totalData.value, offset: offsetData.value }};
+            }} catch (error) {{
+                console.error('Impossibile leggere il contatore di ' + name, error);
+            }}
+            updateExtraCounters();
+            await sleep(150);
+        }}
+    }}
+
+    const COUNTER_CACHE_KEY = 'rosticcerie-counter-cache-v1';
+    let counterCacheRestored = false;
+    let counterFreshByPanel = [];
+
+    function restoreCounterCache() {{
+        if (counterCacheRestored) return;
+        counterCacheRestored = true;
+        try {{
+            const cached = JSON.parse(localStorage.getItem(COUNTER_CACHE_KEY) || '{{}}');
+            PANELS.forEach((panel, i) => {{
+                const entry = cached[panel.name];
+                if (!entry || !Number.isSafeInteger(entry.total) || entry.total < 0 ||
+                    !Number.isSafeInteger(entry.offset) || entry.offset < 0) return;
+                totalClicksByPanel[i] = entry.total;
+                offsetClicksByPanel[i] = entry.offset;
+            }});
+        }} catch (error) {{
+            console.warn('Cache contatori non disponibile', error);
+        }}
+    }}
+
+    function saveCounterCache() {{
+        try {{
+            const cached = {{}};
+            PANELS.forEach((panel, i) => {{
+                if (visibleCounter(i) !== null) cached[panel.name] = {{
+                    total: totalClicksByPanel[i], offset: offsetClicksByPanel[i]
+                }};
+            }});
+            localStorage.setItem(COUNTER_CACHE_KEY, JSON.stringify(cached));
+        }} catch (error) {{
+            console.warn('Cache contatori non salvata', error);
+        }}
+    }}
+
+    async function loadCounter() {{
+        if (!isAdmin || counterLoadRunning) return;
+        counterLoadRunning = true;
+        restoreCounterCache();
+        counterFreshByPanel = PANELS.map(() => false);
+        updateCardCounters();
+        updateAdminTitle();
+        let nextIndex = 0;
+        async function readNextCounters() {{
+            while (nextIndex < PANELS.length) {{
+                const i = nextIndex++;
+                const p = PANELS[i];
+                if (p.counter_enabled === false) continue;
+                try {{
+                    const totalData = await fetchJsonWithRetry(counterGetUrlFor(p.name), 4);
+                    await sleep(150);
+                    const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(p.name), 4, true);
+                    // Aggiorna insieme totale e offset, solo se entrambi sono disponibili.
+                    totalClicksByPanel[i] = totalData.value;
+                    offsetClicksByPanel[i] = offsetData.value;
+                    counterFreshByPanel[i] = true;
+                    saveCounterCache();
+                }} catch (error) {{
+                    // Conserva l'ultimo valore noto se il servizio non risponde.
+                    console.error('Impossibile leggere il contatore di ' + p.name, error);
+                }}
+                updateCardCounters();
+                updateAdminTitle();
+                await sleep(150);
+            }}
+        }}
+        try {{
+            // Due richieste al massimo contemporaneamente, con le pause e
+            // i tentativi previsti in caso di limitazione del servizio.
+            await Promise.all([readNextCounters(), readNextCounters()]);
+        }} finally {{
+            counterLoadRunning = false;
+            updateAdminTitle();
+            updateCardCounters();
+        }}
+    }}
+
+    // Limitatore di frequenza condiviso fra tutte le richieste
+    // dell'azzeramento: Abacus accetta al massimo 30 richieste ogni 10
+    // secondi per indirizzo IP. Restare un po' sotto quel limite evita del
+    // tutto le risposte 429 (che altrimenti costringono fetchJsonWithRetry
+    // ad attendere e riprovare, rendendo l'azzeramento ancora piu' lento e,
+    // se i tentativi si esauriscono, anche incompleto).
+    function createRateGate(maxPerWindow, windowMs) {{
+        const intervalMs = windowMs / maxPerWindow;
+        let nextSlot = 0;
+        return async function gate() {{
+            const now = Date.now();
+            nextSlot = Math.max(nextSlot + intervalMs, now);
+            const wait = nextSlot - now;
+            if (wait > 0) await sleep(wait);
+        }};
+    }}
+
+    // Evita che due azzeramenti restino attivi insieme: se il secondo
+    // partisse mentre i "colpi" del primo stanno ancora completando in
+    // background (puo' richiedere alcuni minuti), entrambi
+    // incrementerebbero la stessa chiave di azzeramento sul server, che
+    // supererebbe il totale vero e resterebbe "avvelenata" per sempre
+    // (l'API non permette di farla scendere). E' esattamente cosi' che si
+    // sono rovinati tutti i contatori il 22/09/2026.
+    let resetInProgress = false;
+
+    async function resetCounterGlobally() {{
+        if (resetInProgress) {{
+            alert("Azzeramento gia' in corso su questo dispositivo: attendi il completamento (puo' richiedere qualche minuto) prima di ripeterlo, altrimenti i contatori restano bloccati.");
+            return;
+        }}
+        resetInProgress = true;
+        try {{
+            await resetCounterGloballyImpl();
+        }} finally {{
+            resetInProgress = false;
+        }}
+    }}
+
+    async function resetCounterGloballyImpl() {{
+        const mainTitle = document.getElementById('main-title');
+        mainTitle.innerText = 'Azzeramento: lettura contatori...';
+
+        // Sia le rosticcerie sia i contatori extra (Audio/Info) usano
+        // lo stesso meccanismo totale+offset, quindi si azzerano allo
+        // stesso modo: prima mancavano del tutto da questo elenco.
+        const targets = [];
+        for (let i = 0; i < PANELS.length; i++) {{
+            if (PANELS[i].counter_enabled === false) continue;
+            targets.push({{ key: PANELS[i].name, apply: (target, current) => {{
+                totalClicksByPanel[i] = target;
+                offsetClicksByPanel[i] = current;
+                counterFreshByPanel[i] = true;
+            }} }});
+        }}
+        for (const {{ name }} of EXTRA_COUNTERS) {{
+            targets.push({{ key: name, apply: (target, current) => {{
+                extraCounterState[name] = {{ total: target, offset: current }};
+            }} }});
+        }}
+
+        // Primo giro: leggo quante unita' mancano per ciascun contatore.
+        // Le richieste sono distanziate con lo stesso limitatore usato piu'
+        // sotto per i "colpi": lette tutte insieme senza limite (fino a
+        // ~20 richieste simultanee con 7 rosticcerie + 3 contatori extra),
+        // l'API gratuita di Abacus rispondeva 429 ad alcune di esse e,
+        // esauriti i tentativi, quel singolo contatore restava
+        // silenziosamente non azzerato (bug osservato su "Le delizie di
+        // Michela" il 14/09/2026: tutti gli altri a 0, lei ferma al valore
+        // precedente). Il limitatore e' condiviso con i "colpi" veri e
+        // propri qui sotto, cosi' il totale di richieste verso Abacus in
+        // ogni finestra di 10s resta sotto controllo in entrambe le fasi.
+        const rateGate = createRateGate(24, 10000);
+        const jobs = [];
+        const failedTargets = [];
+        await Promise.all(targets.map(async (t) => {{
+            try {{
+                await rateGate();
+                const totalData = await fetchJsonWithRetry(counterGetUrlFor(t.key), 4);
+                await rateGate();
+                const offsetData = await fetchJsonWithRetry(offsetGetUrlFor(t.key), 4, true);
+                const target = totalData.value;
+                const current = offsetData.value;
+                if (current > target) throw new Error('Azzeramento incoerente: impossibile ridurre il valore remoto');
+                jobs.push({{ ...t, target, current }});
+            }} catch (e) {{
+                console.error('Lettura fallita per ' + t.key, e);
+                failedTargets.push(t.key);
+            }}
+        }}));
+
+        // Azzeramento visibile SUBITO, ma solo su questo dispositivo: non
+        // appena conosciamo i totali mostriamo gia' 0, invece di far
+        // scendere i numeri man mano che i "colpi" verso Abacus (qui
+        // sotto) vanno a segno. Il vero azzeramento sul server - il solo
+        // modo che Abacus offre e' incrementare l'offset di 1 per volta,
+        // fino a raggiungere il totale - prosegue in background e puo'
+        // richiedere piu' tempo: chi ricarica la pagina da un altro
+        // dispositivo nel frattempo puo' ancora vedere un valore
+        // intermedio, finche' i colpi non sono completati.
+        for (const job of jobs) job.apply(job.target, job.target);
+        updateCardCounters();
+        updateAdminTitle();
+        updateExtraCounters();
+        saveCounterCache();
+        mainTitle.innerText = 'Rosticcerie';
+
+        // Da qui in poi i "colpi" mancanti proseguono in background: non
+        // fanno piu' attendere ne' aggiornano la schermata, che resta
+        // gia' a 0 per chi ha cliccato.
+        const queue = [];
+        for (const job of jobs) {{
+            for (let k = job.current; k < job.target; k++) queue.push(job);
+        }}
+        let nextInQueue = 0;
+        const gate = createRateGate(24, 10000);
+
+        async function worker() {{
+            while (nextInQueue < queue.length) {{
+                const job = queue[nextInQueue++];
+                await gate();
+                try {{
+                    await fetchJsonWithRetry(offsetHitUrlFor(job.key), 4);
+                    job.current++;
+                }} catch (e) {{
+                    // Un colpo fallito su un contatore non deve bloccare
+                    // gli altri: proseguiamo con la prossima unita' in coda.
+                    console.error('Azzeramento fallito per ' + job.key, e);
+                }}
+            }}
+        }}
+        // Chi ha cliccato vede gia' 0 da subito (impostato piu' sopra) e
+        // handleTitleClick non aspetta il ritorno di resetCounterGlobally:
+        // l'"await" qui sotto serve solo a tenere alto il guardiano
+        // "resetInProgress" fino al vero completamento in background, cosi'
+        // un secondo azzeramento lanciato troppo presto viene bloccato
+        // invece di sovrapporsi al primo.
+        try {{
+            await Promise.all([worker(), worker(), worker(), worker()]);
+        }} catch (e) {{
+            console.error('Azzeramento in background non completato', e);
+        }}
+    }}
+
+    function formatCounter(value) {{
+        return String(Math.max(0, Math.trunc(Number(value)))).replace(/\B(?=(\d{{3}})+(?!\d))/g, '.');
+    }}
+
+    function updateAdminTitle() {{
+        if (document.getElementById('detail-view').style.display === 'block') return;
+        let val = 0;
+        for (let i = 0; i < PANELS.length; i++) {{
+            // Info ha un badge giornaliero anche se non usa il contatore menu.
+            if (PANELS[i].counter_enabled === false && PANELS[i].name !== 'Suggerimenti') continue;
+            const today = todayCountByPanel[i];
+            if (Number.isFinite(today)) val += today;
+        }}
+        // Somma gli stessi valori mostrati dai badge extra (Audio).
+        for (const {{name}} of EXTRA_COUNTERS) {{
+            const extra = extraVisibleCounter(name);
+            if (Number.isFinite(extra)) val += extra;
+        }}
+        document.getElementById('main-title').innerText = 'Rosticcerie';
+        document.getElementById('main-signature').innerText = 'by Mazzarisi' + (isAdmin ? ' ' + formatCounter(val) : '');
+    }}
+
+    function updateCardCounters() {{
+        if (!isAdmin) return;
+        for (let i = 0; i < PANELS.length; i++) {{
+            const el = document.getElementById('card-counter-' + i);
+            if (!el) continue;
+            if (PANELS[i].counter_enabled === false) {{
+                el.style.display = 'none';
+                continue;
+            }}
+            const today = todayCountByPanel[i];
+            if (today === undefined) {{
+                el.style.display = 'none';
+                continue;
+            }}
+            el.innerText = today;
+            el.title = 'Accessi oggi';
+            el.style.display = 'block';
+        }}
+        // Badge extra sul tasto Info: mostra accessi di OGGI (loggati come 'Info')
+        const sugIdx = PANELS.findIndex(p => p.name === 'Suggerimenti');
+        const elInfo = document.getElementById('extra-counter-info');
+        if (elInfo && sugIdx >= 0) {{
+            const todayInfo = todayCountByPanel[sugIdx];
+            elInfo.innerText = typeof todayInfo === 'number' ? formatCounter(todayInfo) : '0';
+            elInfo.title = 'Accessi oggi';
+            elInfo.style.display = 'block';
+        }}
+    }}
+
+    // Carica dal foglio Google il conteggio degli accessi di oggi per ogni
+    // riquadro e aggiorna i badge visibili solo al supervisore.
+    async function loadTodayCardStats() {{
+        if (!isAdmin) return;
+        try {{
+            const url = SHEET_LOG_URL + '?action=todayStats&t=' + Date.now();
+            const resp = await fetch(url, {{cache: 'no-store'}});
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();  // {{ "Fantasia": 3, "Bollenti piatti": 1, ... }}
+            PANELS.forEach((p, i) => {{
+                // I click su Info vengono loggati come 'Info', non come 'Suggerimenti'
+                const key = p.name === 'Suggerimenti' ? 'Info' : p.name;
+                todayCountByPanel[i] = data[key] ?? 0;
+            }});
+            // Contatore audio (clic sul logo): usa il dato giornaliero del foglio
+            // invece del totale Abacus, così si azzera a mezzanotte come gli altri badge.
+            const todayAudio = data['Audio'];
+            if (Number.isFinite(todayAudio)) {{
+                extraCounterState['Audio'] = {{ total: todayAudio, offset: 0 }};
+            }}
+        }} catch (err) {{
+            console.warn('Statistiche oggi non disponibili', err);
+            PANELS.forEach((_, i) => {{ if (todayCountByPanel[i] === undefined) todayCountByPanel[i] = '?'; }});
+        }}
+        updateCardCounters();
+        updateAdminTitle();
+    }}
+
+    // --- Riordino personalizzato delle caselle iniziali (tenere premuto
+    // per "tremare" + trascinare per scambiare posto, come su iOS/Android).
+    // L'ordine e' salvato in localStorage: e' quindi personale per ogni
+    // dispositivo/browser, non condiviso tra dispositivi diversi ne'
+    // pubblicato sul sito.
+    const ORDER_STORAGE_KEY = 'rosticcerie-order-v2';
+    const DEFAULT_ORDER_NAMES = [
+        'Fantasia', 'Bollenti piatti', 'Pane & Co', 'Cibària',
+        'Le delizie di Michela', 'Impastamò', 'Santoro (Castellana)', 'Aufer', 'Suggerimenti',
+    ];
+
+    function buildDefaultOrder() {{
+        const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+        const restored = [];
+        const seen = new Set();
+        DEFAULT_ORDER_NAMES.forEach(name => {{
+            if (nameToIndex.has(name) && !seen.has(name)) {{
+                restored.push(nameToIndex.get(name));
+                seen.add(name);
+            }}
+        }});
+        PANELS.forEach((p, i) => {{
+            if (!seen.has(p.name)) {{
+                restored.push(i);
+                seen.add(p.name);
+            }}
+        }});
+        return pinInfoLast(restored);
+    }}
+
+    // Il riquadro "Info" (nome interno "Suggerimenti") deve restare sempre
+    // per ultimo, qualunque riordino l'utente faccia trascinando le altre
+    // caselle o con le frecce da tastiera: lo spostiamo in fondo ogni volta
+    // che l'ordine viene ricostruito da zero (ordine di default o salvato).
+    function pinInfoLast(arr) {{
+        const idx = arr.findIndex(i => PANELS[i] && PANELS[i].name === 'Suggerimenti');
+        if (idx !== -1 && idx !== arr.length - 1) {{
+            const [info] = arr.splice(idx, 1);
+            arr.push(info);
+        }}
+        return arr;
+    }}
+
+    let order = buildDefaultOrder();
+    let reorderMode = false;
+    let dragState = null;
+    const LONG_PRESS_MS = 450;
+    const MOVE_CANCEL_PX = 10;
+
+    function loadSavedOrder() {{
+        try {{
+            const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+            if (!raw) return;
+            const savedNames = JSON.parse(raw);
+            if (!Array.isArray(savedNames)) return;
+            const nameToIndex = new Map(PANELS.map((p, i) => [p.name, i]));
+            const restored = [];
+            const seen = new Set();
+            savedNames.forEach(name => {{
+                if (nameToIndex.has(name) && !seen.has(name)) {{
+                    restored.push(nameToIndex.get(name));
+                    seen.add(name);
+                }}
+            }});
+            // Eventuali rosticcerie nuove non presenti nell'ordine salvato
+            // vengono aggiunte in coda, nell'ordine con cui arrivano dal server.
+            PANELS.forEach((p, i) => {{
+                if (!seen.has(p.name)) {{
+                    restored.push(i);
+                    seen.add(p.name);
+                }}
+            }});
+            if (restored.length === PANELS.length) {{
+                order = pinInfoLast(restored);
+            }}
+        }} catch (e) {{
+            console.error('Ordine personalizzato non leggibile, uso quello di default', e);
+        }}
+    }}
+
+    function saveOrder() {{
+        try {{
+            localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order.map(i => PANELS[i].name)));
+        }} catch (e) {{
+            console.error("Impossibile salvare l'ordine personalizzato", e);
+        }}
+    }}
+
+    function applyOrderToGrid() {{
+        const grid = document.getElementById('grid-view');
+        order.forEach(pid => {{
+            const el = grid.querySelector('.card[data-pid="' + pid + '"]');
+            if (el) grid.appendChild(el);
+        }});
+        // La nota informativa non e' una casella riordinabile: va sempre
+        // tenuta come ultimo elemento della griglia, altrimenti gli
+        // appendChild qui sopra la spingerebbero prima delle caselle.
+        const note = grid.querySelector('.site-note');
+        if (note) grid.appendChild(note);
+    }}
+
+    function isWaitingForUpdate(panel, now = new Date()) {{
+        if (!panel || panel.card_border || panel.updated) return false;
+        const parts = new Intl.DateTimeFormat('en-GB', {{
+            timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        }}).formatToParts(now);
+        const value = type => Number(parts.find(part => part.type === type).value);
+        const minutes = value('hour') * 60 + value('minute');
+        return minutes >= 1 && minutes < 600;
+    }}
+
+    let waitingUpdateTimer = null;
+    let waitingUpdatePid = null;
+    function continueAfterWaiting() {{
+        clearTimeout(waitingUpdateTimer);
+        waitingUpdateTimer = null;
+        waitingUpdatePid = null;
+        const dialog = document.getElementById('waiting-update-dialog');
+        if (dialog.open) dialog.close();
+    }}
+
+    function michelaNoticeFrom(text) {{
+        const lines = text.replace(/^\\uFEFF/, '').split(/\\r?\\n/);
+        const start = lines.findIndex(line => line.trim() === '*Michela');
+        if (start < 0) return '';
+        const notice = [];
+        for (let i = start + 1; i < lines.length && lines[i].trim(); i++) notice.push(lines[i]);
+        return notice.join('\\n').trim();
+    }}
+
+    function showMichelaNotice(text) {{
+        return new Promise(resolve => {{
+            const dialog = document.getElementById('michela-notice');
+            document.getElementById('michela-notice-text').textContent = text;
+            const ok = document.getElementById('michela-notice-ok');
+            let timer;
+            const finish = () => {{
+                clearTimeout(timer);
+                ok.removeEventListener('click', finish);
+                dialog.removeEventListener('cancel', preventCancel);
+                dialog.close();
+                resolve();
+            }};
+            const preventCancel = event => event.preventDefault();
+            ok.addEventListener('click', finish);
+            dialog.addEventListener('cancel', preventCancel);
+            dialog.showModal();
+            ok.focus();
+            timer = setTimeout(finish, 8000);
+        }});
+    }}
+
+    let cardOpening = false;
+    function handleCardClick(pid) {{
+        // Se il menu non e' aggiornato oggi (bottone bianco, non giallo) e
+        // non siamo nella fascia oraria di "attesa aggiornamento" della
+        // mattina (isWaitingForUpdate), non ha senso mostrare un menu
+        // vecchio: si va direttamente alla pagina Facebook/Instagram della
+        // rosticceria, come premendo il titolo/logo nella scheda di
+        // dettaglio (handleTitleClick).
+        const panel = PANELS[pid];
+        if (panel && !panel.updated && panel.url && !isWaitingForUpdate(panel)) {{
+            if (panel.counter_enabled !== false) recordExtraHit(panel.name);
+            window.open(panel.url, '_blank', 'noopener');
+            return;
+        }}
+        cardClicked(pid);
+    }}
+
+    async function cardClicked(pid) {{
+        // Non aprire il menu durante il riordino o una precedente apertura.
+        if (reorderMode || cardOpening) return;
+        refreshMenuDates();
+        if (isWaitingForUpdate(PANELS[pid])) {{
+            // Mostra prima il menu del giorno precedente, poi l'avviso
+            // "In attesa di aggiornamento" per 1 secondo (si chiude da solo).
+            openDetail(order.indexOf(pid));
+            waitingUpdatePid = pid;
+            document.getElementById('waiting-update-dialog').showModal();
+            clearTimeout(waitingUpdateTimer);
+            waitingUpdateTimer = setTimeout(continueAfterWaiting, 1000);
+            return;
+        }}
+        cardOpening = true;
+        try {{
+            const panel = PANELS[pid];
+            if (panel.name === 'Le delizie di Michela' && panel.updated) {{
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 3000);
+                let notice = '';
+                try {{
+                    const response = await fetch(new URL('../../Rosticcerie.txt', document.baseURI), {{
+                        cache: 'no-store', signal: controller.signal
+                    }});
+                    if (response.ok) notice = michelaNoticeFrom(await response.text());
+                }} catch (error) {{
+                    console.warn('Avviso Michela non disponibile', error);
+                }} finally {{
+                    clearTimeout(timeout);
+                }}
+                if (notice) await showMichelaNotice(notice);
+            }}
+            openDetail(order.indexOf(pid));
+        }} finally {{
+            cardOpening = false;
+        }}
+    }}
+
+    function syncOrderFromDom() {{
+        const grid = document.getElementById('grid-view');
+        order = pinInfoLast(Array.from(grid.querySelectorAll('.card')).map(c => parseInt(c.dataset.pid, 10)));
+    }}
+
+    function showReorderActions() {{
+        document.getElementById('reorder-actions').style.display = 'flex';
+    }}
+
+    function exitReorderMode() {{
+        reorderMode = false;
+        document.getElementById('grid-view').querySelectorAll('.card').forEach(c => {{
+            c.classList.remove('jiggling', 'dragging');
+        }});
+        document.getElementById('reorder-actions').style.display = 'none';
+        saveOrder();
+    }}
+
+    const SHARE_URL = 'https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/Rosticcerie.html';
+
+    async function shareMenuImage(event) {{
+        event.stopPropagation();
+        const p = PANELS[order[currentIndex]];
+        if (!p || !p.image) {{
+            alert('Nessuna immagine da condividere.');
+            return;
+        }}
+        const menuUrl = new URL(p.image, window.location.href).href;
+        try {{
+            const response = await fetch(p.image);
+            const blob = await response.blob();
+            const shareLabel = p.detail_title || p.name;
+            const fileName = (p.name || 'menu').replace(/[\\/:*?"<>|]+/g, '_') + '.jpg';
+            const file = new File([blob], fileName, {{ type: blob.type || 'image/jpeg' }});
+            if (navigator.canShare && navigator.canShare({{ files: [file] }})) {{
+                await navigator.share({{ files: [file], title: shareLabel, text: 'Menu di ' + shareLabel }});
+                return;
+            }}
+            if (navigator.share) {{
+                await navigator.share({{ title: shareLabel, text: 'Menu di ' + shareLabel, url: menuUrl }});
+                return;
+            }}
+            // Nessuna Web Share API disponibile (tipico dei browser desktop):
+            // si scarica l'immagine, cosi' l'utente puo' comunque allegarla
+            // manualmente dove vuole.
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }} catch (err) {{
+            if (err && err.name !== 'AbortError') {{
+                alert('Impossibile condividere il menu.');
+            }}
+        }}
+    }}
+
+    async function shareSite(event) {{
+        event.stopPropagation();
+        const shareData = {{
+            title: 'Rosticcerie',
+            text: 'Guarda i menu delle rosticcerie',
+            url: SHARE_URL,
+        }};
+        try {{
+            if (navigator.share) {{
+                await navigator.share(shareData);
+                return;
+            }}
+            await navigator.clipboard.writeText(SHARE_URL);
+            alert('Link copiato negli appunti.');
+        }} catch (err) {{
+            if (err && err.name !== 'AbortError') {{
+                alert('Impossibile avviare la condivisione.');
+            }}
+        }}
+    }}
+
+    function resetOrderToDefault() {{
+        order = buildDefaultOrder();
+        applyOrderToGrid();
+        saveOrder();
+    }}
+
+    function startDrag(el, e) {{
+        reorderMode = true;
+        // Punto in cui l'utente ha "afferrato" la casella, relativo al suo
+        // angolo in alto a sinistra (prima di applicare qualunque
+        // transform): serve per calcolare ad ogni spostamento la nuova
+        // posizione senza accumulare l'offset dalla pressione iniziale.
+        const startRect = el.getBoundingClientRect();
+        dragState = {{
+            el,
+            grabOffsetX: e.clientX - startRect.left,
+            grabOffsetY: e.clientY - startRect.top,
+        }};
+        el.classList.add('dragging');
+        el.style.touchAction = 'none';
+        document.getElementById('grid-view').querySelectorAll('.card').forEach(c => {{
+            if (c !== el) c.classList.add('jiggling');
+        }});
+        showReorderActions();
+        if (navigator.vibrate) {{
+            try {{ navigator.vibrate(15); }} catch (err) {{}}
+        }}
+    }}
+
+    function updateDrag(e) {{
+        if (!dragState) return;
+        e.preventDefault();
+
+        const grid = document.getElementById('grid-view');
+        const cards = Array.from(grid.querySelectorAll('.card'));
+        let target = null;
+        for (const c of cards) {{
+            if (c === dragState.el) continue;
+            // "Info" non e' un bersaglio valido: niente puo' essere
+            // inserito prima o dopo di lui, cosi' resta sempre ultimo.
+            const cPanel = PANELS[parseInt(c.dataset.pid, 10)];
+            if (cPanel && cPanel.name === 'Suggerimenti') continue;
+            const r = c.getBoundingClientRect();
+            if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {{
+                target = c;
+                break;
+            }}
+        }}
+        if (target) {{
+            // Decidiamo se inserire il trascinato prima o dopo il bersaglio
+            // guardando la posizione del PUNTATORE rispetto al centro del
+            // bersaglio (non il rettangolo dell'elemento trascinato, che a
+            // causa del transform non riflette piu' la sua posizione nel
+            // flusso della griglia).
+            const targetRect = target.getBoundingClientRect();
+            const centerX = targetRect.left + targetRect.width / 2;
+            const centerY = targetRect.top + targetRect.height / 2;
+            const before = (e.clientY < centerY - 2) ||
+                (Math.abs(e.clientY - centerY) <= 2 && e.clientX < centerX);
+            if (before) {{
+                grid.insertBefore(dragState.el, target);
+            }} else {{
+                grid.insertBefore(dragState.el, target.nextSibling);
+            }}
+            syncOrderFromDom();
+        }}
+
+        // Ricalcoliamo SEMPRE la posizione statica (senza transform) della
+        // casella trascinata, per poi spostarla di conseguenza dal
+        // puntatore: se invece si accumula lo scostamento dalla pressione
+        // iniziale (come in precedenza), dopo un primo scambio la casella
+        // si ritrova in una cella diversa da quella di partenza e il
+        // trascinamento "salta" lontano dal dito/puntatore.
+        dragState.el.style.transform = '';
+        const staticRect = dragState.el.getBoundingClientRect();
+        const dx = e.clientX - dragState.grabOffsetX - staticRect.left;
+        const dy = e.clientY - dragState.grabOffsetY - staticRect.top;
+        dragState.el.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.06)';
+    }}
+
+    function endDrag() {{
+        if (!dragState) return;
+        dragState.el.classList.remove('dragging');
+        dragState.el.style.transform = '';
+        dragState.el.style.touchAction = '';
+        dragState.el.classList.add('jiggling');
+        dragState = null;
+        syncOrderFromDom();
+        saveOrder();
+    }}
+
+    // Stato della "pressione" in corso (prima che diventi un trascinamento
+    // vero e proprio). E' condiviso (non per-casella) perche' puo' esserci
+    // al piu' una pressione/trascinamento attivo alla volta.
+    let pressTimer = null;
+    let pressStartX = 0;
+    let pressStartY = 0;
+    let pressMoved = false;
+
+    // Ascoltiamo pointermove/pointerup sulla finestra (non sulla singola
+    // casella): una volta avviato il trascinamento, la casella viene
+    // spostata nel DOM (insertBefore) per farle cambiare posizione nella
+    // griglia, e questo interrompe la pointer capture sull'elemento —
+    // senza un listener globale, gli eventi successivi al primo scambio
+    // andrebbero persi e il trascinamento si bloccherebbe dopo il primo
+    // spostamento.
+    function onWindowPointerMove(e) {{
+        if (dragState) {{
+            updateDrag(e);
+            return;
+        }}
+        const dx = e.clientX - pressStartX;
+        const dy = e.clientY - pressStartY;
+        if (Math.hypot(dx, dy) > MOVE_CANCEL_PX) {{
+            pressMoved = true;
+            clearTimeout(pressTimer);
+        }}
+    }}
+
+    function onWindowPointerUp() {{
+        clearTimeout(pressTimer);
+        if (dragState) {{
+            endDrag();
+        }}
+        window.removeEventListener('pointermove', onWindowPointerMove);
+        window.removeEventListener('pointerup', onWindowPointerUp);
+        window.removeEventListener('pointercancel', onWindowPointerUp);
+    }}
+
+    function attachDragHandlers() {{
+        const grid = document.getElementById('grid-view');
+        grid.querySelectorAll('.card').forEach(el => {{
+            el.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            el.addEventListener('pointerdown', (e) => {{
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                // Il riquadro "Info" deve restare sempre per ultimo: non lo
+                // rendiamo trascinabile.
+                const panelForEl = PANELS[parseInt(el.dataset.pid, 10)];
+                if (panelForEl && panelForEl.name === 'Suggerimenti') return;
+                pressStartX = e.clientX;
+                pressStartY = e.clientY;
+                pressMoved = false;
+                clearTimeout(pressTimer);
+                pressTimer = setTimeout(() => {{
+                    if (!pressMoved) {{
+                        startDrag(el, e);
+                    }}
+                }}, LONG_PRESS_MS);
+                window.addEventListener('pointermove', onWindowPointerMove);
+                window.addEventListener('pointerup', onWindowPointerUp);
+                window.addEventListener('pointercancel', onWindowPointerUp);
+            }});
+        }});
+    }}
+
+    function moveCardByKeyboard(el, key) {{
+        const grid = document.getElementById('grid-view');
+        const cards = Array.from(grid.querySelectorAll('.card'));
+        const idx = cards.indexOf(el);
+        if (idx === -1) return;
+
+        // Il numero di colonne cambia con la larghezza dello schermo
+        // (2 su telefono, 4 su schermi larghi): lo leggiamo dal CSS
+        // effettivamente applicato invece di darlo per scontato, cosi'
+        // "su"/"giu'" spostano sempre alla riga giusta.
+        const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+
+        let targetIdx = null;
+        if (key === 'ArrowLeft') targetIdx = idx - 1;
+        else if (key === 'ArrowRight') targetIdx = idx + 1;
+        else if (key === 'ArrowUp') targetIdx = idx - columns;
+        else if (key === 'ArrowDown') targetIdx = idx + columns;
+        if (targetIdx === null || targetIdx < 0 || targetIdx >= cards.length) return;
+
+        const a = el;
+        const b = cards[targetIdx];
+        // "Info" deve restare sempre per ultimo: niente si scambia con lui,
+        // ne' da tastiera ne' trascinando (vedi sopra).
+        const aPanel = PANELS[parseInt(a.dataset.pid, 10)];
+        const bPanel = PANELS[parseInt(b.dataset.pid, 10)];
+        if ((aPanel && aPanel.name === 'Suggerimenti') || (bPanel && bPanel.name === 'Suggerimenti')) return;
+        const aNext = a.nextSibling;
+        const bNext = b.nextSibling;
+        if (aNext === b) {{
+            grid.insertBefore(b, a);
+        }} else if (bNext === a) {{
+            grid.insertBefore(a, b);
+        }} else {{
+            grid.insertBefore(a, bNext);
+            grid.insertBefore(b, aNext);
+        }}
+
+        syncOrderFromDom();
+        reorderMode = true;
+        showReorderActions();
+        el.focus();
+    }}
+
+    function handleGlobalKeydown(e) {{
+        const inDetail = document.getElementById('grid-view').style.display === 'none';
+        if (inDetail) {{
+            if (e.key === 'ArrowRight') {{
+                e.preventDefault();
+                showNext();
+            }} else if (e.key === 'ArrowLeft') {{
+                e.preventDefault();
+                showPrev();
+            }} else if (e.key === 'Escape') {{
+                e.preventDefault();
+                closeDetail();
+            }}
+            // Freccia su/giu': non le intercettiamo, cosi' restano libere
+            // di far scorrere la pagina/l'immagine come richiesto.
+            return;
+        }}
+
+        if (e.key === 'Escape') {{
+            if (dragState || reorderMode) {{
+                e.preventDefault();
+                if (dragState) {{ endDrag(); }}
+                exitReorderMode();
+            }}
+            return;
+        }}
+
+        if (e.key.indexOf('Arrow') === 0) {{
+            const focused = document.activeElement;
+            if (focused && focused.classList && focused.classList.contains('card')) {{
+                e.preventDefault();
+                moveCardByKeyboard(focused, e.key);
+            }}
+        }}
+    }}
+
+    function initReorder() {{
+        document.querySelectorAll('.card[data-pid]').forEach(card => {{
+            const panel = PANELS[Number(card.dataset.pid)];
+            if (!panel) return;
+            card.style.borderColor = panel.card_border || (panel.updated ? '#ffd641' : '#ffffff');
+            card.style.backgroundColor = panel.card_bg || (panel.updated ? '#fff7de' : '#ffffff');
+            const cardNameEl = card.querySelector('.card-name');
+            if (cardNameEl) {{
+                cardNameEl.style.color = panel.card_name_color || '#111';
+            }}
+        }});
+        loadSavedOrder();
+        applyOrderToGrid();
+        document.addEventListener('keydown', handleGlobalKeydown);
+        attachDragHandlers();
+        // In modalita' spostamento, toccare una zona vuota della griglia
+        // (fuori da qualunque casella) chiude il riordino come "Fine".
+        document.getElementById('grid-view').addEventListener('click', (e) => {{
+            if (reorderMode && !e.target.closest('.card')) {{
+                exitReorderMode();
+            }}
+        }});
+    }}
+
+    function renderDetail(i) {{
+        const n = order.length;
+        currentIndex = ((i % n) + n) % n;
+        const p = PANELS[order[currentIndex]];
+
+        document.getElementById('identity-block').classList.remove('home-identity');
+        const identityLogo = document.getElementById('identity-logo');
+        document.getElementById('identity-block').classList.toggle('has-logo', Boolean(p.logo));
+        identityLogo.style.display = p.logo ? 'block' : 'none';
+        if (p.logo) {{
+            identityLogo.src = p.logo;
+            identityLogo.alt = 'Logo ' + (p.detail_title || p.name);
+        }} else {{
+            identityLogo.removeAttribute('src');
+            identityLogo.alt = '';
+        }}
+        document.getElementById('main-title').innerText = p.detail_title || p.name;
+        document.getElementById('main-updated').innerText = p.updated_label || '{html.escape(today_label)}';
+        document.getElementById('main-updated').style.display = 'none';
+        document.getElementById('main-signature').style.display = 'none';
+        document.getElementById('nav-position').innerText = (currentIndex + 1) + '/' + n;
+
+        const phoneLine = document.getElementById('phone-line');
+        if (p.phone_tel) {{
+            phoneLine.innerHTML = '<a href="tel:' + p.phone_tel + '" onclick="event.stopPropagation()">' + p.phone_display + '</a>';
+            phoneLine.style.display = 'block';
+        }} else {{
+            phoneLine.innerHTML = '';
+            phoneLine.style.display = 'none';
+        }}
+
+        const content = document.getElementById('detail-content');
+        if (p.image) {{
+            const imageClass = p.name === 'Le delizie di Michela' ? ' class="michela-menu"' : '';
+            const sharePanel = p.name === 'Suggerimenti'
+                ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
+                : '';
+            const weekdayChart = (isAdmin && p.name === 'Suggerimenti')
+                ? '<div class="weekday-chart weekday-chart-first"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
+                    + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione oraria</div><div class="weekday-bars" id="hourly-bars"></div></div>'
+                    + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione per dispositivi</div><div class="weekday-bars" id="device-bars"></div></div>'
+                    + '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per bottone</div>'
+                    + '<table class="date-table"><thead><tr>'
+                    + '<th class="bst-name">Bottone</th>'
+                    + '<th class="bst-num">Oggi</th>'
+                    + '<th class="bst-num">Mese</th>'
+                    + '<th class="bst-num">Anno</th>'
+                    + '</tr></thead><tbody id="button-stats-body"></tbody></table></div>'
+                    + ''  /* link foglio spostato sul confetto DB del riquadro Info */
+                : '';
+            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
+            applyDetailImageFit();
+            if (isAdmin && p.name === 'Suggerimenti') {{
+                loadWeekdayChart();
+                loadHourlyChart();
+                loadDeviceChart();
+                loadButtonStatsTable();
+            }}
+        }} else {{
+            content.innerHTML = '<p class="error">' + (p.error || 'Menu non disponibile.') + '</p>';
+        }}
+    }}
+
+    function applyDetailImageFit() {{
+        const img = document.querySelector('#detail-content img');
+        if (!img) return;
+        const desktop = window.matchMedia('(min-width: 900px)').matches;
+        const width = desktop ? (window.innerWidth / 3) : window.innerWidth;
+        img.style.width = width + 'px';
+        img.style.maxWidth = width + 'px';
+        img.style.maxHeight = 'none';
+        img.style.height = 'auto';
+    }}
+
+    let detailOpenedAt = 0;
+    function openDetail(i) {{
+        document.getElementById('grid-view').style.display = 'none';
+        detailOpenedAt = Date.now();
+
+        renderDetail(i);
+        document.getElementById('detail-view').style.display = 'block';
+        document.getElementById('nav-bar').style.display = 'flex';
+        applyDetailImageFit();
+        window.scrollTo(0, 0);
+
+        recordCurrentView();
+    }}
+
+    function showMapPopup(address, url) {{
+      document.getElementById('map-popup-addr').textContent = address;
+      const btn = document.getElementById('map-popup-open');
+      btn.onclick = function() {{ window.open(url, '_blank'); }};
+      btn.style.display = url ? 'block' : 'none';
+      document.getElementById('map-popup').classList.add('open');
+    }}
+    function closeMapPopup() {{
+      document.getElementById('map-popup').classList.remove('open');
+    }}
+    function showPrev() {{ renderDetail(currentIndex - 1); recordCurrentView(); }}
+    function showNext() {{ renderDetail(currentIndex + 1); recordCurrentView(); }}
+
+    function closeDetail() {{
+        document.getElementById('identity-block').classList.add('has-logo', 'home-identity');
+        const logo = document.getElementById('identity-logo');
+        logo.style.display = 'block';
+        logo.src = 'apple-touch-icon.png';
+        logo.alt = 'Logo Rosticcerie';
+        document.getElementById('detail-view').style.display = 'none';
+        document.getElementById('phone-line').style.display = 'none';
+        document.getElementById('nav-bar').style.display = 'none';
+        document.getElementById('grid-view').style.display = 'grid';
+        fitCardNames();
+        document.getElementById('main-updated').style.display = '';
+        document.getElementById('main-updated').innerText = currentItalianDateLabel();
+        document.getElementById('main-signature').style.display = '';
+
+        const mainTitle = document.getElementById('main-title');
+        if (isAdmin) {{
+            updateAdminTitle();
+        }} else {{
+            mainTitle.innerText = 'Rosticcerie';
+        }}
+
+        window.scrollTo(0, 0);
+    }}
+
+    let menuRefreshRunning = false;
+    function italianDay() {{
+        return new Intl.DateTimeFormat('en-CA', {{timeZone: 'Europe/Rome', year:'numeric',month:'2-digit',day:'2-digit'}}).format(new Date());
+    }}
+    let lastMenuRefreshDay = '';
+    let lastMenuRefreshAt = 0;
+    const MENU_REFRESH_INTERVAL_MS = 600000;
+    function hardRefreshPage() {{
+        // Mantieni vivo il lettore durante gli aggiornamenti richiesti dalla pagina.
+        if (homeAudio && !homeAudio.paused) return forceFreshReload();
+        const url = new URL(window.location.href);
+        url.searchParams.set('reload', Date.now().toString());
+        window.location.replace(url.href);
+    }}
+    document.addEventListener('keydown', event => {{
+        if (event.ctrlKey && event.altKey && event.key.toLowerCase() === 'r') {{
+            event.preventDefault();
+            hardRefreshPage();
+        }}
+    }});
+
+    async function forceFreshReload(showFeedback = true) {{
+        if (menuRefreshRunning) return;
+        menuRefreshRunning = true;
+        const signature = document.getElementById('main-signature');
+        if (showFeedback) signature.innerText = 'Aggiornamento in corso…';
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        try {{
+            const base = window.location.protocol === 'file:'
+                ? new URL('https://sebastiano-mazzarisi.github.io/Rosticcerie/output/rosticceria_ios/')
+                : new URL('.', document.baseURI);
+            const statusUrl = new URL('status.json', base);
+            statusUrl.searchParams.set('refresh', Date.now().toString());
+            const response = await fetch(statusUrl.href, {{cache:'no-store', signal:controller.signal}});
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const status = await response.json();
+            if (!Array.isArray(status.pages) || !status.pages.length) throw new Error('Dati non validi');
+            status.pages.forEach(source => {{
+                const panel = PANELS.find(p => p.name === source.name);
+                if (!panel || panel.card_border) return;
+                const date = /([0-9]{{2}})\/([0-9]{{2}})\/([0-9]{{4}})/.exec(source.published_at || '');
+                panel.menu_date = date ? date[3] + '-' + date[2] + '-' + date[1] : '';
+                const time = /([0-9]{{1,2}}:[0-9]{{2}})/.exec(source.published_at || '');
+                // Come in refreshMenuDates: se manca un orario preciso (es.
+                // Pane & Co, che riporta solo la data) mostriamo comunque la
+                // data invece di svuotare il confetto verde, altrimenti
+                // questo aggiornamento automatico (che gira gia' al primo
+                // caricamento della pagina) lo faceva sparire subito dopo.
+                if (time) {{
+                    panel.card_reference = time[1];
+                }} else if (panel.menu_date) {{
+                    panel.card_reference = new Intl.DateTimeFormat('it-IT', {{timeZone: 'Europe/Rome', day: 'numeric', month: 'short'}}).format(new Date(panel.menu_date + 'T12:00:00Z'));
+                }} else {{
+                    panel.card_reference = '';
+                }}
+                panel.updated_label = source.published_at || '';
+                panel.error = source.error || '';
+                if (source.image) {{
+                    const imageUrl = new URL(source.image, base);
+                    imageUrl.searchParams.set('refresh', Date.now().toString());
+                    panel.image = imageUrl.href;
+                }} else {{ panel.image = ''; }}
+                const card = document.querySelector('.card[data-pid="' + PANELS.indexOf(panel) + '"]');
+                if (card && !card.querySelector('.card-reference')) {{
+                    const ref = document.createElement('span');
+                    ref.className = 'card-reference'; card.appendChild(ref);
+                }}
+                // Le rosticcerie "nuove" (badge_new) mostrano sempre il
+                // confetto "NEW" lampeggiante al posto della data: questo
+                // aggiornamento periodico dei dati non deve sovrascriverlo
+                // con l'orario/data appena ricevuti da status.json, altrimenti
+                // il confetto sparisce pochi istanti dopo il caricamento.
+                if (card && !panel.badge_new) card.querySelector('.card-reference').innerText = panel.card_reference;
+            }});
+            refreshMenuDates();
+            refreshReferenceDate();
+            if (document.getElementById('detail-view').style.display === 'block') renderDetail(currentIndex);
+            lastMenuRefreshDay = italianDay();
+            lastMenuRefreshAt = Date.now();
+            if (isAdmin) {{ loadCounter(); loadExtraCounters(); loadTodayCardStats(); }}
+            if (showFeedback) signature.innerText = 'by Mazzarisi';
+            if (isAdmin) updateAdminTitle();
+        }} catch (error) {{
+            refreshMenuDates();
+            refreshReferenceDate();
+            if (showFeedback) signature.innerText = 'Aggiornamento non riuscito • Tocca per riprovare';
+            console.warn('Aggiornamento menu non riuscito', error);
+        }} finally {{
+            clearTimeout(timeout);
+            menuRefreshRunning = false;
+            loadInfoAccessCount();
+        }}
+    }}
+    function refreshWhenNeeded() {{
+        if (!document.hidden && (lastMenuRefreshDay !== italianDay() || Date.now() - lastMenuRefreshAt >= MENU_REFRESH_INTERVAL_MS)) forceFreshReload(false);
+    }}
+    document.addEventListener('DOMContentLoaded', refreshWhenNeeded);
+    document.addEventListener('visibilitychange', refreshWhenNeeded);
+    window.addEventListener('focus', refreshWhenNeeded);
+    window.addEventListener('online', refreshWhenNeeded);
+    setInterval(refreshWhenNeeded, 60000);
+
+    let homeAudio;
+    // La freccia indica sempre il logo, sia per i visitatori sia in
+    // modalita' amministratore: sotto di essa compare, fissa, la scritta
+    // "Clicca per ascoltare" per i visitatori, oppure il numero del
+    // contatore in modalita' amministratore (?v=57).
+    function updateAudioHintArrow() {{
+        const textEl = document.getElementById('audio-hint-text');
+        if (textEl) textEl.classList.toggle('show-hint', !isAdmin);
+    }}
+    function toggleHomeAudio() {{
+        if (!document.getElementById('identity-block').classList.contains('home-identity')) {{ handleTitleClick(); return; }}
+        if (!homeAudio) {{
+            homeAudio = new Audio('Rosticcerie.mp3');
+            homeAudio.addEventListener('playing', () => {{
+                document.getElementById('identity-block').classList.add('audio-playing');
+            }});
+            ['pause', 'ended', 'waiting', 'error', 'emptied'].forEach(event => {{
+                homeAudio.addEventListener(event, () => {{
+                    document.getElementById('identity-block').classList.remove('audio-playing');
+                }});
+            }});
+        }}
+        if (homeAudio.paused) {{
+            recordExtraHit('Audio');
+            homeAudio.play().catch(() => alert('Audio non disponibile. Riprova.'));
+        }} else {{
+            homeAudio.pause();
+        }}
+    }}
+
+    function handleTitleClick() {{
+        const inDetail = document.getElementById('grid-view').style.display === 'none';
+        if (inDetail) {{
+            // Su iPhone, subito dopo aver toccato una card (che apre questa
+            // scheda di dettaglio), a volte il telefono genera un secondo
+            // tocco "fantasma" sulla stessa posizione dello schermo: se li'
+            // e' appena comparso il logo/titolo, quel tocco fantasma
+            // apriva subito anche il sito esterno, dando l'impressione che
+            // un solo tocco sul confetto facesse sia le due cose insieme.
+            // Ignoriamo quindi i tocchi sul titolo/logo troppo vicini
+            // all'apertura della scheda.
+            if (Date.now() - detailOpenedAt < 400) return;
+            const p = PANELS[order[currentIndex]];
+            if (p && p.url) {{
+                window.open(p.url, '_blank', 'noopener');
+            }}
+            return;
+        }}
+        if (isAdmin) {{
+            if (confirm("Vuoi davvero azzerare tutti i contatori, incluse le visualizzazioni extra (Audio/Info)? Su questo dispositivo si azzerano subito. Il completamento per tutti gli altri dispositivi avviene in background e puo' richiedere qualche minuto in piu' sui contatori con molte visualizzazioni.")) {{
+                resetCounterGlobally();
+            }}
+        }} else {{
+            hardRefreshPage();
+        }}
+    }}
+
+    function fitCardNames() {{
+        document.querySelectorAll('.card-name').forEach(name => {{
+            if (!name.clientWidth) return;
+            name.style.fontSize = '';
+            let size = parseFloat(getComputedStyle(name).fontSize);
+            while (size > 10 && (name.scrollHeight > size * 1.1 * 2 + 1 || name.scrollWidth > name.clientWidth + 1)) {{
+                size -= 0.5;
+                name.style.fontSize = size + 'px';
+            }}
+            const picture = name.parentElement.querySelector('.suggestions-image');
+            if (picture) {{
+                const range = document.createRange();
+                range.selectNodeContents(name);
+                picture.style.width = range.getBoundingClientRect().width + 'px';
+            }}
+        }});
+    }}
+    window.addEventListener('resize', fitCardNames);
+    document.addEventListener('DOMContentLoaded', fitCardNames);
+    window.onload = () => {{ loadCounter(); loadExtraCounters(); loadTodayCardStats(); updateAudioHintArrow(); }};
+    window.addEventListener('resize', applyDetailImageFit);
+    document.addEventListener('DOMContentLoaded', () => {{
+        refreshReferenceDate();
+        initReorder();
+        refreshMenuDates();
+    }});
+  </script>
+</head>
+<body>
+  <dialog id="michela-notice" aria-labelledby="michela-notice-title" aria-describedby="michela-notice-text">
+    <h2 id="michela-notice-title">Le delizie di Michela</h2>
+    <p id="michela-notice-text"></p>
+    <button type="button" id="michela-notice-ok">OK</button>
+  </dialog>
+
+  <header id="main-header">
+    <div id="identity-block" class="has-logo home-identity">
+      <div class="audio-counter-wrap">
+        <div class="audio-hint-stack">
+          <span id="audio-hint-text" class="audio-hint-text" aria-hidden="true">Clicca<br>per<br>ascoltare</span>
+          <span id="audio-hint-arrow" class="audio-hint-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13M13 6l6 6-6 6"/></svg></span>
+          <span id="audio-play-counter" class="audio-play-counter">0</span>
+        </div>
+        <svg class="sound-waves" viewBox="0 0 44 88" aria-hidden="true" focusable="false">
+          <path d="M 40 30 Q 26 44 40 58"></path>
+          <path d="M 40 30 Q 26 44 40 58"></path>
+          <path d="M 40 30 Q 26 44 40 58"></path>
+        </svg>
+      </div>
+      <img id="identity-logo" src="apple-touch-icon.png" alt="Logo Rosticcerie" style="display:block" role="button" tabindex="0" onclick="toggleHomeAudio()" onkeydown="if(event.key === 'Enter' || event.key === ' ') {{ event.preventDefault(); toggleHomeAudio(); }}">
+      <div id="identity-text">
+    <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
+    <p id="main-updated" class="updated" onclick="hardRefreshPage()">{html.escape(today_label)}</p>
+    <p id="main-signature" class="signature" onclick="hardRefreshPage()">by Mazzarisi</p>
+        <div id="phone-line"></div>
+      </div>
+    </div>
+    <div id="reorder-actions">
+      <button type="button" id="reorder-reset-btn" onclick="resetOrderToDefault()">Reset</button>
+      <button type="button" id="reorder-done-btn" onclick="exitReorderMode()">Fine</button>
+    </div>
+
+  </header>
+
+  <main id="grid-view">
+    {"".join(cards)}
+  </main>
+
+  <div id="detail-view">
+    <div id="detail-content" onclick="closeDetail()"></div>
+  </div>
+
+  <div id="nav-bar">
+    <button type="button" onclick="showPrev()" aria-label="Rosticceria precedente">&#8592;</button>
+    <span id="nav-position-group">
+      <button type="button" id="nav-share-btn" onclick="shareMenuImage(event)" aria-label="Condividi il menu">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 V13 M7.5 7 L12 2 L16.5 7 M5 10 V19 H19 V10"/></svg>
+      </button>
+      <span id="nav-position"></span>
+      <button type="button" id="nav-home-btn" onclick="closeDetail()" aria-label="Torna alla Home">&#127968;</button>
+    </span>
+    <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
+  </div>
+  <div id="map-popup" role="dialog" aria-modal="true" aria-label="Indirizzo">
+    <div id="map-popup-backdrop" onclick="closeMapPopup()"></div>
+    <div id="map-popup-box">
+      <div id="map-popup-addr"></div>
+      <button id="map-popup-open" type="button">Apri in Google Maps</button>
+      <button id="map-popup-close" type="button" onclick="closeMapPopup()">Esci</button>
+    </div>
+  </div>
+<dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
+    <p id="waiting-update-text">In attesa di<br>aggiornamento</p>
+  </dialog>
+</body>
+</html>
+"""
+    index_path = os.path.join(output_dir, "Rosticcerie.html")
+    with open(index_path, "w", encoding="utf-8") as index_file:
+        index_file.write(index_html)
+
+    # "index.html" e' la pagina che iOS/i browser aprono per default quando si
+    # salva l'URL della cartella (es. icona sulla schermata Home): la teniamo
+    # identica a Rosticcerie.html per evitare che resti una versione vecchia.
+    root_index_path = os.path.join(output_dir, "index.html")
+    with open(root_index_path, "w", encoding="utf-8") as root_index_file:
+        root_index_file.write(index_html)
+
+
+def git_publish_if_available(output_dir: str) -> None:
+    repo_dir = find_git_repository(output_dir)
+    if not repo_dir:
+        print("Cartella pubblicata localmente. GitHub non configurato in questa cartella.")
+        return
+
+    rel_output = os.path.relpath(output_dir, repo_dir)
+    commands = [
+        ["git", "add", rel_output],
+        ["git", "commit", "-m", "Aggiorna foto rosticcerie"],
+        ["git", "push"],
+    ]
+
+    for command in commands:
+        result = subprocess.run(command, cwd=repo_dir, capture_output=True, text=True)
+        if command[1] == "commit" and result.returncode != 0 and "nothing to commit" in result.stdout.lower():
+            print("GitHub: nessuna modifica nuova da pubblicare.")
+            return
+        if result.returncode != 0:
+            print(f"GitHub: comando non riuscito: {' '.join(command)}")
+            print((result.stderr or result.stdout).strip())
+            return
+
+    print("GitHub: pubblicazione completata.")
+
+
+def find_git_repository(path: str) -> Optional[str]:
+    current = os.path.abspath(path)
+    while True:
+        if os.path.isdir(os.path.join(current, ".git")):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            return None
+        current = parent
+
+
+def fit_image(image: Image.Image, max_width: int, max_height: int) -> Image.Image:
+    fitted = image.copy()
+    fitted.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+    return fitted
+
+
+def draw_panel(canvas, image_tk, panel: Dict, left: int, top: int, width: int, height: int):
+    canvas.create_rectangle(left, top, left + width, top + height, fill="black", outline="#333333")
+
+    if "error" in panel:
+        canvas.create_text(
+            left + 28,
+            top + 28,
+            anchor="nw",
+            text=f"{panel['name']}\n{panel['error']}",
+            fill="white",
+            font=("Arial", 24, "bold"),
+            width=max(260, width - 56),
+        )
+        return None
+
+    image = Image.open(io.BytesIO(panel["image_bytes"]))
+    image = fit_image(image, width, height)
+    photo = image_tk.PhotoImage(image)
+
+    x = left + (width - image.width) // 2
+    y = top + (height - image.height) // 2
+    canvas.create_image(x, y, anchor="nw", image=photo)
+
+    title = panel["name"]
+    text = panel.get("text", "")
+    overlay = title if not text else f"{title}\n{text}"
+    text_width = min(680, max(260, width - 56))
+    text_id = canvas.create_text(
+        left + 28,
+        top + 24,
+        anchor="nw",
+        text=overlay,
+        fill="white",
+        font=("Arial", 21, "bold"),
+        width=text_width,
+    )
+    bbox = canvas.bbox(text_id)
+    if bbox:
+        padding = 14
+        background = canvas.create_rectangle(
+            bbox[0] - padding,
+            bbox[1] - padding,
+            bbox[2] + padding,
+            bbox[3] + padding,
+            fill="black",
+            outline="white",
+        )
+        canvas.tag_lower(background, text_id)
+
+    return photo
+
+
+def show_fullscreen(panels: List[Dict]) -> None:
+    from PIL import ImageTk
+    from tkinter import Canvas, Tk
+
+    root = Tk()
+    root.title("Rosticcerie")
+    root.configure(bg="black")
+    root.attributes("-fullscreen", True)
+    root.focus_force()
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    canvas = Canvas(root, width=screen_width, height=screen_height, bg="black", highlightthickness=0)
+    canvas.pack(fill="both", expand=True)
+
+    panel_count = max(1, len(panels))
+    panel_width = screen_width // panel_count
+    photos = []
+    for index, panel in enumerate(panels):
+        left = index * panel_width
+        width = screen_width - left if index == panel_count - 1 else panel_width
+        photos.append(draw_panel(canvas, ImageTk, panel, left, 0, width, screen_height))
+        if index:
+            canvas.create_line(left, 0, left, screen_height, fill="white", width=2)
+    canvas.photos = photos
+
+    def close(_event=None):
+        root.destroy()
+
+    root.bind("<Key>", close)
+    root.bind("<Button-1>", close)
+    root.bind("<Escape>", close)
+    root.after(300, root.focus_force)
+    root.mainloop()
+
+
+def extract_pages() -> List[Dict]:
+    panels = []
+
+    for facebook_page in FACEBOOK_PAGES:
+        name = facebook_page["name"]
+        existing_panel = existing_publish_panel_if_today(name)
+        # Impastamo' puo' pubblicare prima un annuncio di riapertura e poi il
+        # menu nello stesso giorno: non riutilizziamo quindi una foto gia'
+        # salvata, altrimenti non arriveremmo mai al post del menu.
+        if existing_panel and name != "Impastamò":
+            print(f"{name}: foto di oggi già presente, salto la verifica.")
+            panels.append(existing_panel)
+            continue
+
+        print(f"Cerco la prima immagine su Facebook: {name}...")
+        try:
+            post = extract_first_facebook_image(
+                facebook_page["url"],
+                prefer_active_closure=(name == "Le delizie di Michela"),
+                skip_closure_notices=(name == "Impastamò"),
+                skip_first_today_post=(name == "Impastamò"),
+                prefer_facebook_date=(name == "Fantasia"),
+            )
+            image_bytes = download_image(post["image_url"])
+
+            if name == "Fantasia":
+                image_bytes = crop_fantasia_chalkboard(image_bytes)
+            elif name == "Le delizie di Michela":
+                closure_signal = f"{post.get('text', '')} {post.get('image_alt', '')}"
+                if looks_like_closure_notice(closure_signal):
+                    print(
+                        f"{name}: rilevato avviso di chiusura/ferie, mantengo la foto "
+                        "intera (niente ritaglio lavagna)."
+                    )
+                    if not clean_post_text(post.get("text", "")):
+                        alt_text = clean_facebook_alt_text(post.get("image_alt", ""))
+                        if alt_text:
+                            post["text"] = alt_text
+                else:
+                    image_bytes = crop_michela_chalkboard(image_bytes)
+            elif name == "Santoro (Castellana)":
+                image_bytes = add_white_border(image_bytes, border=10)
+
+            image_bytes = add_date_footer(image_bytes, post.get("published_at", ""))
+
+            image_path = save_image(image_bytes, facebook_page["output_image"])
+            print(f"{name}: immagine salvata in {image_path}")
+            if not post.get("published_at_raw"):
+                print(
+                    f"{name}: non ho trovato la data/ora del post su Facebook "
+                    "(published_at_raw vuoto). Uso come riserva la data eventualmente "
+                    "scritta nel testo del post."
+                )
+            panels.append(
+                {
+                    "name": name,
+                    "image_bytes": image_bytes,
+                    "text": post.get("text", ""),
+                    "published_at": post.get("published_at", ""),
+                    "published_at_raw": post.get("published_at_raw", ""),
+                }
+            )
+        except Exception as exc:
+            existing_panel = existing_publish_panel_if_today(name, require_today=False)
+            if existing_panel and name != "Impastamò":
+                print(f"{name}: Facebook non leggibile ora, tengo l'ultima foto salvata.")
+                panels.append(existing_panel)
+            else:
+                panels.append({"name": name, "error": str(exc)})
+
+    existing_panel = existing_publish_panel_if_today(PANECO_PAGE["name"])
+    if existing_panel:
+        print("Pane&Co: menu di oggi già presente, salto la verifica.")
+        panels.append(existing_panel)
+    else:
+        print("Creo il menu Pane&Co con primi e secondi del giorno...")
+        try:
+            panel = extract_paneeco_menu()
+            image_path = save_image(panel["image_bytes"], "Rosticceria_Pane_Co.jpg")
+            print(f"Pane&Co: immagine salvata in {image_path}")
+            panels.append(panel)
+        except Exception as exc:
+            panels.append({"name": PANECO_PAGE["name"], "error": str(exc)})
+
+    for text_page in TEXT_FACEBOOK_PAGES:
+        name = text_page["name"]
+        print(f"Cerco il menu testuale su Facebook: {name}...")
+        try:
+            panel = extract_first_facebook_text_menu(text_page)
+            image_path = save_image(panel["image_bytes"], f"Rosticceria_{safe_file_name(name)}.jpg")
+            print(f"{name}: immagine generata in {image_path}")
+            panels.append(panel)
+        except Exception as exc:
+            existing_panel = existing_publish_panel_if_today(name, require_today=False)
+            if existing_panel:
+                print(f"{name}: menu completo non leggibile ora, tengo l'ultimo menu salvato.")
+                panels.append(existing_panel)
+            else:
+                panels.append({"name": name, "error": str(exc)})
+
+    return panels
+
+
+def run_once(show: bool = False, publish_to_git: bool = True) -> None:
+    panels = extract_pages()
+    output_dir = publish_dir()
+    if panels and all(panel.get("reused") for panel in panels):
+        output_dir = save_publish_files(panels)
+        print(f"File per iOS riallineati in: {output_dir}")
+        print("Tutte le rosticcerie hanno già il menu di oggi: nessuna verifica necessaria.")
+        if show:
+            show_fullscreen(panels)
+        return
+
+    output_dir = save_publish_files(panels)
+    print(f"File per iOS aggiornati in: {output_dir}")
+
+    if publish_to_git:
+        git_publish_if_available(output_dir)
+
+    if show:
+        show_fullscreen(panels)
+
+
+def inside_run_window(moment: datetime.datetime) -> bool:
+    midnight_start = datetime.datetime.combine(moment.date(), MIDNIGHT_REFRESH, tzinfo=moment.tzinfo)
+    midnight_end = midnight_start + datetime.timedelta(minutes=MIDNIGHT_REFRESH_GRACE_MINUTES)
+    return midnight_start <= moment <= midnight_end or RUN_START <= moment.time() <= RUN_END
+
+
+def next_run_time(now: datetime.datetime) -> datetime.datetime:
+    midnight_run = datetime.datetime.combine(now.date(), MIDNIGHT_REFRESH, tzinfo=now.tzinfo)
+    today_start = datetime.datetime.combine(now.date(), RUN_START, tzinfo=now.tzinfo)
+    today_end = datetime.datetime.combine(now.date(), RUN_END, tzinfo=now.tzinfo)
+    interval = datetime.timedelta(minutes=RUN_INTERVAL_MINUTES)
+
+    if now <= midnight_run:
+        return midnight_run
+    if now < today_start:
+        return today_start
+    if now > today_end:
+        return midnight_run + datetime.timedelta(days=1)
+
+    next_time = today_start
+    while next_time < now:
+        next_time += interval
+
+    if next_time <= today_end:
+        return next_time
+    return midnight_run + datetime.timedelta(days=1)
+
+
+def monitor_loop(show: bool = False, publish_to_git: bool = True) -> None:
+    print("Monitor attivo: estrazione alle 00:01 e ogni 10 minuti tra le 05:00 e le 20:00.")
+
+    while True:
+        now = datetime.datetime.now()
+        scheduled = next_run_time(now)
+        seconds = max(0, int((scheduled - now).total_seconds()))
+        print(f"Prossima estrazione: {scheduled.strftime('%d/%m/%Y %H:%M')}")
+
+        while seconds > 0:
+            time.sleep(min(seconds, 60))
+            now = datetime.datetime.now()
+            seconds = max(0, int((scheduled - now).total_seconds()))
+
+        if inside_run_window(datetime.datetime.now()):
+            run_once(show=show, publish_to_git=publish_to_git)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Estrae e pubblica Fantasia, Cibària, Bollenti piatti, Pane&Co, Impastamò, Le delizie di Michela, Santoro e Aufer.")
+    parser.add_argument("--once", action="store_true", help="Esegue una sola estrazione e poi termina.")
+    parser.add_argument("--show", action="store_true", help="Mostra anche le due foto a pieno schermo.")
+    parser.add_argument("--no-git", action="store_true", help="Non prova a pubblicare con GitHub/git.")
+    args = parser.parse_args()
+
+    if args.once:
+        run_once(show=args.show, publish_to_git=not args.no_git)
+    else:
+        monitor_loop(show=args.show, publish_to_git=not args.no_git)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as exc:
+        print(f"Errore: {exc}")
+        sys.exit(1)
