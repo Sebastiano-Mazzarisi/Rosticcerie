@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-02T07:09:19",
+  "updated_at": "2026-10-02T08:42:37",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,9 +12,9 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "1 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "01/10/2026 10:43 circa",
-      "published_at_raw": "01/10/2026",
+      "text": "2 Ottobre 2026.\nMenù del giorno.",
+      "published_at": "02/10/2026 08:39 circa",
+      "published_at_raw": "02/10/2026",
       "error": null
     },
     {
@@ -44,15 +44,15 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 1 Ottobre",
-      "published_at": "01/10/2026 10:44 circa",
-      "published_at_raw": "01/10/2026",
+      "text": "menù del giorno 2 Ottobre",
+      "published_at": "02/10/2026 09:41 circa",
+      "published_at_raw": "02/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 2 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Rigatoni alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Risotto con radicchio e gorgonzola - €7.50\n- Orecchiette con zucca e salsiccia a punta di coltello - €8.50\n- Cavatellucci con cozze e fagioli - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di cernia gratinato con carciofi e pomodorino - €8.50\n- Straccetti di petto di pollo con zucchina e mandorle - €7.50",
+      "text": "Menu 2 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Gnocchi di patate alla sorrentina - €8.00\n- Risotto con zucca e salsiccia - €8.50\n- Cavatellucci con cernia, pomodorini e carciofi - €8.50\n- Zuppa di fagioli, lenticchie e ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa con patate e pomodorino - €8.50\n- Scaloppe di lonza con salsa al vino bianco e speck - €7.50\n  2 pezzi",
       "published_at": "02/10/2026",
       "published_at_raw": "2 Ottobre",
       "error": null
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "23 hours ago\nPRIMI PIATTI\n●TROFIETTE PORCINI, PANCETTA E CREMA DI ZAFFERANO 5,5\n●CASERECCIA CON FAGIOLI CANNELLINI, PATATE E SPECK CROCCANTE 5,0\n●SPAGHETTI AGLI SCAMPI 6,0\n●FARFALLE ALLA CRUDAIOLA CON GAMBERI, SALMONE E PESTO DI BASILICO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●QUADRATO DI CARNE MACINATO CON CARCIOFI, PROSCIUTTO E GALBANINO\n●TRIPPA IN UMIDO\n●SPIEDINO DI ROSE DI CARNE CON SPECK RUCOLA E GALBANINO\n●MILLEFOGLIE DI VERDURE GRATINATO AL FORNO\n●FILETTO DI ORATA IN CROSTA DI ZUCCHINA\n●OLIVE FRITTE\n●RUSTICO PROSCIUTTO COTTO E SCAMORZA AFFUMICATA",
-      "published_at": "01/10/2026 10:08 circa",
-      "published_at_raw": "23h",
+      "text": "about an hour ago\nPRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●LASAGNA AL FORNO 5,0\n●PENNETTE CON SUGO DI POMODORO, PESTO DI BASILICO, STRACCIATELLA E CARNE DI VITELLO 5,5\n●LINGUINE ALLE VONGOLE CON CREMA DI PATATE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO ALLA PAPRIKA E ERBE DI PROVENZIA\n●POLPETTONE DI VITELLO FARCITO\n●POLPETTE DI POLLO CON CAROTE E SPINACI IN SALSA DI PORCINI\n●PARMIGIANA\n●CUORE DI MERLUZZO IN CREMA DI CECI AL CURRY E POMODORINO\n●INSALATA DI POLLO TONNATA\n●PIZZA DI PATATE CON SPECK E MOZZARELLA\n●OLIVE NERE FRITTE",
+      "published_at": "02/10/2026 09:42 circa",
+      "published_at_raw": "1h",
       "error": null
     }
   ]
