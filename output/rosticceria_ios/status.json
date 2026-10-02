@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-01T16:44:55",
+  "updated_at": "2026-10-02T07:04:06",
   "pages": [
     {
       "name": "Fantasia",
@@ -20,26 +20,26 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "",
-      "published_at": "01/10/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "text": "about an hour ago\n1h\n·",
+      "published_at": "02/10/2026 08:01 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
-      "image": "Le_delizie_di_Michela.jpg",
+      "image": null,
       "text": "",
-      "published_at": "01/10/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Le delizie di Michela."
     },
     {
       "name": "Aufer",
-      "image": "Aufer.jpg",
+      "image": null,
       "text": "",
-      "published_at": "01/10/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun menu locale importato oggi per Aufer."
     },
     {
       "name": "Santoro (Castellana)",
@@ -52,9 +52,9 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 1 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Rigatoni alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Risotto con radicchio e gorgonzola - €7.50\n- Orecchiette con zucca e salsiccia a punta di coltello - €8.50\n- Cavatellucci con cozze e fagioli - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di cernia gratinato con carciofi e pomodorino - €8.50\n- Straccetti di petto di pollo con zucchina e mandorle - €7.50",
-      "published_at": "01/10/2026",
-      "published_at_raw": "1 Ottobre",
+      "text": "Menu 2 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Rigatoni alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Risotto con radicchio e gorgonzola - €7.50\n- Orecchiette con zucca e salsiccia a punta di coltello - €8.50\n- Cavatellucci con cozze e fagioli - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di cernia gratinato con carciofi e pomodorino - €8.50\n- Straccetti di petto di pollo con zucchina e mandorle - €7.50",
+      "published_at": "02/10/2026",
+      "published_at_raw": "2 Ottobre",
       "error": null
     },
     {
