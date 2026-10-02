@@ -115,26 +115,6 @@ RECENT_JS = """() => {
  });
 }"""
 
-# Estrae l'eta' della storia corrente in MINUTI dal visualizzatore.
-# Ritorna None se non trova un'indicazione di tempo leggibile.
-TIME_MINUTES_JS = """() => {
- const re = /(?:^|[^\\p{L}\\p{N}])(\\d{1,2})\\s*(m|min|h)(?![\\p{L}\\p{N}])/iu;
- for (const el of [...document.querySelectorAll('*')]) {
-   const t = (el.innerText || el.textContent || '').trim();
-   if (!t || t.length > 80) continue;
-   const match = re.exec(t);
-   if (!match) continue;
-   const r = el.getBoundingClientRect();
-   if (r.width > 0 && r.height > 0 && r.height < 60 && r.top >= 0 && r.top < 140
-     && r.left > innerWidth * .35 && r.left < innerWidth) {
-     const n = parseInt(match[1]);
-     const unit = match[2].toLowerCase();
-     return unit.startsWith('h') ? n * 60 : n;
-   }
- }
- return null;
-}"""
-
 
 def facebook_url(value):
     p = urlparse(value)
@@ -295,31 +275,6 @@ def main():
                     page.wait_for_timeout(300)
                 return False
 
-            def story_age_minutes():
-                """Ritorna l'eta' della storia corrente in minuti (es. '2 h'
-                → 120), o None se non riesce a leggere l'indicazione di tempo."""
-                deadline = time.monotonic() + 4
-                while time.monotonic() < deadline:
-                    val = page.evaluate(TIME_MINUTES_JS)
-                    if val is not None:
-                        return int(val)
-                    page.wait_for_timeout(300)
-                return None
-
-            def try_advance_story():
-                """Clicca la freccia 'storia successiva' nel visualizzatore
-                Facebook per passare alla storia successiva dello stesso profilo.
-                Ritorna True se il click è andato a segno e l'URL è cambiato."""
-                old_url = page.url
-                # Tasto freccia destra: il modo più affidabile su Facebook
-                page.keyboard.press('ArrowRight')
-                try:
-                    page.wait_for_url(re.compile(r'/stories/'), timeout=4000)
-                except Exception:
-                    pass
-                page.wait_for_timeout(1500)
-                return page.url != old_url
-
             def story_unavailable():
                 """Vero se il visualizzatore mostra il placeholder di storia scaduta/
                 assente ("Questa storia non e' piu' disponibile"), tipico di quando
@@ -436,34 +391,6 @@ def main():
                           'evidenza): non la importo per sicurezza. Schermata: ' + str(diagnostic)
                           + ' Nuovo controllo fra 10 minuti.')
                     return None
-
-                # Controlla l'eta' della storia. Se e' molto vecchia (> 10 ore),
-                # Michela potrebbe aver pubblicato una storia piu' recente DOPO:
-                # proviamo ad avanzare di una storia per trovare quella di oggi.
-                age = story_age_minutes()
-                if age is not None and age > 10 * 60:
-                    print(f'Prima storia trovata ma pubblicata {age // 60}h fa: '
-                          f'verifico se esiste una storia piu\' recente...')
-                    if try_advance_story() and not story_unavailable():
-                        newer_candidate = None
-                        newer_deadline = time.monotonic() + 10
-                        while time.monotonic() < newer_deadline:
-                            newer_candidate = page.evaluate(IMAGE_JS)
-                            if newer_candidate:
-                                break
-                            page.wait_for_timeout(300)
-                        if newer_candidate and story_is_recent():
-                            newer_age = story_age_minutes()
-                            if newer_age is None or newer_age < age:
-                                print(f'Storia piu\' recente trovata'
-                                      + (f' ({newer_age} min fa)' if newer_age is not None else '')
-                                      + ': uso questa.')
-                                candidate = newer_candidate
-                        else:
-                            # Torna alla storia originale se quella successiva non va
-                            page.keyboard.press('ArrowLeft')
-                            page.wait_for_timeout(1000)
-
                 # Storia valida e recente: la teniamo in cache per il resto della
                 # giornata (STORY_CACHE['date'] e' gia' impostato da check_once),
                 # cosi' i prossimi controlli non devono ripassare dal profilo ogni
