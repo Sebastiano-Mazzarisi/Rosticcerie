@@ -3404,6 +3404,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     display_names = {
         "Aufer": "Aufer Gastronomia",
     }
+    # Indirizzi usati esclusivamente dal segnaposto nella barra del dettaglio.
+    # Non vengono mostrati indicatori o pulsanti nei riquadri della Home.
+    map_addresses = {
+        "Fantasia":              "Via Nicola Losavio 10, Putignano",
+        "Bollenti piatti":       "Via Noci 48, Putignano",
+        "Pane & Co":             "Viale Federico II 49, Putignano",
+        "Cibària":               "Estrad. a Levante 11, Putignano",
+        "Le delizie di Michela": "Corso Umberto I 87, Putignano",
+        "Impastamò":             "Via Conversano 34, Putignano",
+        "Santoro (Castellana)":  "Via Mazzini 28, Castellana Grotte",
+        "Aufer":                 "Estrad. a Mezzogiorno 83, Putignano",
+    }
     today = rome_now().date()
     panels_data = []
 
@@ -3473,6 +3485,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     })
 
     panels_json = json.dumps(panels_data, ensure_ascii=False)
+    map_addresses_json = json.dumps(map_addresses, ensure_ascii=False)
 
     cards = []
     for i, p in enumerate(panels_data):
@@ -3973,11 +3986,47 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       font-size: 22px;
       padding: 4px;
     }}
+    #nav-bar #nav-map-btn {{
+      display: none;
+      padding: 4px;
+      color: #e53935;
+      align-items: center;
+      justify-content: center;
+    }}
     #nav-bar #nav-share-btn {{
       padding: 4px;
       display: flex;
       align-items: center;
     }}
+    #map-dialog {{
+      border: 0;
+      border-radius: 16px;
+      padding: 0;
+      width: min(90vw, 430px);
+      color: #111;
+      background: #fff;
+      text-align: center;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.45);
+    }}
+    #map-dialog::backdrop {{ background: rgba(0,0,0,0.65); }}
+    .map-dialog-content {{ padding: 26px 24px 22px; }}
+    #map-dialog h2 {{ margin: 0 0 12px; font-size: 23px; }}
+    #map-dialog-address {{ margin: 0 0 24px; font-size: 18px; line-height: 1.4; font-style: normal; }}
+    .map-dialog-actions {{ display: flex; flex-direction: column; gap: 10px; }}
+    #map-dialog-open, #map-dialog-close {{
+      box-sizing: border-box;
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }}
+    #map-dialog-open {{ background: #1a73e8; color: #fff; }}
+    #map-dialog-close {{ background: #e9ecef; color: #333; }}
     #waiting-update-dialog {{ border: 0; border-radius: 14px; padding: 28px 36px; text-align: center; color: #111; background: #fedb9b; max-width: calc(100vw - 40px); }}
     #waiting-update-dialog::backdrop {{ background: rgba(0,0,0,.55); }}
     #waiting-update-dialog p {{ margin: 0 0 24px; font-size: 24px; line-height: 1.35; text-align: center; }}
@@ -4021,6 +4070,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   </style>
   <script>
     const PANELS = {panels_json};
+    const MAP_ADDRESSES = {map_addresses_json};
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {{
         PANELS.forEach(panel => {{
@@ -5400,6 +5450,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         document.getElementById('main-updated').style.display = 'none';
         document.getElementById('main-signature').style.display = 'none';
         document.getElementById('nav-position').innerText = (currentIndex + 1) + '/' + n;
+        document.getElementById('nav-map-btn').style.display = MAP_ADDRESSES[p.name] ? 'inline-flex' : 'none';
 
         const phoneLine = document.getElementById('phone-line');
         if (p.phone_tel) {{
@@ -5469,6 +5520,18 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
 
     function showPrev() {{ renderDetail(currentIndex - 1); recordCurrentView(); }}
     function showNext() {{ renderDetail(currentIndex + 1); recordCurrentView(); }}
+
+    function showMapDialog(event) {{
+        if (event) event.stopPropagation();
+        const p = PANELS[order[currentIndex]];
+        const address = p ? MAP_ADDRESSES[p.name] : '';
+        if (!address) return;
+        document.getElementById('map-dialog-title').innerText = p.detail_title || p.name;
+        document.getElementById('map-dialog-address').innerText = address;
+        document.getElementById('map-dialog-open').href =
+            'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
+        document.getElementById('map-dialog').showModal();
+    }}
 
     function closeDetail() {{
         document.getElementById('identity-block').classList.add('has-logo', 'home-identity');
@@ -5735,11 +5798,24 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       </button>
       <span id="nav-position"></span>
       <button type="button" id="nav-home-btn" onclick="closeDetail()" aria-label="Torna alla Home">&#127968;</button>
+      <button type="button" id="nav-map-btn" onclick="showMapDialog(event)" aria-label="Mostra indirizzo e apri Google Maps">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>
+      </button>
     </span>
     <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
   </div>
-<dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
+  <dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
     <p id="waiting-update-text">In attesa di<br>aggiornamento</p>
+  </dialog>
+  <dialog id="map-dialog" aria-labelledby="map-dialog-title" onclick="if(event.target===this)this.close()">
+    <div class="map-dialog-content">
+      <h2 id="map-dialog-title"></h2>
+      <address id="map-dialog-address"></address>
+      <div class="map-dialog-actions">
+        <a id="map-dialog-open" href="#" target="_blank" rel="noopener">Apri in Google Maps</a>
+        <button type="button" id="map-dialog-close" onclick="document.getElementById('map-dialog').close()">Chiudi</button>
+      </div>
+    </div>
   </dialog>
 </body>
 </html>
