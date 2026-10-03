@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-03T09:36:22",
+  "updated_at": "2026-10-03T09:53:46",
   "pages": [
     {
       "name": "Fantasia",
@@ -27,19 +27,19 @@
     },
     {
       "name": "Le delizie di Michela",
-      "image": null,
+      "image": "Le_delizie_di_Michela.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun post trovato per Le delizie di Michela."
+      "published_at": "03/10/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Aufer",
-      "image": null,
+      "image": "Aufer.jpg",
       "text": "",
-      "published_at": "",
-      "published_at_raw": "",
-      "error": "Nessun menu locale importato oggi per Aufer."
+      "published_at": "03/10/2026",
+      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
+      "error": null
     },
     {
       "name": "Santoro (Castellana)",
@@ -61,7 +61,7 @@
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
       "text": "2 hours ago\nPRIMI PIATTI\n●CIME DI RAPE STUFATE CON OLIO, AGLIO E POMODORINO 6,0\n●LASAGNA AL FORNO 5,0\n●TORTIGLIONI CON PISELLI, FUNGHI MISTI CON PORCINI E SPECK 5,5\n●CAVATELLI AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SPIEDINO DI BOCCONCINI DI POLLO BARDATI ALLA PANCETTA E GRATINATI AL LIMONE\n●SCALOPPINE DI VITELLO AI FUNGHI\n●FUSI DI POLLO AL FORNO CON PATATE\n●MELANZANE RIPIENE\n●FRITTURA DI ANELLI, CIUFFI E GAMBERI\n●PIZZA DI PATATE\n●FIORI DI ZUCCA FRITTI",
-      "published_at": "03/10/2026 09:36 circa",
+      "published_at": "03/10/2026 09:53 circa",
       "published_at_raw": "2h",
       "error": null
     }
