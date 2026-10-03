@@ -408,15 +408,7 @@
     }
     .db-badge:active { background: #1565c0; }
     body.is-admin .db-badge { display: inline-block; }
-    .map-pin {
-      position: absolute; bottom: 8px; right: 10px;
-      width: 14px; height: 14px;
-      background: #e53935; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.8);
-      z-index: 9; cursor: pointer;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-    }
-    body.is-admin .card .map-pin { right: 44px; }
+    body.is-admin .card
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {
@@ -2217,56 +2209,48 @@
             <span class="card-name" style="color:#111">Fantasia</span>
             <span class="card-reference">2 ott</span>
             <span class="card-counter" id="card-counter-0"></span>
-            <span class="map-pin" title="Via Nicola Losavio 10, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Nicola%20Losavio%2010%2C%20Putignano','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(1)">
             <span class="card-name" style="color:#111">Cibària</span>
             <span class="card-reference">09:15</span>
             <span class="card-counter" id="card-counter-1"></span>
-            <span class="map-pin" title="Estrad. a Levante 11, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Estrad.%20a%20Levante%2011%2C%20Putignano','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="2" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(2)">
             <span class="card-name" style="color:#111">Impastamò</span>
             <span class="card-reference">07:04</span>
             <span class="card-counter" id="card-counter-2"></span>
-            <span class="map-pin" title="Via Conversano 34, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Conversano%2034%2C%20Putignano','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="3" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(3)">
             <span class="card-name" style="color:#111">Le delizie di Michela</span>
             
             <span class="card-counter" id="card-counter-3"></span>
-            <span class="map-pin" title="Corso Umberto I 87, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Corso%20Umberto%20I%2087%2C%20Putignano','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="4" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(4)">
             <span class="card-name" style="color:#111">Aufer Gastronomia</span>
             
             <span class="card-counter" id="card-counter-4"></span>
-            <span class="map-pin" title="Estrad. a Mezzogiorno 83, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Estrad.%20a%20Mezzogiorno%2083%2C%20Putignano','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(5)">
             <span class="card-name" style="color:#111">Santoro (Castellana)</span>
             <span class="card-reference">08:42</span>
             <span class="card-counter" id="card-counter-5"></span>
-            <span class="map-pin" title="Via Mazzini 28, Castellana Grotte" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Mazzini%2028%2C%20Castellana%20Grotte','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="6" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(6)">
             <span class="card-name" style="color:#111">Pane &amp; Co</span>
             <span class="card-reference">3 ott</span>
             <span class="card-counter" id="card-counter-6"></span>
-            <span class="map-pin" title="Viale Federico II 49, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Viale%20Federico%20II%2049%2C%20Putignano','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="7" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(7)">
             <span class="card-name" style="color:#111">Bollenti piatti</span>
             <span class="card-reference">2 ott</span>
             <span class="card-counter" id="card-counter-7"></span>
-            <span class="map-pin" title="Via Noci 48, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Noci%2048%2C%20Putignano','_blank')"></span>
         </button>
         
             <button type="button" class="card" data-pid="8" style="border-color:#49a95c;background-color:#eaf7ea;position:relative" onclick="recordExtraHit('Info'); cardClicked(8)">
