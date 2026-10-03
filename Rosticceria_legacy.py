@@ -3872,6 +3872,34 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       text-align: left;
     }}
 
+    /* Tabella contatti/log (admin) */
+    #admin-contacts {{ margin-bottom: 0; }}
+    #admin-contacts h3 {{
+      font-size: 15px; font-weight: 700; color: #fff;
+      margin: 0 0 8px; text-transform: uppercase;
+      letter-spacing: 0.06em; opacity: 0.75;
+    }}
+    .log-table {{
+      width: 100%; border-collapse: collapse;
+      font-size: 12px; color: #fff;
+      margin-bottom: 4px;
+    }}
+    .log-table td, .log-table th {{
+      padding: 4px 3px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      vertical-align: top;
+    }}
+    .log-table thead th {{
+      font-weight: 600; opacity: 0.65; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      text-align: left;
+    }}
+    .log-table .lt-date {{ white-space: nowrap; opacity: 0.8; }}
+    .log-table .lt-name {{ font-weight: 600; }}
+    .log-table .lt-dev  {{ opacity: 0.7; }}
+    .log-table .lt-loc  {{ opacity: 0.6; }}
+    #admin-contacts-loading {{ font-size: 13px; color: rgba(255,255,255,0.5); padding: 8px 0; }}
+
     /* Tabella accessi per bottone (admin) */
     .date-table {{
       width: 100%;
@@ -4422,6 +4450,43 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                 }}).join('');
             }})
             .catch(err => console.error('Tabella per bottone non disponibile', err));
+    }}
+
+    // Elenco contatti/accessi ricevuti (admin): ultime righe del log grezzo.
+    function loadContactsLog() {{
+        if (!isAdmin) return;
+        const el = document.getElementById('admin-contacts-body');
+        const loading = document.getElementById('admin-contacts-loading');
+        if (!el) return;
+        if (loading) loading.style.display = 'block';
+        fetch(SHEET_LOG_URL + '?action=getLog&limit=100', {{cache: 'no-store'}})
+            .then(r => r.json())
+            .then(data => {{
+                if (loading) loading.style.display = 'none';
+                if (!el) return;
+                const rows = Array.isArray(data.rows) ? data.rows : (Array.isArray(data) ? data : []);
+                if (rows.length === 0) {{
+                    el.innerHTML = '<tr><td colspan="4" style="opacity:0.5;padding:8px 0">Nessun accesso trovato</td></tr>';
+                    return;
+                }}
+                el.innerHTML = rows.slice().reverse().map(r => {{
+                    const date  = r.date  || r[0] || '';
+                    const name  = r.name  || r.rosticceria || r[1] || '';
+                    const dev   = r.device|| r.browser || r[2] || '';
+                    const loc   = r.location || r.city || r[3] || '';
+                    return '<tr>'
+                        + '<td class="lt-date">' + date + '</td>'
+                        + '<td class="lt-name">' + name + '</td>'
+                        + '<td class="lt-dev">'  + dev  + '</td>'
+                        + '<td class="lt-loc">'  + loc  + '</td>'
+                        + '</tr>';
+                }}).join('');
+            }})
+            .catch(err => {{
+                if (loading) loading.style.display = 'none';
+                if (el) el.innerHTML = '<tr><td colspan="4" style="opacity:0.5">Errore nel caricamento</td></tr>';
+                console.error('Log contatti non disponibile', err);
+            }});
     }}
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
