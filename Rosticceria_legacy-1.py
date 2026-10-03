@@ -3522,9 +3522,9 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             if address else ""
         )
         pin_html = (
-            f'<span class="map-pin" title="{html.escape(address)}"'
-            f' onclick="event.stopPropagation();showMapPopup({html.escape(json.dumps(address))},{html.escape(json.dumps(maps_url))})">'
-            f'📍</span>'
+            f'<a class="map-pin" href="{html.escape(maps_url)}" target="_blank" rel="noopener"'
+            f' title="{html.escape(address)}" onclick="event.stopPropagation()">'
+            f'📍</a>'
             if address else ""
         )
         cards.append(f"""
@@ -3924,6 +3924,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
       position: absolute; bottom: 6px; right: 3px;
       font-size: 24px; opacity: 0.75; z-index: 9;
       cursor: pointer; user-select: none; -webkit-user-select: none;
+      text-decoration: none; line-height: 1;
     }}
     .map-pin:active {{ opacity: 1; transform: scale(1.3); }}
     body.is-admin .card .map-pin {{ right: 44px; }}

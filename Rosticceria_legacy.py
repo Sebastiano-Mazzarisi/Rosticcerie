@@ -3523,8 +3523,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         )
         pin_html = (
             f'<span class="map-pin" title="{html.escape(address)}"'
-            f' onclick="event.stopPropagation();showMapPopup({html.escape(json.dumps(address))},{html.escape(json.dumps(maps_url))})">'
-            f'📍</span>'
+            f' onclick="event.stopPropagation();window.open(\'{maps_url}\',\'_blank\')"></span>'
             if address else ""
         )
         cards.append(f"""
@@ -3920,6 +3919,15 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     .db-badge:active {{ background: #1565c0; }}
     body.is-admin .db-badge {{ display: inline-block; }}
+    .map-pin {{
+      position: absolute; bottom: 8px; right: 10px;
+      width: 14px; height: 14px;
+      background: #e53935; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.8);
+      z-index: 9; cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }}
+    body.is-admin .card .map-pin {{ right: 44px; }}
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {{
