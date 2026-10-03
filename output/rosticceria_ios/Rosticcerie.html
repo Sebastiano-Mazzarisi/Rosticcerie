@@ -380,6 +380,15 @@
     }
     .db-badge:active { background: #1565c0; }
     body.is-admin .db-badge { display: inline-block; }
+    .map-pin {
+      position: absolute; bottom: 8px; right: 10px;
+      width: 14px; height: 14px;
+      background: #e53935; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.8);
+      z-index: 9; cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    body.is-admin .card .map-pin { right: 44px; }
 
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {
@@ -473,61 +482,9 @@
       .sound-waves path:nth-child(2) { transform: translateX(-12px) scaleY(1.4); }
       .sound-waves path:nth-child(3) { transform: translateX(-24px) scaleY(1.8); }
     }
-
-  
-    /* Popup indirizzo rosticceria */
-    #map-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.55); z-index: 200;
-      align-items: flex-end; justify-content: center;
-    }
-    #map-overlay.open { display: flex; }
-    #map-popup {
-      background: #fff; color: #111;
-      border-radius: 16px 16px 0 0;
-      padding: 24px 20px 36px;
-      width: 100%; max-width: 480px;
-      text-align: center;
-    }
-    #map-popup h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
-    #map-popup p  { margin: 0 0 20px; font-size: 15px; color: #555; }
-    #map-popup-go {
-      display: inline-block; padding: 13px 30px;
-      background: #1a73e8; color: #fff;
-      border: none; border-radius: 10px;
-      font-size: 16px; font-weight: 600; cursor: pointer;
-      text-decoration: none;
-    }
-    #map-popup-close {
-      display: block; margin: 14px auto 0;
-      font-size: 14px; color: #999; cursor: pointer;
-      background: none; border: none;
-    }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1790965119", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "card_reference": "09:02", "menu_date": "2026-10-02", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true, "badge_new": false}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1790965119", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "card_reference": "09:15", "menu_date": "2026-10-02", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true, "badge_new": false}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1790965119", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "card_reference": "08:01", "menu_date": "2026-10-02", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true, "badge_new": false}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1790965119", "phone_display": "080-521.42.33", "phone_tel": "0805214233", "image": "Le_delizie_di_Michela.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true, "badge_new": false}, {"name": "Aufer", "card_label": "Aufer Gastronomia", "detail_title": "Aufer Gastronomia", "logo": "../../Logo-Aufer.jpg?v=1790965119", "phone_display": "368-38.30.313", "phone_tel": "3683830313", "image": "Aufer.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.instagram.com/aufergastronomia/", "counter_enabled": true, "badge_new": false}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1790965119", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "card_reference": "09:17", "menu_date": "2026-10-02", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true, "badge_new": false}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1790965119", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.paneeco.it/menu", "counter_enabled": true, "badge_new": false}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1790965119", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "card_reference": "10:17", "menu_date": "2026-10-02", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true, "badge_new": false}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Info", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1790965119", "error": "", "updated": true, "updated_label": "Venerdì 2 ottobre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
-    const MAP_ADDRESSES = {
-      "Fantasia":              {addr: "Via Nicola Losavio 10, Putignano",   url: "https://www.google.com/maps/search/?api=1&query=Via%20Nicola%20Losavio%2010%2C%20Putignano"},
-      "Cibària":          {addr: "Estrad. a Levante 11, Putignano",    url: "https://www.google.com/maps/search/?api=1&query=Estrad.%20a%20Levante%2011%2C%20Putignano"},
-      "Impastamò":        {addr: "Via Conversano 34, Putignano",       url: "https://www.google.com/maps/search/?api=1&query=Via%20Conversano%2034%2C%20Putignano"},
-      "Le delizie di Michela": {addr: "Corso Umberto I 87, Putignano",      url: "https://www.google.com/maps/search/?api=1&query=Corso%20Umberto%20I%2087%2C%20Putignano"},
-      "Aufer Gastronomia":     {addr: "Estrad. a Mezzogiorno 83, Putignano",url: "https://www.google.com/maps/search/?api=1&query=Estrad.%20a%20Mezzogiorno%2083%2C%20Putignano"},
-      "Santoro (Castellana)":  {addr: "Via Mazzini 28, Castellana Grotte",  url: "https://www.google.com/maps/search/?api=1&query=Via%20Mazzini%2028%2C%20Castellana%20Grotte"},
-      "Pane & Co":             {addr: "Viale Federico II 49, Putignano",    url: "https://www.google.com/maps/search/?api=1&query=Viale%20Federico%20II%2049%2C%20Putignano"},
-      "Bollenti piatti":       {addr: "Via Noci 48, Putignano",             url: "https://www.google.com/maps/search/?api=1&query=Via%20Noci%2048%2C%20Putignano"},
-    };
-    function showMapPopup() {
-      const p = PANELS[order[currentIndex]];
-      const m = MAP_ADDRESSES[p.name];
-      if (!m) return;
-      document.getElementById('map-popup-name').textContent = p.name;
-      document.getElementById('map-popup-addr').textContent = m.addr;
-      document.getElementById('map-popup-go').href = m.url;
-      document.getElementById('map-overlay').classList.add('open');
-    }
-    function closeMapPopup() {
-      document.getElementById('map-overlay').classList.remove('open');
-    }
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1791011182", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1791011182", "error": "", "updated": false, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true, "badge_new": false}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1791011182", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1791011182", "error": "", "updated": false, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true, "badge_new": false}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1791011182", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1791011182", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "07:04", "menu_date": "2026-10-03", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true, "badge_new": false}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1791011182", "phone_display": "080-521.42.33", "phone_tel": "0805214233", "image": "", "error": "Nessun post trovato per Le delizie di Michela.", "updated": false, "updated_label": "Sabato 3 ottobre", "card_reference": "", "menu_date": "", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true, "badge_new": false}, {"name": "Aufer", "card_label": "Aufer Gastronomia", "detail_title": "Aufer Gastronomia", "logo": "../../Logo-Aufer.jpg?v=1791011182", "phone_display": "368-38.30.313", "phone_tel": "3683830313", "image": "", "error": "Nessun menu locale importato oggi per Aufer.", "updated": false, "updated_label": "Sabato 3 ottobre", "card_reference": "", "menu_date": "", "url": "https://www.instagram.com/aufergastronomia/", "counter_enabled": true, "badge_new": false}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1791011182", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1791011182", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "08:42", "menu_date": "2026-10-03", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true, "badge_new": false}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1791011182", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1791011182", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "3 ott", "menu_date": "2026-10-03", "url": "https://www.paneeco.it/menu", "counter_enabled": true, "badge_new": false}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1791011182", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1791011182", "error": "", "updated": false, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true, "badge_new": false}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Info", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1791011182", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -1866,7 +1823,7 @@
             identityLogo.alt = '';
         }
         document.getElementById('main-title').innerText = p.detail_title || p.name;
-        document.getElementById('main-updated').innerText = p.updated_label || 'Venerdì 2 ottobre';
+        document.getElementById('main-updated').innerText = p.updated_label || 'Sabato 3 ottobre';
         document.getElementById('main-updated').style.display = 'none';
         document.getElementById('main-signature').style.display = 'none';
         document.getElementById('nav-position').innerText = (currentIndex + 1) + '/' + n;
@@ -2177,7 +2134,7 @@
       <img id="identity-logo" src="apple-touch-icon.png" alt="Logo Rosticcerie" style="display:block" role="button" tabindex="0" onclick="toggleHomeAudio()" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleHomeAudio(); }">
       <div id="identity-text">
     <h1 id="main-title" onclick="handleTitleClick()">Rosticcerie</h1>
-    <p id="main-updated" class="updated" onclick="hardRefreshPage()">Venerdì 2 ottobre</p>
+    <p id="main-updated" class="updated" onclick="hardRefreshPage()">Sabato 3 ottobre</p>
     <p id="main-signature" class="signature" onclick="hardRefreshPage()">by Mazzarisi</p>
         <div id="phone-line"></div>
       </div>
@@ -2191,52 +2148,60 @@
 
   <main id="grid-view">
     
-        <button type="button" class="card" data-pid="0" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(0)">
+        <button type="button" class="card" data-pid="0" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(0)">
             <span class="card-name" style="color:#111">Fantasia</span>
-            <span class="card-reference">09:02</span>
+            <span class="card-reference">2 ott</span>
             <span class="card-counter" id="card-counter-0"></span>
+            <span class="map-pin" title="Via Nicola Losavio 10, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Nicola%20Losavio%2010%2C%20Putignano','_blank')"></span>
         </button>
         
-        <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(1)">
+        <button type="button" class="card" data-pid="1" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(1)">
             <span class="card-name" style="color:#111">Cibària</span>
-            <span class="card-reference">09:15</span>
+            <span class="card-reference">2 ott</span>
             <span class="card-counter" id="card-counter-1"></span>
+            <span class="map-pin" title="Estrad. a Levante 11, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Estrad.%20a%20Levante%2011%2C%20Putignano','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="2" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(2)">
             <span class="card-name" style="color:#111">Impastamò</span>
-            <span class="card-reference">08:01</span>
+            <span class="card-reference">07:04</span>
             <span class="card-counter" id="card-counter-2"></span>
+            <span class="map-pin" title="Via Conversano 34, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Conversano%2034%2C%20Putignano','_blank')"></span>
         </button>
         
-        <button type="button" class="card" data-pid="3" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(3)">
+        <button type="button" class="card" data-pid="3" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(3)">
             <span class="card-name" style="color:#111">Le delizie di Michela</span>
-            <span class="card-reference">2 ott</span>
+            
             <span class="card-counter" id="card-counter-3"></span>
+            <span class="map-pin" title="Corso Umberto I 87, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Corso%20Umberto%20I%2087%2C%20Putignano','_blank')"></span>
         </button>
         
-        <button type="button" class="card" data-pid="4" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(4)">
+        <button type="button" class="card" data-pid="4" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(4)">
             <span class="card-name" style="color:#111">Aufer Gastronomia</span>
-            <span class="card-reference">2 ott</span>
+            
             <span class="card-counter" id="card-counter-4"></span>
+            <span class="map-pin" title="Estrad. a Mezzogiorno 83, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Estrad.%20a%20Mezzogiorno%2083%2C%20Putignano','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="5" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(5)">
             <span class="card-name" style="color:#111">Santoro (Castellana)</span>
-            <span class="card-reference">09:17</span>
+            <span class="card-reference">08:42</span>
             <span class="card-counter" id="card-counter-5"></span>
+            <span class="map-pin" title="Via Mazzini 28, Castellana Grotte" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Mazzini%2028%2C%20Castellana%20Grotte','_blank')"></span>
         </button>
         
         <button type="button" class="card" data-pid="6" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(6)">
             <span class="card-name" style="color:#111">Pane &amp; Co</span>
-            <span class="card-reference">2 ott</span>
+            <span class="card-reference">3 ott</span>
             <span class="card-counter" id="card-counter-6"></span>
+            <span class="map-pin" title="Viale Federico II 49, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Viale%20Federico%20II%2049%2C%20Putignano','_blank')"></span>
         </button>
         
-        <button type="button" class="card" data-pid="7" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(7)">
+        <button type="button" class="card" data-pid="7" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(7)">
             <span class="card-name" style="color:#111">Bollenti piatti</span>
-            <span class="card-reference">10:17</span>
+            <span class="card-reference">2 ott</span>
             <span class="card-counter" id="card-counter-7"></span>
+            <span class="map-pin" title="Via Noci 48, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Noci%2048%2C%20Putignano','_blank')"></span>
         </button>
         
             <button type="button" class="card" data-pid="8" style="border-color:#49a95c;background-color:#eaf7ea;position:relative" onclick="recordExtraHit('Info'); cardClicked(8)">
@@ -2258,7 +2223,6 @@
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 V13 M7.5 7 L12 2 L16.5 7 M5 10 V19 H19 V10"/></svg>
       </button>
       <span id="nav-position"></span>
-      <button type="button" onclick="showMapPopup()" aria-label="Indirizzo su Maps" style="font-size:22px;line-height:1">&#128205;</button>
       <button type="button" id="nav-home-btn" onclick="closeDetail()" aria-label="Torna alla Home">&#127968;</button>
     </span>
     <button type="button" onclick="showNext()" aria-label="Rosticceria successiva">&#8594;</button>
@@ -2266,13 +2230,5 @@
 <dialog id="waiting-update-dialog" aria-labelledby="waiting-update-text" onclose="continueAfterWaiting()">
     <p id="waiting-update-text">In attesa di<br>aggiornamento</p>
   </dialog>
-<div id="map-overlay" onclick="if(event.target===this)closeMapPopup()">
-  <div id="map-popup">
-    <h3 id="map-popup-name"></h3>
-    <p id="map-popup-addr"></p>
-    <a id="map-popup-go" href="#" target="_blank" rel="noopener">Apri in Google Maps</a>
-    <button id="map-popup-close" onclick="closeMapPopup()">Chiudi</button>
-  </div>
-</div>
 </body>
 </html>
