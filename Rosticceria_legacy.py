@@ -3404,16 +3404,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     display_names = {
         "Aufer": "Aufer Gastronomia",
     }
-    map_addresses = {
-        "Fantasia":              "Via Nicola Losavio 10, Putignano",
-        "Bollenti piatti":       "Via Noci 48, Putignano",
-        "Pane & Co":             "Viale Federico II 49, Putignano",
-        "Cibària":               "Estrad. a Levante 11, Putignano",
-        "Le delizie di Michela": "Corso Umberto I 87, Putignano",
-        "Impastamò":             "Via Conversano 34, Putignano",
-        "Santoro (Castellana)":  "Via Mazzini 28, Castellana Grotte",
-        "Aufer":                 "Estrad. a Mezzogiorno 83, Putignano",
-    }
     today = rome_now().date()
     panels_data = []
 
@@ -3516,22 +3506,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             """)
             continue
         title = html.escape(p.get("card_label", p["name"])).replace("\n", "<br>")
-        address = map_addresses.get(p["name"], "")
-        maps_url = (
-            "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote(address)
-            if address else ""
-        )
-        pin_html = (
-            f'<span class="map-pin" title="{html.escape(address)}"'
-            f' onclick="event.stopPropagation();window.open(\'{maps_url}\',\'_blank\')"></span>'
-            if address else ""
-        )
         cards.append(f"""
         <button type="button" class="card" data-pid="{i}" style="border-color:{border_color};background-color:{bg_color}" onclick="handleCardClick({i})">
             <span class="card-name" style="color:{name_color}">{title}</span>
             {reference_html}
             {counter_html}
-            {pin_html}
         </button>
         """)
 
@@ -3947,16 +3926,6 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
     }}
     .db-badge:active {{ background: #1565c0; }}
     body.is-admin .db-badge {{ display: inline-block; }}
-    .map-pin {{
-      position: absolute; bottom: 8px; right: 10px;
-      width: 14px; height: 14px;
-      background: #e53935; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.8);
-      z-index: 9; cursor: pointer;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-    }}
-    body.is-admin .card .map-pin {{ right: 44px; }}
-
     /* La foto occupa tutta la larghezza su mobile e un terzo su PC. */
     @media (min-width: 900px) {{
       #detail-content img {{
