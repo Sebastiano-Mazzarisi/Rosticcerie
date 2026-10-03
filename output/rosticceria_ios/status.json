@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-10-03T07:23:19",
+  "updated_at": "2026-10-03T09:36:22",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 02/10/26",
-      "published_at": "02/10/2026 09:02 circa",
-      "published_at_raw": "4m",
+      "text": "MENÙ DEL GIORNO 03/10/26",
+      "published_at": "03/10/2026 10:33 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "3 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "03/10/2026 09:15 circa",
+      "published_at": "03/10/2026 09:33 circa",
       "published_at_raw": "03/10/2026",
       "error": null
     },
@@ -45,14 +45,14 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 3 Ottobre",
-      "published_at": "03/10/2026 08:42 circa",
+      "published_at": "03/10/2026 09:35 circa",
       "published_at_raw": "03/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 3 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Gnocchi di patate alla sorrentina - €8.00\n- Risotto con zucca e salsiccia - €8.50\n- Cavatellucci con cernia, pomodorini e carciofi - €8.50\n- Zuppa di fagioli, lenticchie e ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa con patate e pomodorino - €8.50\n- Scaloppe di lonza con salsa al vino bianco e speck - €7.50\n  2 pezzi",
+      "text": "Menu 3 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Tagliatella paglia e fieno alla boscaiola - €7.00\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Orecchiette con ciliegino, rucola, fagiolini e cacio affumicato - €8.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli con pesce persico, pomodorini e carciofi - €8.50\n- Zuppa del casale - €6.00\n  Con lenticchie, fagioli, farro e ceci Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa gratinato con zucchina - €8.50\n- Arrosto di lonza con speck - €7.50\n  2 pezzi\n- Spezzatino di capocollo alla contadina - €7.50",
       "published_at": "03/10/2026",
       "published_at_raw": "3 Ottobre",
       "error": null
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "23 hours ago\nPRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●LASAGNA AL FORNO 5,0\n●PENNETTE CON SUGO DI POMODORO, PESTO DI BASILICO, STRACCIATELLA E CARNE DI VITELLO 5,5\n●LINGUINE ALLE VONGOLE CON CREMA DI PATATE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●ALETTE DI POLLO ALLA PAPRIKA E ERBE DI PROVENZIA\n●POLPETTONE DI VITELLO FARCITO\n●POLPETTE DI POLLO CON CAROTE E SPINACI IN SALSA DI PORCINI\n●PARMIGIANA\n●CUORE DI MERLUZZO IN CREMA DI CECI AL CURRY E POMODORINO\n●INSALATA DI POLLO TONNATA\n●PIZZA DI PATATE CON SPECK E MOZZARELLA\n●OLIVE NERE FRITTE",
-      "published_at": "02/10/2026 10:22 circa",
-      "published_at_raw": "23h",
+      "text": "2 hours ago\nPRIMI PIATTI\n●CIME DI RAPE STUFATE CON OLIO, AGLIO E POMODORINO 6,0\n●LASAGNA AL FORNO 5,0\n●TORTIGLIONI CON PISELLI, FUNGHI MISTI CON PORCINI E SPECK 5,5\n●CAVATELLI AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SPIEDINO DI BOCCONCINI DI POLLO BARDATI ALLA PANCETTA E GRATINATI AL LIMONE\n●SCALOPPINE DI VITELLO AI FUNGHI\n●FUSI DI POLLO AL FORNO CON PATATE\n●MELANZANE RIPIENE\n●FRITTURA DI ANELLI, CIUFFI E GAMBERI\n●PIZZA DI PATATE\n●FIORI DI ZUCCA FRITTI",
+      "published_at": "03/10/2026 09:36 circa",
+      "published_at_raw": "2h",
       "error": null
     }
   ]
