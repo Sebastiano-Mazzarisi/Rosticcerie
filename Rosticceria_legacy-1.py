@@ -3408,11 +3408,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Fantasia":              "Via Nicola Losavio 10, Putignano",
         "Bollenti piatti":       "Via Noci 48, Putignano",
         "Pane & Co":             "Viale Federico II 49, Putignano",
-        "Cibària":               "Estrad. a Levante 11, Putignano",
+        "Cibària":               "Via Estramurale a Levante 11, Putignano",
         "Le delizie di Michela": "Corso Umberto I 87, Putignano",
         "Impastamò":             "Via Conversano 34, Putignano",
         "Santoro (Castellana)":  "Via Mazzini 28, Castellana Grotte",
-        "Aufer":                 "Estrad. a Mezzogiorno 83, Putignano",
+        "Aufer":                 "Via Estramurale a Mezzogiorno 83, Putignano",
     }
     today = rome_now().date()
     panels_data = []

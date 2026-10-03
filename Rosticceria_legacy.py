@@ -3410,11 +3410,11 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Fantasia":              "Via Nicola Losavio 10, Putignano",
         "Bollenti piatti":       "Via Noci 48, Putignano",
         "Pane & Co":             "Viale Federico II 49, Putignano",
-        "Cibària":               "Estrad. a Levante 11, Putignano",
+        "Cibària":               "Va Estramurale a Levante 11, Putignano",
         "Le delizie di Michela": "Corso Umberto I 87, Putignano",
         "Impastamò":             "Via Conversano 34, Putignano",
         "Santoro (Castellana)":  "Via Mazzini 28, Castellana Grotte",
-        "Aufer":                 "Estrad. a Mezzogiorno 83, Putignano",
+        "Aufer":                 "Via Estramurale a Mezzogiorno 83, Putignano",
     }
     today = rome_now().date()
     panels_data = []
@@ -5467,8 +5467,16 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
             const sharePanel = p.name === 'Suggerimenti'
                 ? '<div class="share-panel"><button type="button" class="share-button" onclick="shareSite(event)"><span class="share-symbol" aria-hidden="true">↗</span>Condividi</button><p class="share-help">Clicca su questo bottone per inviare il link ai tuoi amici.</p></div>'
                 : '';
+            const adminContactsList = (isAdmin && p.name === 'Suggerimenti')
+                ? '<div id="admin-contacts" class="weekday-chart weekday-chart-first">'
+                    + '<h3>Contatti ricevuti</h3>'
+                    + '<div id="admin-contacts-loading" style="display:none">Caricamento…</div>'
+                    + '<table class="log-table"><thead><tr>'
+                    + '<th>Data</th><th>Rosticceria</th><th>Dispositivo</th><th>Luogo</th>'
+                    + '</tr></thead><tbody id="admin-contacts-body"></tbody></table></div>'
+                : '';
             const weekdayChart = (isAdmin && p.name === 'Suggerimenti')
-                ? '<div class="weekday-chart weekday-chart-first"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
+                ? '<div class="weekday-chart' + (adminContactsList ? '' : ' weekday-chart-first') + '"><div class="weekday-chart-title">Distribuzione settimanale</div><div class="weekday-bars" id="weekday-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione oraria</div><div class="weekday-bars" id="hourly-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Distribuzione per dispositivi</div><div class="weekday-bars" id="device-bars"></div></div>'
                     + '<div class="weekday-chart"><div class="weekday-chart-title">Accessi per bottone</div>'
@@ -5480,9 +5488,17 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
                     + '</tr></thead><tbody id="button-stats-body"></tbody></table></div>'
                     + ''  /* link foglio spostato sul confetto DB del riquadro Info */
                 : '';
-            content.innerHTML = sharePanel + '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">' + weekdayChart;
+            // Ordine per admin Info: contatti → grafici → consigli (immagine) + condividi
+            // Ordine per tutti: condividi → consigli (immagine)
+            const imgTag = '<img' + imageClass + ' src="' + p.image + '" alt="' + (p.detail_title || p.name) + '">';
+            if (isAdmin && p.name === 'Suggerimenti') {{
+                content.innerHTML = adminContactsList + weekdayChart + imgTag + sharePanel;
+            }} else {{
+                content.innerHTML = sharePanel + imgTag;
+            }}
             applyDetailImageFit();
             if (isAdmin && p.name === 'Suggerimenti') {{
+                loadContactsLog();
                 loadWeekdayChart();
                 loadHourlyChart();
                 loadDeviceChart();
