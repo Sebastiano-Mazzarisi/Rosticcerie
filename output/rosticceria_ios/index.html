@@ -333,6 +333,34 @@
       text-align: left;
     }
 
+    /* Tabella contatti/log (admin) */
+    #admin-contacts { margin-bottom: 0; }
+    #admin-contacts h3 {
+      font-size: 15px; font-weight: 700; color: #fff;
+      margin: 0 0 8px; text-transform: uppercase;
+      letter-spacing: 0.06em; opacity: 0.75;
+    }
+    .log-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 12px; color: #fff;
+      margin-bottom: 4px;
+    }
+    .log-table td, .log-table th {
+      padding: 4px 3px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      vertical-align: top;
+    }
+    .log-table thead th {
+      font-weight: 600; opacity: 0.65; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      text-align: left;
+    }
+    .log-table .lt-date { white-space: nowrap; opacity: 0.8; }
+    .log-table .lt-name { font-weight: 600; }
+    .log-table .lt-dev  { opacity: 0.7; }
+    .log-table .lt-loc  { opacity: 0.6; }
+    #admin-contacts-loading { font-size: 13px; color: rgba(255,255,255,0.5); padding: 8px 0; }
+
     /* Tabella accessi per bottone (admin) */
     .date-table {
       width: 100%;
@@ -484,7 +512,7 @@
     }
   </style>
   <script>
-    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1791011182", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1791011182", "error": "", "updated": false, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true, "badge_new": false}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1791011182", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1791011182", "error": "", "updated": false, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true, "badge_new": false}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1791011182", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1791011182", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "07:04", "menu_date": "2026-10-03", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true, "badge_new": false}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1791011182", "phone_display": "080-521.42.33", "phone_tel": "0805214233", "image": "", "error": "Nessun post trovato per Le delizie di Michela.", "updated": false, "updated_label": "Sabato 3 ottobre", "card_reference": "", "menu_date": "", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true, "badge_new": false}, {"name": "Aufer", "card_label": "Aufer Gastronomia", "detail_title": "Aufer Gastronomia", "logo": "../../Logo-Aufer.jpg?v=1791011182", "phone_display": "368-38.30.313", "phone_tel": "3683830313", "image": "", "error": "Nessun menu locale importato oggi per Aufer.", "updated": false, "updated_label": "Sabato 3 ottobre", "card_reference": "", "menu_date": "", "url": "https://www.instagram.com/aufergastronomia/", "counter_enabled": true, "badge_new": false}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1791011182", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1791011182", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "08:42", "menu_date": "2026-10-03", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true, "badge_new": false}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1791011182", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1791011182", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "3 ott", "menu_date": "2026-10-03", "url": "https://www.paneeco.it/menu", "counter_enabled": true, "badge_new": false}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1791011182", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1791011182", "error": "", "updated": false, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true, "badge_new": false}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Info", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1791011182", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
+    const PANELS = [{"name": "Fantasia", "card_label": "Fantasia", "detail_title": "Fantasia", "logo": "../../Logo-Fantasia.jpg?v=1791012199", "phone_display": "080-405.41.39", "phone_tel": "0804054139", "image": "Fantasia.jpg?v=1791012199", "error": "", "updated": false, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/RosticceriaFantasia", "counter_enabled": true, "badge_new": false}, {"name": "Cibària", "card_label": "Cibària", "detail_title": "Cibària", "logo": "../../Logo-Cibaria.jpg?v=1791012199", "phone_display": "080-645.07.99", "phone_tel": "0806450799", "image": "Cibaria.jpg?v=1791012199", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "09:15", "menu_date": "2026-10-03", "url": "https://www.facebook.com/cibaria.asporto", "counter_enabled": true, "badge_new": false}, {"name": "Impastamò", "card_label": "Impastamò", "detail_title": "Impastamò", "logo": "../../Logo-Impastamo.jpg?v=1791012199", "phone_display": "392-536.15.36", "phone_tel": "3925361536", "image": "Impastamo.jpg?v=1791012199", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "07:04", "menu_date": "2026-10-03", "url": "https://www.facebook.com/profile.php?id=61560452176728", "counter_enabled": true, "badge_new": false}, {"name": "Le delizie di Michela", "card_label": "Le delizie di Michela", "detail_title": "Le delizie di Michela", "logo": "../../Logo-Michela.jpg?v=1791012199", "phone_display": "080-521.42.33", "phone_tel": "0805214233", "image": "", "error": "Nessun post trovato per Le delizie di Michela.", "updated": false, "updated_label": "Sabato 3 ottobre", "card_reference": "", "menu_date": "", "url": "https://www.facebook.com/profile.php?id=100045208848338", "counter_enabled": true, "badge_new": false}, {"name": "Aufer", "card_label": "Aufer Gastronomia", "detail_title": "Aufer Gastronomia", "logo": "../../Logo-Aufer.jpg?v=1791012199", "phone_display": "368-38.30.313", "phone_tel": "3683830313", "image": "", "error": "Nessun menu locale importato oggi per Aufer.", "updated": false, "updated_label": "Sabato 3 ottobre", "card_reference": "", "menu_date": "", "url": "https://www.instagram.com/aufergastronomia/", "counter_enabled": true, "badge_new": false}, {"name": "Santoro (Castellana)", "card_label": "Santoro (Castellana)", "detail_title": "Santoro (Castellana)", "logo": "../../Logo-Santoro.jpg?v=1791012199", "phone_display": "080-859.83.13", "phone_tel": "0808598313", "image": "Santoro__Castellana.jpg?v=1791012199", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "08:42", "menu_date": "2026-10-03", "url": "https://www.facebook.com/santorogastronomia", "counter_enabled": true, "badge_new": false}, {"name": "Pane & Co", "card_label": "Pane & Co", "detail_title": "Pane & Co", "logo": "../../Logo-pane.jpg?v=1791012199", "phone_display": "080-405.49.00", "phone_tel": "0804054900", "image": "Pane___Co.jpg?v=1791012199", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "card_reference": "3 ott", "menu_date": "2026-10-03", "url": "https://www.paneeco.it/menu", "counter_enabled": true, "badge_new": false}, {"name": "Bollenti piatti", "card_label": "Bollenti piatti", "detail_title": "Bollenti piatti", "logo": "../../Logo-Bollent.jpg?v=1791012199", "phone_display": "334-318.58.44", "phone_tel": "3343185844", "image": "Bollenti_piatti.jpg?v=1791012199", "error": "", "updated": false, "updated_label": "Venerdì 2 ottobre", "card_reference": "2 ott", "menu_date": "2026-10-02", "url": "https://www.facebook.com/BollentiPiatti", "counter_enabled": true, "badge_new": false}, {"name": "Suggerimenti", "card_label": "Suggerimenti", "detail_title": "Info", "phone_display": "", "phone_tel": "", "image": "Rosticcerie-Home.jpg?v=1791012199", "error": "", "updated": true, "updated_label": "Sabato 3 ottobre", "url": "", "counter_enabled": false, "card_border": "#49a95c", "card_bg": "#eaf7ea", "card_name_color": "#111"}];
     const hardReloadToken = new URL(window.location.href).searchParams.get('reload');
     if (hardReloadToken) {
         PANELS.forEach(panel => {
@@ -883,6 +911,43 @@
                 }).join('');
             })
             .catch(err => console.error('Tabella per bottone non disponibile', err));
+    }
+
+    // Elenco contatti/accessi ricevuti (admin): ultime righe del log grezzo.
+    function loadContactsLog() {
+        if (!isAdmin) return;
+        const el = document.getElementById('admin-contacts-body');
+        const loading = document.getElementById('admin-contacts-loading');
+        if (!el) return;
+        if (loading) loading.style.display = 'block';
+        fetch(SHEET_LOG_URL + '?action=getLog&limit=100', {cache: 'no-store'})
+            .then(r => r.json())
+            .then(data => {
+                if (loading) loading.style.display = 'none';
+                if (!el) return;
+                const rows = Array.isArray(data.rows) ? data.rows : (Array.isArray(data) ? data : []);
+                if (rows.length === 0) {
+                    el.innerHTML = '<tr><td colspan="4" style="opacity:0.5;padding:8px 0">Nessun accesso trovato</td></tr>';
+                    return;
+                }
+                el.innerHTML = rows.slice().reverse().map(r => {
+                    const date  = r.date  || r[0] || '';
+                    const name  = r.name  || r.rosticceria || r[1] || '';
+                    const dev   = r.device|| r.browser || r[2] || '';
+                    const loc   = r.location || r.city || r[3] || '';
+                    return '<tr>'
+                        + '<td class="lt-date">' + date + '</td>'
+                        + '<td class="lt-name">' + name + '</td>'
+                        + '<td class="lt-dev">'  + dev  + '</td>'
+                        + '<td class="lt-loc">'  + loc  + '</td>'
+                        + '</tr>';
+                }).join('');
+            })
+            .catch(err => {
+                if (loading) loading.style.display = 'none';
+                if (el) el.innerHTML = '<tr><td colspan="4" style="opacity:0.5">Errore nel caricamento</td></tr>';
+                console.error('Log contatti non disponibile', err);
+            });
     }
 
     // Registra un'apertura per un contatore qualsiasi (una rosticceria, ma
@@ -2155,9 +2220,9 @@
             <span class="map-pin" title="Via Nicola Losavio 10, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Via%20Nicola%20Losavio%2010%2C%20Putignano','_blank')"></span>
         </button>
         
-        <button type="button" class="card" data-pid="1" style="border-color:#ffffff;background-color:#ffffff" onclick="handleCardClick(1)">
+        <button type="button" class="card" data-pid="1" style="border-color:#ffd641;background-color:#fff7de" onclick="handleCardClick(1)">
             <span class="card-name" style="color:#111">Cibària</span>
-            <span class="card-reference">2 ott</span>
+            <span class="card-reference">09:15</span>
             <span class="card-counter" id="card-counter-1"></span>
             <span class="map-pin" title="Estrad. a Levante 11, Putignano" onclick="event.stopPropagation();window.open('https://www.google.com/maps/search/?api=1&query=Estrad.%20a%20Levante%2011%2C%20Putignano','_blank')"></span>
         </button>
