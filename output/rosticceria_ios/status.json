@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-03T17:42:47",
+  "updated_at": "2026-10-04T06:22:06",
   "pages": [
     {
       "name": "Fantasia",
@@ -20,26 +20,26 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "2 hours ago\n2h\n·",
-      "published_at": "03/10/2026 07:04 circa",
-      "published_at_raw": "2h",
+      "text": "about an hour ago\n1h\n·",
+      "published_at": "04/10/2026 07:19 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
-      "image": "Le_delizie_di_Michela.jpg",
+      "image": null,
       "text": "",
-      "published_at": "03/10/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun post trovato per Le delizie di Michela."
     },
     {
       "name": "Aufer",
-      "image": "Aufer.jpg",
+      "image": null,
       "text": "",
-      "published_at": "03/10/2026",
-      "published_at_raw": "Menu importato manualmente dalla cartella Menu/",
-      "error": null
+      "published_at": "",
+      "published_at_raw": "",
+      "error": "Nessun menu locale importato oggi per Aufer."
     },
     {
       "name": "Santoro (Castellana)",
@@ -52,9 +52,9 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 3 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Tagliatella paglia e fieno alla boscaiola - €7.00\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Orecchiette con ciliegino, rucola, fagiolini e cacio affumicato - €8.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli con pesce persico, pomodorini e carciofi - €8.50\n- Zuppa del casale - €6.00\n  Con lenticchie, fagioli, farro e ceci Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa gratinato con zucchina - €8.50\n- Arrosto di lonza con speck - €7.50\n  2 pezzi\n- Spezzatino di capocollo alla contadina - €7.50",
-      "published_at": "03/10/2026",
-      "published_at_raw": "3 Ottobre",
+      "text": "Menu 4 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Tagliatella paglia e fieno alla boscaiola - €7.00\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Orecchiette con ciliegino, rucola, fagiolini e cacio affumicato - €8.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli con pesce persico, pomodorini e carciofi - €8.50\n- Zuppa del casale - €6.00\n  Con lenticchie, fagioli, farro e ceci Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa gratinato con zucchina - €8.50\n- Arrosto di lonza con speck - €7.50\n  2 pezzi\n- Spezzatino di capocollo alla contadina - €7.50",
+      "published_at": "04/10/2026",
+      "published_at_raw": "4 Ottobre",
       "error": null
     },
     {
