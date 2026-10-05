@@ -3410,7 +3410,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
         "Fantasia":              "Via Nicola Losavio 10, Putignano",
         "Bollenti piatti":       "Via Noci 48, Putignano",
         "Pane & Co":             "Viale Federico II 49, Putignano",
-        "Cibària":               "Va Estramurale a Levante 11, Putignano",
+        "Cibària":               "Via Estramurale a Levante 11, Putignano",
         "Le delizie di Michela": "Corso Umberto I 87, Putignano",
         "Impastamò":             "Via Conversano 34, Putignano",
         "Santoro (Castellana)":  "Via Mazzini 28, Castellana Grotte",
@@ -5763,6 +5763,7 @@ def write_publish_index(panels: List[Dict], output_dir: str) -> None:
   </script>
 </head>
 <body>
+<div id="versione-sostituita" style="position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;font-family:system-ui,-apple-system,Segoe UI,sans-serif"><div style="font-size:26px;font-weight:700">Versione sostituita da:</div><a href="https://sebastiano-mazzarisi.github.io/Menu" style="font-size:20px;font-weight:600;color:#86efac;word-break:break-all">https://sebastiano-mazzarisi.github.io/Menu</a></div>
   <dialog id="michela-notice" aria-labelledby="michela-notice-title" aria-describedby="michela-notice-text">
     <h2 id="michela-notice-title">Le delizie di Michela</h2>
     <p id="michela-notice-text"></p>
