@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-06T09:36:09",
+  "updated_at": "2026-10-06T16:18:37",
   "pages": [
     {
       "name": "Fantasia",
@@ -13,7 +13,7 @@
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "6 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "06/10/2026 09:31 circa",
+      "published_at": "06/10/2026 10:14 circa",
       "published_at_raw": "06/10/2026",
       "error": null
     },
@@ -28,9 +28,9 @@
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "25 minutes ago\n25m\n·",
-      "published_at": "06/10/2026 11:08 circa",
-      "published_at_raw": "25m",
+      "text": "7 hours ago\n7h\n·\n2",
+      "published_at": "06/10/2026 11:16 circa",
+      "published_at_raw": "7h",
       "error": null
     },
     {
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "about an hour ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●PASTA E MINESTRONE 5,0\n●SPAGHETTI ALLA CARBONARA 5,0\n●MEZZI RIGATONI CON PANCETTA, CAVOLO BIANCO E SCAMORZA AFFUMICATA 5,0\n●PENNETTE AL TONNO, PESTO DI PEPERONI E CAPPERI 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●BRACIOLONE DI POLLO FARCITO CON CONTORNO DI PISELLI\n●ALETTE DI POLLO AL FORNELLO\n●PANZEROTTO DI VITELLO CON PROSCIUTTO E GALBANINO\n●TRIANGOLO DI PATATE ALLO SPECK\n●PARMIGIANA\n●POLPETTE DI PANE AL SUGO DI POMODORO\n●POLIPO A INSALATA\n●INSALATA DI POLLO TONNATA",
-      "published_at": "06/10/2026 10:34 circa",
-      "published_at_raw": "1h",
+      "text": "8 hours ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●PASTA E MINESTRONE 5,0\n●SPAGHETTI ALLA CARBONARA 5,0\n●MEZZI RIGATONI CON PANCETTA, CAVOLO BIANCO E SCAMORZA AFFUMICATA 5,0\n●PENNETTE AL TONNO, PESTO DI PEPERONI E CAPPERI 5,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●BRACIOLONE DI POLLO FARCITO CON CONTORNO DI PISELLI\n●ALETTE DI POLLO AL FORNELLO\n●PANZEROTTO DI VITELLO CON PROSCIUTTO E GALBANINO\n●TRIANGOLO DI PATATE ALLO SPECK\n●PARMIGIANA\n●POLPETTE DI PANE AL SUGO DI POMODORO\n●POLIPO A INSALATA\n●INSALATA DI POLLO TONNATA",
+      "published_at": "06/10/2026 10:17 circa",
+      "published_at_raw": "8h",
       "error": null
     }
   ]
