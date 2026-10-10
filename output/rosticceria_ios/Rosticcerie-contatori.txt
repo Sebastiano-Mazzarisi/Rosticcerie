@@ -1,8 +1,8 @@
-2026-10-01 Fantasia, 63
-2026-10-01 Cibària, 41
-2026-10-01 Impastamò, 34
-2026-10-01 Le delizie di Michela, 34
-2026-10-01 Aufer, 37
-2026-10-01 Santoro (Castellana), 30
-2026-10-01 Pane & Co, 227
-2026-10-01 Bollenti piatti, 46
+2026-10-11 Fantasia, 89
+2026-10-11 Cibària, 55
+2026-10-11 Impastamò, 50
+2026-10-11 Le delizie di Michela, 48
+2026-10-11 Aufer, 48
+2026-10-11 Santoro (Castellana), 39
+2026-10-11 Pane & Co, 241
+2026-10-11 Bollenti piatti, 61
