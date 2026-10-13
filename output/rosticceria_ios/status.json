@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-13T09:53:02",
+  "updated_at": "2026-10-13T17:14:08",
   "pages": [
     {
       "name": "Fantasia",
@@ -13,7 +13,7 @@
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "13 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "13/10/2026 09:49 circa",
+      "published_at": "13/10/2026 10:10 circa",
       "published_at_raw": "13/10/2026",
       "error": null
     },
@@ -28,9 +28,9 @@
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "50 minutes ago\n50m\n·\n1",
-      "published_at": "13/10/2026 11:01 circa",
-      "published_at_raw": "50m",
+      "text": "8 hours ago\n8h\n·\n1",
+      "published_at": "13/10/2026 11:12 circa",
+      "published_at_raw": "8h",
       "error": null
     },
     {
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "2 hours ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●PASTA E MINESTRONE 5,0\n●RIGATONI CON BROCCOLI, SPECK, CILIEGINO E CACIORICOTTA 5,5\n●PENNETTE AL SUGO DI BOLOGNESE 5,5\n●RISOTTO AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●COTOLETTA DI COSTATA DI SUINO AL FORNO\n●FUSI DI POLLO AL FORNO CON PATATE\n●ALETTE DI POLLO SPEZIATE ALLA PAPRIKA\n●ZUCCHINE RIPIENE\n●TRANCIO DI MERLUZZO CON IMPANATURA DI PATATE E SALSA ROSA\n●OLIVE FRITTE",
-      "published_at": "13/10/2026 09:52 circa",
-      "published_at_raw": "2h",
+      "text": "10 hours ago\nPRIMI PIATTI\n●MINESTRONE DI VERDURE FRESCHE 5,0\n●PASTA E MINESTRONE 5,0\n●RIGATONI CON BROCCOLI, SPECK, CILIEGINO E CACIORICOTTA 5,5\n●PENNETTE AL SUGO DI BOLOGNESE 5,5\n●RISOTTO AI FRUTTI DI MARE 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●COTOLETTA DI COSTATA DI SUINO AL FORNO\n●FUSI DI POLLO AL FORNO CON PATATE\n●ALETTE DI POLLO SPEZIATE ALLA PAPRIKA\n●ZUCCHINE RIPIENE\n●TRANCIO DI MERLUZZO CON IMPANATURA DI PATATE E SALSA ROSA\n●OLIVE FRITTE",
+      "published_at": "13/10/2026 09:13 circa",
+      "published_at_raw": "10h",
       "error": null
     }
   ]
