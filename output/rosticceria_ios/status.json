@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-10-14T13:40:37",
+  "updated_at": "2026-10-14T18:14:11",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 14/10/26",
-      "published_at": "14/10/2026 09:37 circa",
-      "published_at_raw": "6h",
+      "published_at": "14/10/2026 10:11 circa",
+      "published_at_raw": "10h",
       "error": null
     },
     {
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 14 Ottobre",
-      "published_at": "14/10/2026 09:39 circa",
+      "published_at": "14/10/2026 09:13 circa",
       "published_at_raw": "14/10/2026",
       "error": null
     },
