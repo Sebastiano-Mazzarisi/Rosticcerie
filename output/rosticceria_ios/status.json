@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-10-15T12:56:18",
+  "updated_at": "2026-10-15T17:29:44",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 15/10/26",
-      "published_at": "15/10/2026 10:53 circa",
-      "published_at_raw": "4h",
+      "published_at": "15/10/2026 10:26 circa",
+      "published_at_raw": "9h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "15 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "15/10/2026 09:53 circa",
+      "published_at": "15/10/2026 09:26 circa",
       "published_at_raw": "15/10/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 15 Ottobre",
-      "published_at": "15/10/2026 11:55 circa",
+      "published_at": "15/10/2026 11:28 circa",
       "published_at_raw": "15/10/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "5 hours ago\nPRIMI PIATTI\n●CICORIE ALL'OLIO 5,0\n●SPAGHETTI AL SUGO DI POMODORO 5,0\n●MINESTRA DI RISO CON VERZA, PANCETTA E CAROTE 5,0\n●GNOCCHI DI PATATE CON SUGO DI POMODORO, PESTO DI BASILICO E MORTADELLA PIASTRATA 5,5\n●FARFALLE AL SALMONE CON SPINACI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●FAGOTTO DI CARNE CHIUSA CON SALAME E GALBANINO ALLA PIZZAIOLA\n●STRACCETTI DI POLLO CON CECI E VELLUTATA DI DATTERINO GIALLO\n●SBRICIOLATA DI PATATE, SALSICCIA E MOZZARELLA\n●SFORMATO DI VERDURE MISTE CON MOZZARELLA AL FORNO\n●POLPETTE DI PANE AL SUGO\n●PARMIGIANA\n●CUORE DI MERLUZZO AL SUGO DI CROSTACEI\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
-      "published_at": "15/10/2026 09:56 circa",
-      "published_at_raw": "5h",
+      "text": "9 hours ago\nPRIMI PIATTI\n●CICORIE ALL'OLIO 5,0\n●SPAGHETTI AL SUGO DI POMODORO 5,0\n●MINESTRA DI RISO CON VERZA, PANCETTA E CAROTE 5,0\n●GNOCCHI DI PATATE CON SUGO DI POMODORO, PESTO DI BASILICO E MORTADELLA PIASTRATA 5,5\n●FARFALLE AL SALMONE CON SPINACI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●FAGOTTO DI CARNE CHIUSA CON SALAME E GALBANINO ALLA PIZZAIOLA\n●STRACCETTI DI POLLO CON CECI E VELLUTATA DI DATTERINO GIALLO\n●SBRICIOLATA DI PATATE, SALSICCIA E MOZZARELLA\n●SFORMATO DI VERDURE MISTE CON MOZZARELLA AL FORNO\n●POLPETTE DI PANE AL SUGO\n●PARMIGIANA\n●CUORE DI MERLUZZO AL SUGO DI CROSTACEI\n●INSALATA DI PATATE ALLO YOGURT E MAIONESE",
+      "published_at": "15/10/2026 10:29 circa",
+      "published_at_raw": "9h",
       "error": null
     }
   ]
