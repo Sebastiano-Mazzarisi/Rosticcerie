@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-10-16T12:45:23",
+  "updated_at": "2026-10-16T17:02:47",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 16.10",
-      "published_at": "16/10/2026 10:42 circa",
-      "published_at_raw": "4h",
+      "published_at": "16/10/2026 09:59 circa",
+      "published_at_raw": "9h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "16 Ottobre.\nMenù del giorno.",
-      "published_at": "16/10/2026 09:42 circa",
+      "published_at": "16/10/2026 09:59 circa",
       "published_at_raw": "16/10/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 16 Ottobre",
-      "published_at": "16/10/2026 09:44 circa",
+      "published_at": "16/10/2026 09:01 circa",
       "published_at_raw": "16/10/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "4 hours ago\nPRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●GNOCCHI CON VELLUTATA DI POMODORO, PESTO DI BASILICO E CUBETTI DI MORTADELLA 5,5\n●LASAGNA AL FORNO 5,0\n●ORECCHIETTE CON CIME DI RAPE 5,5\n●SPAGHETTI ALLE COZZE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●MAXI HAMBURGER DI VITELLO ALLA CAPRESE\n●SALSICCIA DI POLLO AI FUNGHI E SCALOGNO\n●COSCIA E SOVRAVOSCIA DI POLLO NOSTRANO AL FORNO CON PATATE\n●PARMIGIANA\n●TRIANGOLO DI PATATE ALLO SPECK AL FORNO\n●FILETTO DI CERNIA IN CROSTA DI ZUCCHINE\n●OLIVE NERE FRITTE\n●SFORMATO DI VERDURE\n●VERDURE GRATINATE AL FORNO",
-      "published_at": "16/10/2026 10:45 circa",
-      "published_at_raw": "4h",
+      "text": "9 hours ago\nPRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●GNOCCHI CON VELLUTATA DI POMODORO, PESTO DI BASILICO E CUBETTI DI MORTADELLA 5,5\n●LASAGNA AL FORNO 5,0\n●ORECCHIETTE CON CIME DI RAPE 5,5\n●SPAGHETTI ALLE COZZE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●MAXI HAMBURGER DI VITELLO ALLA CAPRESE\n●SALSICCIA DI POLLO AI FUNGHI E SCALOGNO\n●COSCIA E SOVRAVOSCIA DI POLLO NOSTRANO AL FORNO CON PATATE\n●PARMIGIANA\n●TRIANGOLO DI PATATE ALLO SPECK AL FORNO\n●FILETTO DI CERNIA IN CROSTA DI ZUCCHINE\n●OLIVE NERE FRITTE\n●SFORMATO DI VERDURE\n●VERDURE GRATINATE AL FORNO",
+      "published_at": "16/10/2026 10:02 circa",
+      "published_at_raw": "9h",
       "error": null
     }
   ]
