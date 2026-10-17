@@ -1,20 +1,20 @@
 {
-  "updated_at": "2026-10-17T07:19:45",
+  "updated_at": "2026-10-17T11:41:19",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 16.10",
-      "published_at": "16/10/2026 09:59 circa",
-      "published_at_raw": "9h",
+      "text": "MENÙ DEL GIORNO 17/10/26",
+      "published_at": "17/10/2026 10:38 circa",
+      "published_at_raw": "3h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "16 Ottobre.\nMenù del giorno.",
-      "published_at": "16/10/2026 09:59 circa",
-      "published_at_raw": "16/10/2026",
+      "text": "17 Ottobre.\nMenù del giorno.",
+      "published_at": "17/10/2026 10:38 circa",
+      "published_at_raw": "17/10/2026",
       "error": null
     },
     {
@@ -45,14 +45,14 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 17 Ottobre",
-      "published_at": "17/10/2026 09:07 circa",
+      "published_at": "17/10/2026 09:40 circa",
       "published_at_raw": "17/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 17 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Orecchiette con vellutata di zucca e speck croccante - €8.00\n- Risotto con asparagi e cernia - €8.50\n- Mezze maniche con pomodorino, salsiccia e rucola - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Bocconcini di capocollo all'ortolana - €7.50\n- Trancio di baccalà gratinato - €8.50",
+      "text": "Menu 17 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Penne all'amatriciana - €6.50\n- Orecchiette con vellutata di cavolfiore e capocollo croccante - €8.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli al grano arso con ragù di baccalà - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con zucchina - €8.50\n  Con pomodorino\n- Bocconcini di petto di pollo con piselli - €7.50",
       "published_at": "17/10/2026",
       "published_at_raw": "17 Ottobre",
       "error": null
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "23 hours ago\nPRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CICORIA 5,0\n●GNOCCHI CON VELLUTATA DI POMODORO, PESTO DI BASILICO E CUBETTI DI MORTADELLA 5,5\n●LASAGNA AL FORNO 5,0\n●ORECCHIETTE CON CIME DI RAPE 5,5\n●SPAGHETTI ALLE COZZE 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●MAXI HAMBURGER DI VITELLO ALLA CAPRESE\n●SALSICCIA DI POLLO AI FUNGHI E SCALOGNO\n●COSCIA E SOVRAVOSCIA DI POLLO NOSTRANO AL FORNO CON PATATE\n●PARMIGIANA\n●TRIANGOLO DI PATATE ALLO SPECK AL FORNO\n●FILETTO DI CERNIA IN CROSTA DI ZUCCHINE\n●OLIVE NERE FRITTE\n●SFORMATO DI VERDURE\n●VERDURE GRATINATE AL FORNO",
-      "published_at": "16/10/2026 10:19 circa",
-      "published_at_raw": "23h",
+      "text": "4 hours ago\nPRIMI PIATTI\n●TIMBALLO DI CICORIA, PATATE E PROSCIUTTO COTTO 5,0\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA CON SUGO DI PORCINI, PROSCIUTTO COTTO E MOZZARELLA 5,5\n●PASTA ALLA BOLOGNESE 5,5\n●SPAGHETTI CON CECI, COZZE E POMODORINO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SCALOPPINE DI VITELLO AI FUNGHI\n●STRACCETTI DI POLLO CON PESTO DI PEPERONI\n●ZAMPINA DI VITELLO ARROSTO\n●COSCIA E SOVRAVOSCIA DI POLLO AL FORNO CON PATATE\n●HAMBURGER DI VITELLO CON FIORDILATTE E POMODORO\n●TRIANGOLO DI PATATE ALLO SPECK AL FORNO\n●MELANZANE RIPIENE\n●SFORMATO DI ZUCCHINE COL SALMONE CREMOSO\n●OLIVE NERE FRITTE",
+      "published_at": "17/10/2026 09:41 circa",
+      "published_at_raw": "4h",
       "error": null
     }
   ]
