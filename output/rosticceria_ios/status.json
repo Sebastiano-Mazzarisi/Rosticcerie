@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-10-17T14:27:16",
+  "updated_at": "2026-10-17T17:25:34",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 17/10/26",
-      "published_at": "17/10/2026 10:24 circa",
-      "published_at_raw": "6h",
+      "published_at": "17/10/2026 10:22 circa",
+      "published_at_raw": "9h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "17 Ottobre.\nMenù del giorno.",
-      "published_at": "17/10/2026 10:24 circa",
+      "published_at": "17/10/2026 10:22 circa",
       "published_at_raw": "17/10/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 17 Ottobre",
-      "published_at": "17/10/2026 09:26 circa",
+      "published_at": "17/10/2026 09:24 circa",
       "published_at_raw": "17/10/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "6 hours ago\nPRIMI PIATTI\n●TIMBALLO DI CICORIA, PATATE E PROSCIUTTO COTTO 5,0\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA CON SUGO DI PORCINI, PROSCIUTTO COTTO E MOZZARELLA 5,5\n●PASTA ALLA BOLOGNESE 5,5\n●SPAGHETTI CON CECI, COZZE E POMODORINO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SCALOPPINE DI VITELLO AI FUNGHI\n●STRACCETTI DI POLLO CON PESTO DI PEPERONI\n●ZAMPINA DI VITELLO ARROSTO\n●COSCIA E SOVRAVOSCIA DI POLLO AL FORNO CON PATATE\n●HAMBURGER DI VITELLO CON FIORDILATTE E POMODORO\n●TRIANGOLO DI PATATE ALLO SPECK AL FORNO\n●MELANZANE RIPIENE\n●SFORMATO DI ZUCCHINE COL SALMONE CREMOSO\n●OLIVE NERE FRITTE",
-      "published_at": "17/10/2026 10:27 circa",
-      "published_at_raw": "6h",
+      "text": "9 hours ago\nPRIMI PIATTI\n●TIMBALLO DI CICORIA, PATATE E PROSCIUTTO COTTO 5,0\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA CON SUGO DI PORCINI, PROSCIUTTO COTTO E MOZZARELLA 5,5\n●PASTA ALLA BOLOGNESE 5,5\n●SPAGHETTI CON CECI, COZZE E POMODORINO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SCALOPPINE DI VITELLO AI FUNGHI\n●STRACCETTI DI POLLO CON PESTO DI PEPERONI\n●ZAMPINA DI VITELLO ARROSTO\n●COSCIA E SOVRAVOSCIA DI POLLO AL FORNO CON PATATE\n●HAMBURGER DI VITELLO CON FIORDILATTE E POMODORO\n●TRIANGOLO DI PATATE ALLO SPECK AL FORNO\n●MELANZANE RIPIENE\n●SFORMATO DI ZUCCHINE COL SALMONE CREMOSO\n●OLIVE NERE FRITTE",
+      "published_at": "17/10/2026 10:25 circa",
+      "published_at_raw": "9h",
       "error": null
     }
   ]
