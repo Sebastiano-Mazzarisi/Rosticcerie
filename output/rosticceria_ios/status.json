@@ -1,20 +1,20 @@
 {
-  "updated_at": "2026-10-18T15:52:26",
+  "updated_at": "2026-10-19T08:14:21",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 17/10/26",
-      "published_at": "17/10/2026 10:22 circa",
-      "published_at_raw": "9h",
+      "text": "MENÙ DEL GIORNO 19/10/26",
+      "published_at": "19/10/2026 09:54 circa",
+      "published_at_raw": "16m",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "17 Ottobre.\nMenù del giorno.",
-      "published_at": "17/10/2026 10:22 circa",
-      "published_at_raw": "17/10/2026",
+      "text": "19 Ottobre 2026.\nMenù del giorno.",
+      "published_at": "19/10/2026 09:26 circa",
+      "published_at_raw": "19/10/2026",
       "error": null
     },
     {
@@ -44,25 +44,25 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 18 Ottobre",
-      "published_at": "18/10/2026 09:51 circa",
-      "published_at_raw": "18/10/2026",
+      "text": "menù del giorno 19 Ottobre",
+      "published_at": "19/10/2026 09:13 circa",
+      "published_at_raw": "19/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 18 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Penne all'amatriciana - €6.50\n- Orecchiette con vellutata di cavolfiore e capocollo croccante - €8.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli al grano arso con ragù di baccalà - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con zucchina - €8.50\n  Con pomodorino\n- Bocconcini di petto di pollo con piselli - €7.50",
-      "published_at": "18/10/2026",
-      "published_at_raw": "18 Ottobre",
+      "text": "Menu 19 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Penne all'amatriciana - €6.50\n- Orecchiette con vellutata di cavolfiore e capocollo croccante - €8.50\n- Risotto con funghi porcini e zafferano - €8.50\n- Cavatelli al grano arso con ragù di baccalà - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con zucchina - €8.50\n  Con pomodorino\n- Bocconcini di petto di pollo con piselli - €7.50",
+      "published_at": "19/10/2026",
+      "published_at_raw": "19 Ottobre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "a day ago\nPRIMI PIATTI\n●TIMBALLO DI CICORIA, PATATE E PROSCIUTTO COTTO 5,0\n●LASAGNA AL FORNO 5,0\n●LASAGNETTA CON SUGO DI PORCINI, PROSCIUTTO COTTO E MOZZARELLA 5,5\n●PASTA ALLA BOLOGNESE 5,5\n●SPAGHETTI CON CECI, COZZE E POMODORINO 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●SCALOPPINE DI VITELLO AI FUNGHI\n●STRACCETTI DI POLLO CON PESTO DI PEPERONI\n●ZAMPINA DI VITELLO ARROSTO\n●COSCIA E SOVRAVOSCIA DI POLLO AL FORNO CON PATATE\n●HAMBURGER DI VITELLO CON FIORDILATTE E POMODORO\n●TRIANGOLO DI PATATE ALLO SPECK AL FORNO\n●MELANZANE RIPIENE\n●SFORMATO DI ZUCCHINE COL SALMONE CREMOSO\n●OLIVE NERE FRITTE",
-      "published_at": "17/10/2026 circa",
-      "published_at_raw": "1d",
+      "text": "48 minutes ago\nPRIMI PIATTI\n●SFORMATO DI VERDURE MISTE AL FORNO 5,5\n●CICORIA ALL'OLIO 5,0\n●PASTA E LENTICCHIE 4,5\n●CASERECCIA ALLA CARRETTIERA CON TONNO E FUNGHI MISTI CON PORCINI 5,0\n●PENNETTE ALL'ARRABBIATA 4,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●FETTINA DI VITELLO AI FUNGHI\n●BRACIOLE AL SUGO\n●STRACCETTI DI POLLO AL SUGO DI PORCINI E ZUCCHINA\n●SPIEDINO DI BOCCONCINO DI POLLO PANCETTATO AL LIMONE\n●POLPETTE DI PANE AL SUGO\n●MILLEFOGLIE DI ZUCCHINE AL SALMONE\n●MELANZANE RIPIENE",
+      "published_at": "19/10/2026 09:26 circa",
+      "published_at_raw": "48m",
       "error": null
     }
   ]
