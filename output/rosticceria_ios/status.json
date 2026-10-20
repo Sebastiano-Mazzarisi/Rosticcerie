@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-10-19T15:37:30",
+  "updated_at": "2026-10-20T08:03:09",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 19/10/26",
-      "published_at": "19/10/2026 10:33 circa",
-      "published_at_raw": "7h",
+      "text": "MENÙ DEL GIORNO 20/10/26",
+      "published_at": "20/10/2026 09:42 circa",
+      "published_at_raw": "17m",
       "error": null
     },
     {
@@ -21,7 +21,7 @@
       "name": "Impastamò",
       "image": "Impastamo.jpg",
       "text": "2 hours ago\n2h\n·",
-      "published_at": "18/10/2026 07:30 circa",
+      "published_at": "20/10/2026 08:00 circa",
       "published_at_raw": "2h",
       "error": null
     },
@@ -52,17 +52,17 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 19 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Rigatoni alla carbonara - €6.50\n- Risotto con asparagi e zafferano - €7.50\n- Orecchiette con vellutata di cavolfiore e capocollo croccante - €8.50\n- Cavatelli al grano arso con fave, zucchina e gamberetti - €8.50\n- Zuppa del casale - €6.00\n  Con orzo, ceci, farro, lenticchie, fagioli borlotti e cannellini Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato - €8.50\n- Scaloppe di pollo al limone - €7.50\n  2 pezzi",
-      "published_at": "19/10/2026",
-      "published_at_raw": "19 Ottobre",
+      "text": "Menu 20 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Rigatoni alla carbonara - €6.50\n- Risotto con asparagi e zafferano - €7.50\n- Orecchiette con vellutata di cavolfiore e capocollo croccante - €8.50\n- Cavatelli al grano arso con fave, zucchina e gamberetti - €8.50\n- Zuppa del casale - €6.00\n  Con orzo, ceci, farro, lenticchie, fagioli borlotti e cannellini Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato - €8.50\n- Scaloppe di pollo al limone - €7.50\n  2 pezzi",
+      "published_at": "20/10/2026",
+      "published_at_raw": "20 Ottobre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "8 hours ago\nPRIMI PIATTI\n●SFORMATO DI VERDURE MISTE AL FORNO 5,5\n●CICORIA ALL'OLIO 5,0\n●PASTA E LENTICCHIE 4,5\n●CASERECCIA ALLA CARRETTIERA CON TONNO E FUNGHI MISTI CON PORCINI 5,0\n●PENNETTE ALL'ARRABBIATA 4,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●FETTINA DI VITELLO AI FUNGHI\n●BRACIOLE AL SUGO\n●STRACCETTI DI POLLO AL SUGO DI PORCINI E ZUCCHINA\n●SPIEDINO DI BOCCONCINO DI POLLO PANCETTATO AL LIMONE\n●POLPETTE DI PANE AL SUGO\n●MILLEFOGLIE DI ZUCCHINE AL SALMONE\n●MELANZANE RIPIENE",
-      "published_at": "19/10/2026 09:36 circa",
-      "published_at_raw": "8h",
+      "text": "a day ago\nPRIMI PIATTI\n●SFORMATO DI VERDURE MISTE AL FORNO 5,5\n●CICORIA ALL'OLIO 5,0\n●PASTA E LENTICCHIE 4,5\n●CASERECCIA ALLA CARRETTIERA CON TONNO E FUNGHI MISTI CON PORCINI 5,0\n●PENNETTE ALL'ARRABBIATA 4,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●FETTINA DI VITELLO AI FUNGHI\n●BRACIOLE AL SUGO\n●STRACCETTI DI POLLO AL SUGO DI PORCINI E ZUCCHINA\n●SPIEDINO DI BOCCONCINO DI POLLO PANCETTATO AL LIMONE\n●POLPETTE DI PANE AL SUGO\n●MILLEFOGLIE DI ZUCCHINE AL SALMONE\n●MELANZANE RIPIENE",
+      "published_at": "19/10/2026 circa",
+      "published_at_raw": "1d",
       "error": null
     }
   ]
