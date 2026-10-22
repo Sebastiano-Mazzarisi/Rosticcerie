@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-21T13:46:40",
+  "updated_at": "2026-10-22T08:05:49",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,17 +12,17 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "21 Ottobre.\nMenù del giorno.",
-      "published_at": "21/10/2026 09:50 circa",
-      "published_at_raw": "21/10/2026",
+      "text": "Cibària is in Putignano.\n22 hours ago\n22h\n·\n0:00 / 0:05\n3",
+      "published_at": "22/10/2026",
+      "published_at_raw": "0:00",
       "error": null
     },
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "3 hours ago\n3h\n·",
-      "published_at": "21/10/2026 07:05 circa",
-      "published_at_raw": "3h",
+      "text": "2 hours ago\n2h\n·",
+      "published_at": "22/10/2026 08:03 circa",
+      "published_at_raw": "2h",
       "error": null
     },
     {
@@ -44,25 +44,25 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 21 Ottobre",
-      "published_at": "21/10/2026 09:06 circa",
-      "published_at_raw": "21/10/2026",
+      "text": "menù del giorno 22 Ottobre",
+      "published_at": "22/10/2026 09:04 circa",
+      "published_at_raw": "22/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 21 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Penne all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Risotto con barbabietola e stracciatella - €7.50\n- Cavatelli al grano arso con salsiccia a punta di coltello, cicerchie e vellutata di zucca - €8.50\n- Tagliolino con pesce spada, pomodorini, capperi e origano - €8.50\n- Minestra di ceci, lenticchie e orzo - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Involtini di capocollo con verdurine - €7.50\n  5 pezzi\n- Filetto di cernia con vongole e datterino giallo e rosso - €8.50",
-      "published_at": "21/10/2026",
-      "published_at_raw": "21 Ottobre",
+      "text": "Menu 22 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Penne all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Risotto con barbabietola e stracciatella - €7.50\n- Cavatelli al grano arso con salsiccia a punta di coltello, cicerchie e vellutata di zucca - €8.50\n- Tagliolino con pesce spada, pomodorini, capperi e origano - €8.50\n- Minestra di ceci, lenticchie e orzo - €6.00\n\nSECONDI PIATTI DEL GIORNO\n- Involtini di capocollo con verdurine - €7.50\n  5 pezzi\n- Filetto di cernia con vongole e datterino giallo e rosso - €8.50",
+      "published_at": "22/10/2026",
+      "published_at_raw": "22 Ottobre",
       "error": null
     },
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "17 minutes ago\nPrimi piatt\n●Minestrone di verdure fresche\n●Lasagna al forno  € 5.0\n●TIMBALLO DI VERZA € 5.0\nPennette con funghi CARDONCELLI e castagne € 5.50\n●Cavatelli con vellutata di zucca e gamberi €6.0.\nSecondi piatti :\n●Pollo al girarrosto\nDoppia mattonella di vitello con carciofi e prosciutto cotto al forno\n●Filettino di suino farcito con contorno di piselli\nCotolette di SOVRAVOSCIA DI pollo al forno\n●Fettina di petto di pollo ai funghi\nFiletto di cernia con pomodoro capperi e zucchina\n●Cotoletta di melanzana con capocollo e  GALBANINO al forno\n●Pizza di patate .",
-      "published_at": "21/10/2026 09:50 circa",
-      "published_at_raw": "17m",
+      "text": "12 minutes ago\nPRIMI PIATTI\n●SFORMATO DI VERZA E PANCETTA CROCCANTE 4,5\n●CRESPELLE CON CARNE MACINATA E MOZZARELLA AL FORNO 6,0\n●GNOCCHI DI PATATE IN CREMA DI VERDURE E FONDUTA DI FORMAGGIO CON JULIENNE DI CAPOCOLLO DI MARTINA 5,0\n●PENNONI CON SALSICCIA SGRANATA DI NORCIA E ASPARAGI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●DOPPIA CARNE MACINATA FARCITA CON PATATE\n●CONIGLIO ALLA CACCIATORA\n●SPEZZATINO DI MANZO CON PATATE E CAROTE\n●PIZZA DI PATATE\n●FILETTO DI CERNIA CON JULIENNE DI ZUCCHINE, POMODORO E CAPPERI\n●POLPETTE DI PANE FRITTE\n●POLPETTE DI PANE AL SUGO\n●QUIKE ALLA CARNE E SPINACI\n●OLIVE FRITTE",
+      "published_at": "22/10/2026 09:53 circa",
+      "published_at_raw": "12m",
       "error": null
     }
   ]
