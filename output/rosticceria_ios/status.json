@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-10-23T13:34:23",
+  "updated_at": "2026-10-23T18:04:49",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 23/10/26",
-      "published_at": "23/10/2026 10:31 circa",
-      "published_at_raw": "5h",
+      "published_at": "23/10/2026 10:01 circa",
+      "published_at_raw": "10h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "23 Ottobre.\nMenù del giorno.",
-      "published_at": "23/10/2026 09:31 circa",
+      "published_at": "23/10/2026 10:01 circa",
       "published_at_raw": "23/10/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 23 Ottobre",
-      "published_at": "23/10/2026 09:33 circa",
+      "published_at": "23/10/2026 09:03 circa",
       "published_at_raw": "23/10/2026",
       "error": null
     },
@@ -60,9 +60,9 @@
     {
       "name": "Bollenti piatti",
       "image": "Bollenti_piatti.jpg",
-      "text": "a day ago\nPRIMI PIATTI\n●SFORMATO DI VERZA E PANCETTA CROCCANTE 4,5\n●CRESPELLE CON CARNE MACINATA E MOZZARELLA AL FORNO 6,0\n●GNOCCHI DI PATATE IN CREMA DI VERDURE E FONDUTA DI FORMAGGIO CON JULIENNE DI CAPOCOLLO DI MARTINA 5,0\n●PENNONI CON SALSICCIA SGRANATA DI NORCIA E ASPARAGI 5,5\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●DOPPIA CARNE MACINATA FARCITA CON PATATE\n●CONIGLIO ALLA CACCIATORA\n●SPEZZATINO DI MANZO CON PATATE E CAROTE\n●PIZZA DI PATATE\n●FILETTO DI CERNIA CON JULIENNE DI ZUCCHINE, POMODORO E CAPPERI\n●POLPETTE DI PANE FRITTE\n●POLPETTE DI PANE AL SUGO\n●QUIKE ALLA CARNE E SPINACI\n●OLIVE FRITTE",
-      "published_at": "22/10/2026 circa",
-      "published_at_raw": "1d",
+      "text": "9 hours ago\nPRIMI PIATTI\n●FAVE BIANCHE 4,0\n●FAVE E CORNALETTI 5,0\n●FAVE E CICORIA 5,0\n●LASAGNA AL FORNO 5,0\n●CASERECCIA CON PISELLI, GUANCIALE CROCCANTE E FUNGHI MISTI CON PORCINI 5,5\n●CAVATELLI AI FRUTTI DI MARE IN ROSSO 6,0\nSECONDI PIATTI\n●POLLI AL GIRARROSTO\n●OLIVE NERE FRITTE\n●ROSTBEEF DI SUINO ARROSTO IN SALSA DI VERDURE\n●FAGOTTINO DI POLLO CON PROSCIUTTO E GALBANINO IN CREMA DI PISELLI\n●POLPETTE DI POLLO IN SALSA DI PORCINI\n●QUIKE CON CARNE E SPINACI\n●SFORMATO DI VERDURE MISTE CON CARNE E MOZZARELLA\n●PARMIGIANA\n●SPIEDINO DI GAMBERONI DI SURINO AVVOLTI ALLO SPECK GRATINATI AL FORNO\n●FILETTO DI ORATA IN CROSTA DI ZUCCHINE, POMODORINI, CAPPERI E OLIVE",
+      "published_at": "23/10/2026 11:04 circa",
+      "published_at_raw": "9h",
       "error": null
     }
   ]
