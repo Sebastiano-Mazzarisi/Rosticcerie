@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-10-23T08:04:51",
+  "updated_at": "2026-10-23T13:34:23",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 23/10/26",
-      "published_at": "23/10/2026 09:35 circa",
-      "published_at_raw": "26m",
+      "published_at": "23/10/2026 10:31 circa",
+      "published_at_raw": "5h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "23 Ottobre.\nMenù del giorno.",
-      "published_at": "23/10/2026 09:22 circa",
+      "published_at": "23/10/2026 09:31 circa",
       "published_at_raw": "23/10/2026",
       "error": null
     },
@@ -45,14 +45,14 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 23 Ottobre",
-      "published_at": "23/10/2026 09:04 circa",
+      "published_at": "23/10/2026 09:33 circa",
       "published_at_raw": "23/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 23 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Strozzapreti alla boscaiola - €6.50\n  Con macinato di carne, pancetta, funghi misti, prosciutto cotto, salsa di pomodoro e besciamella\n- Risotto con zucca e scamorza affumicata - €7.50\n- Orecchiette con vellutata di cavolfiore e speck croccante - €8.50\n- Spaghetti con tonno, capperi, olive e pomodoro - €8.50\n- Minestrone di verdure - €6.00\n  Sedano, carote, zucchina, patate, melanzane, piselli e fagiolini. Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto persico con vongole e datterino giallo e rosso - €8.50\n- Straccetti di petto di pollo al limone - €7.50\n- Trancio di baccalà gratinato - €8.50",
+      "text": "Menu 23 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Penne all'amatriciana - €6.50\n- Risotto con radicchio e fonduta di gorgonzola - €7.50\n- Orecchiette con pesto di pomodori (base ricotta) e speck croccante - €8.00\n- Cavatelli al grano arso con baccalà e cicerchie - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa con olive, pomodorino e pan grattato - €8.50\n- Spezzatino di vitello con patate - €7.50",
       "published_at": "23/10/2026",
       "published_at_raw": "23 Ottobre",
       "error": null
