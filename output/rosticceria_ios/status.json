@@ -1,19 +1,19 @@
 {
-  "updated_at": "2026-10-24T12:18:44",
+  "updated_at": "2026-10-24T16:02:24",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
       "text": "MENÙ DEL GIORNO 24/10/26",
-      "published_at": "24/10/2026 10:14 circa",
-      "published_at_raw": "4h",
+      "published_at": "24/10/2026 10:58 circa",
+      "published_at_raw": "7h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "24 Ottobre.\nMenù del giorno.",
-      "published_at": "24/10/2026 10:14 circa",
+      "published_at": "24/10/2026 10:58 circa",
       "published_at_raw": "24/10/2026",
       "error": null
     },
@@ -45,7 +45,7 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 24 Ottobre",
-      "published_at": "24/10/2026 09:16 circa",
+      "published_at": "24/10/2026 09:00 circa",
       "published_at_raw": "24/10/2026",
       "error": null
     },
