@@ -1,20 +1,20 @@
 {
-  "updated_at": "2026-10-24T07:45:11",
+  "updated_at": "2026-10-24T12:18:44",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 23/10/26",
-      "published_at": "23/10/2026 10:01 circa",
-      "published_at_raw": "10h",
+      "text": "MENÙ DEL GIORNO 24/10/26",
+      "published_at": "24/10/2026 10:14 circa",
+      "published_at_raw": "4h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "23 Ottobre.\nMenù del giorno.",
-      "published_at": "23/10/2026 10:01 circa",
-      "published_at_raw": "23/10/2026",
+      "text": "24 Ottobre.\nMenù del giorno.",
+      "published_at": "24/10/2026 10:14 circa",
+      "published_at_raw": "24/10/2026",
       "error": null
     },
     {
@@ -44,15 +44,15 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 23 Ottobre",
-      "published_at": "23/10/2026 09:03 circa",
-      "published_at_raw": "23/10/2026",
+      "text": "menù del giorno 24 Ottobre",
+      "published_at": "24/10/2026 09:16 circa",
+      "published_at_raw": "24/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 24 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Penne all'amatriciana - €6.50\n- Risotto con radicchio e fonduta di gorgonzola - €7.50\n- Orecchiette con pesto di pomodori (base ricotta) e speck croccante - €8.00\n- Cavatelli al grano arso con baccalà e cicerchie - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di platessa con olive, pomodorino e pan grattato - €8.50\n- Spezzatino di vitello con patate - €7.50",
+      "text": "Menu 24 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Fusilli alla puttanesca - €6.50\n  Olive, capperi, acciughe, aglio e pomodorino\n- Gnocchi con gorgonzola e pistacchi - €8.00\n- Orecchiette con funghi porcini, salsiccia e pomodorino - €8.50\n- Risotto con gamberetti e datterino giallo - €8.50\n- Minestrone di verdure - €6.00\n  Sedano, carote, zucchina, patate, melanzane, piselli e fagiolini. Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Bocconcini di vitello all'ortolana - €7.50\n- Filetto di cernia con zucchine - €8.50",
       "published_at": "24/10/2026",
       "published_at_raw": "24 Ottobre",
       "error": null
