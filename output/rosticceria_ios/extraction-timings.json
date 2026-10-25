@@ -1,27 +1,27 @@
 {
-  "updated_at": "2026-10-24T18:02:24.384137+02:00",
+  "updated_at": "2026-10-25T08:58:00.208884+01:00",
   "workers": 2,
-  "elapsed_seconds": 265.03,
-  "sum_restaurant_seconds": 461.43,
+  "elapsed_seconds": 334.67,
+  "sum_restaurant_seconds": 607.02,
   "restaurants": [
     {
       "name": "Fantasia",
-      "seconds": 63.48,
+      "seconds": 100.91,
       "outcome": "ok"
     },
     {
       "name": "Cibària",
-      "seconds": 62.81,
+      "seconds": 99.68,
       "outcome": "ok"
     },
     {
       "name": "Impastamò",
-      "seconds": 72.12,
+      "seconds": 73.05,
       "outcome": "ok"
     },
     {
       "name": "Le delizie di Michela",
-      "seconds": 111.87,
+      "seconds": 142.67,
       "outcome": "ok"
     },
     {
@@ -31,17 +31,17 @@
     },
     {
       "name": "Santoro (Castellana)",
-      "seconds": 61.47,
+      "seconds": 99.63,
       "outcome": "ok"
     },
     {
       "name": "Pane & Co",
-      "seconds": 3.69,
+      "seconds": 4.83,
       "outcome": "ok"
     },
     {
       "name": "Bollenti piatti",
-      "seconds": 85.99,
+      "seconds": 86.25,
       "outcome": "fallback"
     }
   ]
