@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-26T08:17:49",
+  "updated_at": "2026-10-26T15:18:15",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,9 +12,9 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "24 Ottobre.\nMenù del giorno.",
-      "published_at": "24/10/2026 10:58 circa",
-      "published_at_raw": "24/10/2026",
+      "text": "26 Ottobre 2026.\nMenù del giorno.",
+      "published_at": "26/10/2026 13:13 circa",
+      "published_at_raw": "26/10/2026",
       "error": null
     },
     {
@@ -52,7 +52,7 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 26 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Fusilli alla puttanesca - €6.50\n  Olive, capperi, acciughe, aglio e pomodorino\n- Gnocchi con gorgonzola e pistacchi - €8.00\n- Orecchiette con funghi porcini, salsiccia e pomodorino - €8.50\n- Risotto con gamberetti e datterino giallo - €8.50\n- Minestrone di verdure - €6.00\n  Sedano, carote, zucchina, patate, melanzane, piselli e fagiolini. Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Bocconcini di vitello all'ortolana - €7.50\n- Filetto di cernia con zucchine - €8.50",
+      "text": "Menu 26 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla carbonara - €6.50\n- Risotto con barbabietola e fonduta al gorgonzola - €7.50\n- Orecchiette con porcini, datterino giallo e noci - €8.50\n- Cavatelli al grano arso con pesce spada e melanzane - €8.50\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con battuto di olive e capperi - €8.50\n- Scaloppe di lonza al limone - €7.50\n  2 pezzi",
       "published_at": "26/10/2026",
       "published_at_raw": "26 Ottobre",
       "error": null
