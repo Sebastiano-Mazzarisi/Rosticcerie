@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-30T09:15:29",
+  "updated_at": "2026-10-30T16:01:40",
   "pages": [
     {
       "name": "Fantasia",
@@ -13,7 +13,7 @@
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "30 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "30/10/2026 09:53 circa",
+      "published_at": "30/10/2026 09:57 circa",
       "published_at_raw": "30/10/2026",
       "error": null
     },
@@ -45,14 +45,14 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 30 Ottobre",
-      "published_at": "30/10/2026 09:13 circa",
+      "published_at": "30/10/2026 09:59 circa",
       "published_at_raw": "30/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 30 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Tagliolino con asparagi e speck - €7.50\n- Orecchiette con vellutata di cavolfiore e battuto di salsiccia - €8.50\n- Risotto con ragù di mare - €8.50\n  Vongole, cozze, cernia, gamberetti e pomodoro.\n- Minestra di piselli - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Trancio di baccalà gratinato con battuto di olive e capperi - €8.50\n- Straccetti di capocollo con funghi misti - €7.50",
+      "text": "Menu 30 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Risotto con zucca e speck croccante - €7.50\n- Gnocchi con gorgonzola e pistacchi - €8.00\n- Cavatellucci con cernia e pomodorino - €8.50\n- Zuppa di legumi misti - €6.00\n  Con orzo, farro, ceci, fagioli e lenticchie Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Straccetti di lonza alla boscaiola - €7.50\n- Filetto di platessa alla pizzaiola - €8.50",
       "published_at": "30/10/2026",
       "published_at_raw": "30 Ottobre",
       "error": null
