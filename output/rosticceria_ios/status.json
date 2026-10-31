@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-31T09:05:15",
+  "updated_at": "2026-10-31T15:12:56",
   "pages": [
     {
       "name": "Fantasia",
@@ -13,7 +13,7 @@
       "name": "Cibària",
       "image": "Cibaria.jpg",
       "text": "31 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "31/10/2026 09:46 circa",
+      "published_at": "31/10/2026 10:08 circa",
       "published_at_raw": "31/10/2026",
       "error": null
     },
@@ -45,14 +45,14 @@
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
       "text": "menù del giorno 31 Ottobre",
-      "published_at": "31/10/2026 09:02 circa",
+      "published_at": "31/10/2026 09:10 circa",
       "published_at_raw": "31/10/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 31 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Risotto con zucca e speck croccante - €7.50\n- Gnocchi con gorgonzola e pistacchi - €8.00\n- Cavatellucci con cernia e pomodorino - €8.50\n- Zuppa di legumi misti - €6.00\n  Con orzo, farro, ceci, fagioli e lenticchie Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Straccetti di lonza alla boscaiola - €7.50\n- Filetto di platessa alla pizzaiola - €8.50",
+      "text": "Menu 31 Ottobre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Cavatelli al grano arso con zucca e salsiccia - €8.50\n- Orecchiette con vellutata di cavolfiore e capocollo croccante - €8.50\n- Risotto con ragù di mare (cernia, gamberetti, cozze, vongole e pomodorino) - €8.50\n- Minestra di piselli - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con zucchina - €8.50\n- Spezzatino di vitello all'ortolana - €7.50\n  Sedano, cipolla, carote, zucchina e patate.",
       "published_at": "31/10/2026",
       "published_at_raw": "31 Ottobre",
       "error": null
