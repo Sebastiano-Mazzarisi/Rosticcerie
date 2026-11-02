@@ -1,20 +1,20 @@
 {
-  "updated_at": "2026-11-01T16:35:37",
+  "updated_at": "2026-11-02T10:15:32",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÚ DEL GIORNO 29.10.26",
-      "published_at": "29/10/2026 09:20 circa",
-      "published_at_raw": "41m",
+      "text": "MENÙ DEL GIORNO 02/11/26",
+      "published_at": "02/11/2026 10:11 circa",
+      "published_at_raw": "1h",
       "error": null
     },
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "31 Ottobre 2026.\nMenù del giorno.",
-      "published_at": "31/10/2026 10:08 circa",
-      "published_at_raw": "31/10/2026",
+      "text": "2 Novembre 2026.\nMenù del giorno.",
+      "published_at": "02/11/2026 10:11 circa",
+      "published_at_raw": "02/11/2026",
       "error": null
     },
     {
@@ -28,9 +28,9 @@
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "4 hours ago\n4h\n·",
-      "published_at": "22/10/2026 11:54 circa",
-      "published_at_raw": "4h",
+      "text": "2 minutes ago\n2m\n·",
+      "published_at": "02/11/2026 11:10 circa",
+      "published_at_raw": "2m",
       "error": null
     },
     {
@@ -44,17 +44,17 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 1 Novembre",
-      "published_at": "01/11/2026 09:33 circa",
-      "published_at_raw": "01/11/2026",
+      "text": "menù del giorno 2 Novembre",
+      "published_at": "02/11/2026 10:13 circa",
+      "published_at_raw": "02/11/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 1 Novembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Cavatelli al grano arso con zucca e salsiccia - €8.50\n- Orecchiette con vellutata di cavolfiore e capocollo croccante - €8.50\n- Risotto con ragù di mare (cernia, gamberetti, cozze, vongole e pomodorino) - €8.50\n- Minestra di piselli - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con zucchina - €8.50\n- Spezzatino di vitello all'ortolana - €7.50\n  Sedano, cipolla, carote, zucchina e patate.",
-      "published_at": "01/11/2026",
-      "published_at_raw": "1 Novembre",
+      "text": "Menu 2 Novembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla carbonara - €6.50\n- Risotto con asparagi e zafferano - €7.50\n- Mezzi rigatoni con gorgonzola e noci - €7.50\n- Cavatelli al grano arso con fagioli, cozze e pomodorino - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Scaloppe di pollo al limone - €7.50\n  2 pezzi\n- Filetto di merluzzo gratinato con battuto di olive e capperi - €8.50",
+      "published_at": "02/11/2026",
+      "published_at_raw": "2 Novembre",
       "error": null
     },
     {
