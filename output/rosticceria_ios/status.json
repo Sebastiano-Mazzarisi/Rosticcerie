@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-03T10:17:35",
+  "updated_at": "2026-11-03T17:56:25",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,25 +12,25 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "2 Novembre 2026.\nMenù del giorno.",
-      "published_at": "02/11/2026 10:11 circa",
-      "published_at_raw": "02/11/2026",
+      "text": "3 Novembre 2026.\nMenù del giorno.",
+      "published_at": "03/11/2026 11:52 circa",
+      "published_at_raw": "03/11/2026",
       "error": null
     },
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "3 hours ago\n3h\n·",
-      "published_at": "31/10/2026 07:01 circa",
-      "published_at_raw": "3h",
+      "text": "11 hours ago\nTuesday, November 3, 2026 at 6:38 AM\n11h\n·\n2",
+      "published_at": "03/11/2026 07:53 circa",
+      "published_at_raw": "11 hours ago Tuesday, November 3, 2026 at 6:38 AM 11h ·",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "about an hour ago\nTuesday, November 3, 2026 at 8:51 AM\n1h\n·",
-      "published_at": "03/11/2026 10:15 circa",
-      "published_at_raw": "about an hour ago Tuesday, November 3, 2026 at 8:51 AM 1h ·",
+      "text": "9 hours ago\nTuesday, November 3, 2026 at 8:51 AM\n9h\n·\n1",
+      "published_at": "03/11/2026 09:54 circa",
+      "published_at_raw": "9 hours ago Tuesday, November 3, 2026 at 8:51 AM 9h ·",
       "error": null
     },
     {
