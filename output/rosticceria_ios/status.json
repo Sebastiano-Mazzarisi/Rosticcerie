@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-11-10T04:10:14",
+  "updated_at": "2026-11-10T10:38:41",
   "pages": [
     {
       "name": "Fantasia",
       "image": "Fantasia.jpg",
-      "text": "MENÙ DEL GIORNO 09/11/26",
-      "published_at": "09/11/2026 10:30 circa",
-      "published_at_raw": "about an hour ago Monday, November 9, 2026 at 8:48 AM 1h ·",
+      "text": "MENÙ DEL GIORNO 10/11/26",
+      "published_at": "10/11/2026 10:33 circa",
+      "published_at_raw": "about an hour ago Tuesday, November 10, 2026 at 8:50 AM 1h ·",
       "error": null
     },
     {
@@ -20,9 +20,9 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "3 hours ago\nSunday, November 8, 2026 at 6:00 AM\n3h\n·",
-      "published_at": "08/11/2026 07:41 circa",
-      "published_at_raw": "3 hours ago Sunday, November 8, 2026 at 6:00 AM 3h ·",
+      "text": "4 hours ago\nTuesday, November 10, 2026 at 6:30 AM\n4h\n·",
+      "published_at": "10/11/2026 07:35 circa",
+      "published_at_raw": "4 hours ago Tuesday, November 10, 2026 at 6:30 AM 4h ·",
       "error": null
     },
     {
@@ -52,7 +52,7 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 10 Novembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla carbonara - €6.50\n- Risotto con funghi misti e zafferano - €7.50\n- Gnocchi con gorgonzola e noci - €8.00\n- Cavatelli al grano arso con tonno, pomodorino e olive - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Trancio di pesce spada alla pizzaiola - €8.50\n  Con pomodorini, origano e olive\n- Bocconcini di petto di pollo al limone - €7.50",
+      "text": "Menu 10 Novembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Risotto con asparagi e speck croccante - €7.50\n- Orecchiette con vellutata di zucca e salsiccia a punta di coltello - €8.50\n- Tagliolino con ragù di pesce spada, pomodorini, capperi e origano - €8.50\n- Zuppa del casale - €6.00\n  Fagioli, lenticchie, ceci, orzo e farro. Con o senza pasta.\n\nSECONDI PIATTI DEL GIORNO\n- Bocconcini di pollo al limone - €7.50\n- Filetto di merluzzo gratinato con zucchina - €8.50\n- Scaloppe di lonza con funghi misti - €7.50\n  2 pezzi",
       "published_at": "10/11/2026",
       "published_at_raw": "10 Novembre",
       "error": null
