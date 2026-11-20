@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-19T10:59:48",
+  "updated_at": "2026-11-20T10:44:33",
   "pages": [
     {
       "name": "Fantasia",
@@ -12,17 +12,17 @@
     {
       "name": "Cibària",
       "image": "Cibaria.jpg",
-      "text": "18 Novembre 2026.\nMenù del giorno.",
-      "published_at": "18/11/2026 10:08 circa",
-      "published_at_raw": "18/11/2026",
+      "text": "20 Novembre.\nMenù del giorno.",
+      "published_at": "20/11/2026 09:40 circa",
+      "published_at_raw": "20/11/2026",
       "error": null
     },
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "1",
-      "published_at": "18/11/2026 06:50 circa",
-      "published_at_raw": "5 hours ago Wednesday, November 18, 2026 at 5:09 AM 5h ·",
+      "text": "4 hours ago\nFriday, November 20, 2026 at 6:22 AM\n4h\n·",
+      "published_at": "20/11/2026 07:41 circa",
+      "published_at_raw": "4 hours ago Friday, November 20, 2026 at 6:22 AM 4h ·",
       "error": null
     },
     {
@@ -44,17 +44,17 @@
     {
       "name": "Santoro (Castellana)",
       "image": "Santoro__Castellana.jpg",
-      "text": "menù del giorno 18 Novembre",
-      "published_at": "18/11/2026 09:10 circa",
-      "published_at_raw": "18/11/2026",
+      "text": "menù del giorno 20 Novembre",
+      "published_at": "20/11/2026 09:42 circa",
+      "published_at_raw": "20/11/2026",
       "error": null
     },
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 19 Novembre\n\nPRIMI PIATTI DEL GIORNO\n- Pennette all'arrabbiata - €6.50\n  Salsa di pomodoro, olio e peperoncino\n- Risotto con spinaci e scamorza affumicata - €7.50",
-      "published_at": "19/11/2026",
-      "published_at_raw": "19 Novembre",
+      "text": "Menu 20 Novembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla San Giovanni - €6.50\n  Con acciughe, capperi, pomodorino e aglio\n- Risotto con vellutata di zucca e speck croccante - €7.50\n- Orecchiette e cime di rapa con pane profumato, acciughe e aglio - €8.50\n- Capunti al primitivo con funghi cardoncelli, pomodorino e fonduta al grana - €9.00\n- Minestrone di verdure - €6.00\n  Zucchine, patate, carote, melenzane, piselli, cavolfiore e cipolla Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Scaloppe di lonza con carciofi - €7.50\n  2 pezzi\n- Filetto di platessa con patate - €8.50",
+      "published_at": "20/11/2026",
+      "published_at_raw": "20 Novembre",
       "error": null
     },
     {
