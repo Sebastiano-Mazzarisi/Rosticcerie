@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-24T05:57:34",
+  "updated_at": "2026-11-24T13:05:32",
   "pages": [
     {
       "name": "Fantasia",
@@ -20,17 +20,17 @@
     {
       "name": "Impastamò",
       "image": "Impastamo.jpg",
-      "text": "1",
-      "published_at": "22/11/2026 07:28 circa",
-      "published_at_raw": "4 hours ago Sunday, November 22, 2026 at 6:00 AM 4h ·",
+      "text": "6 hours ago\nTuesday, November 24, 2026 at 6:33 AM\n6h\n·",
+      "published_at": "24/11/2026 08:03 circa",
+      "published_at_raw": "6 hours ago Tuesday, November 24, 2026 at 6:33 AM 6h ·",
       "error": null
     },
     {
       "name": "Le delizie di Michela",
       "image": "Le_delizie_di_Michela.jpg",
-      "text": "2 hours ago\nMonday, November 23, 2026 at 8:31 AM\n2h\n·",
-      "published_at": "23/11/2026 10:28 circa",
-      "published_at_raw": "2 hours ago Monday, November 23, 2026 at 8:31 AM 2h ·",
+      "text": "3 hours ago\nTuesday, November 24, 2026 at 9:51 AM\n3h\n·",
+      "published_at": "24/11/2026 11:03 circa",
+      "published_at_raw": "3 hours ago Tuesday, November 24, 2026 at 9:51 AM 3h ·",
       "error": null
     },
     {
@@ -52,7 +52,7 @@
     {
       "name": "Pane & Co",
       "image": "Pane___Co.jpg",
-      "text": "Menu 24 Novembre\n\nPRIMI PIATTI DEL GIORNO\n- Spaghetti alla carbonara - €6.50\n- Rigatoni alla pastorella - €7.50\n  Con pomodoro fresco e ricotta\n- Risotto con pesce persico e tocchetti di patate - €8.50\n- Orecchiette con funghi cardoncelli e salsiccia - €9.00\n- Zuppa di lenticchie - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Bocconcini di vitello con funghi misti - €7.50\n- Trancio di cernia gratinato con battuto di olive, capperi e pomodorino - €8.50",
+      "text": "Menu 24 Novembre\n\nPRIMI PIATTI DEL GIORNO\n- Pasta e patate con provola alla napoletana - €6.50\n- Gnocchi con vellutata di zucca e gorgonzola - €8.00\n- Risotto con ragù di mare - €8.50\n  Vongole, cozze, cernia, gamberetti e seppie. In bianco.\n- Fricielli tricolore con cavolfiore e pancetta - €8.50\n- Zuppa di ceci - €6.00\n  Con o senza pasta\n\nSECONDI PIATTI DEL GIORNO\n- Filetto di merluzzo gratinato con zucchina - €8.50\n  Con pan grattato e formaggio.\n- Straccetti di vitello alla boscaiola - €7.50",
       "published_at": "24/11/2026",
       "published_at_raw": "24 Novembre",
       "error": null
